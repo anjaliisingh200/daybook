@@ -14,12 +14,15 @@ import { supabaseBrowser } from "@/lib/supabase/browser";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { signOut } from "@/lib/supabase/signOut";
 
-/** Calendar and Tasks are the product. "Design system" is a temporary reference tab: delete its entry to remove it. */
+/** The design system page is a development reference. It is shown in `npm run dev` only, never in production. */
+export const SHOW_DESIGN_SYSTEM = process.env.NODE_ENV !== "production";
+
+/** Calendar and Tasks are the product. */
 export const TABS = [
   { href: "/calendar", label: "Calendar", short: "Calendar", icon: CalendarDays },
   { href: "/tasks", label: "Tasks", short: "Tasks", icon: CheckCircle2 },
-  { href: "/design-system", label: "Design system", short: "Design", icon: Palette },
-] as const;
+  ...(SHOW_DESIGN_SYSTEM ? [{ href: "/design-system", label: "Design system", short: "Design", icon: Palette }] : []),
+];
 
 export function Header() {
   const path = usePathname();

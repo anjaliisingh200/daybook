@@ -9,6 +9,19 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-19 — Design system tab hidden in production
+
+**Asked for:** show the Design system tab only locally, not in production.
+
+**What changed**
+- The Design system tab is in the header and phone bar only when running `npm run dev`. The deployed site shows Calendar and Tasks only.
+- Opening `/design-system` in production shows the "page could not be found" screen.
+- Checked with a production build: no Design system link on desktop or phone.
+
+**Files:** `components/shell/Header.tsx`, `app/(app)/design-system/page.tsx`
+
+---
+
 ## 2026-11-19 — Log out in the account menu
 
 **Asked for:** a log out option (it was only inside Settings).
