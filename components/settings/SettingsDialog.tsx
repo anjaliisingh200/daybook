@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState, type ReactNode } from "react";
-import { supabaseBrowser } from "@/lib/supabase/browser";
+import { signOut } from "@/lib/supabase/signOut";
 import { Bell, CalendarDays, CheckCircle2, Globe, Keyboard, Palette, RefreshCw, UserRound, X } from "lucide-react";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -488,13 +488,6 @@ function Account() {
   const fmt = useFmt();
   const when = syncedAt ? `${fmt.date(new Date(syncedAt).toISOString().slice(0, 10))}, ${fmt.time(syncedAt)}` : "Never";
 
-  const signOut = async () => {
-    await supabaseBrowser().auth.signOut();
-    // A full page load, so the signed-out app starts with no data in memory.
-    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-    window.location.assign(`${window.location.origin}/`);
-  };
-
   return (
     <>
       <Title sub="Where your data comes from and whether it is in step.">Account &amp; sync</Title>
@@ -514,7 +507,7 @@ function Account() {
           </Button>
           {kind === "supabase" && (
             <Button size="sm" variant="secondary" onClick={() => void signOut()}>
-              Sign out
+              Log out
             </Button>
           )}
           <Button size="sm" variant="secondary" icon={<RefreshCw className={cn("size-3.5", syncState === "syncing" && "animate-spin")} />} onClick={() => void sync()} disabled={syncState === "syncing"}>

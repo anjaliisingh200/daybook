@@ -9,6 +9,21 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-19 — Log out in the account menu
+
+**Asked for:** a log out option (it was only inside Settings).
+
+**What changed**
+- The round avatar at the top right now opens a menu with the signed-in email and a **Log out** item. The avatar shows the first letter of the email.
+- Log out ends the session and returns to the home page. The same button in Settings → Account & sync now reads "Log out".
+- Only shown when Supabase sign-in is on.
+
+**Not checked in a browser:** needs a signed-in session, so no screenshot yet.
+
+**Files:** `components/shell/Header.tsx`, `components/settings/SettingsDialog.tsx`, `lib/supabase/signOut.ts`
+
+---
+
 ## 2026-11-19 — Better home page
 
 **Asked for:** improve the home page design, keep one hero section only.
