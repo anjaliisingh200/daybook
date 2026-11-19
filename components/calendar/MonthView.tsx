@@ -85,8 +85,10 @@ export function MonthView({ anchor, visible }: { anchor: DateKey; visible: Visib
                   if (!mobile) setView("day");
                 }}
                 className={cn(
-                  "mx-auto flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-[0.8125rem] md:mx-0 md:mb-0.5",
-                  isToday ? "bg-accent font-semibold text-on-accent" : inMonth ? "text-text hover:bg-surface-3" : "text-text-3 hover:bg-surface-3"
+                  "mx-auto flex w-fit items-center justify-center rounded-full text-[0.8125rem] md:mx-0 md:mb-0.5",
+                  isToday
+                    ? "h-7 min-w-7 bg-semantic-primary px-1 font-semibold text-semantic-on-primary"
+                    : cn("h-6 min-w-6 px-1.5", inMonth ? "text-text hover:bg-surface-3" : "text-text-3 hover:bg-surface-3")
                 )}
                 aria-label={fmt.dayLong(d)}
               >

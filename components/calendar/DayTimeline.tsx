@@ -1,16 +1,16 @@
 "use client";
-import { useEffect, useMemo, useRef, type ReactNode } from "react";
-import { Clock, MapPin } from "lucide-react";
+import { useEffect, useMemo, useRef } from "react";
 import { cn } from "@/lib/cn";
 import { zoned } from "@/lib/dates";
-import { useCalendarViews, useFmt, useNow, useToday, useTz } from "@/lib/hooks";
+import { useFmt, useNow, useToday, useTz } from "@/lib/hooks";
 import { byDay, layoutDay, type Placed } from "@/lib/layout";
 import { newDraft } from "@/lib/store/eventActions";
 import { usePrefs } from "@/lib/store/prefs";
 import { toRect, useUI } from "@/lib/store/ui";
 import type { DateKey, EventInstance } from "@/lib/types";
 import { useDoneEventIds, useInstanceColor, useInstances } from "./useCalendar";
-import { evSurface, evTitle, evVars } from "./TimeGrid";
+import { EventCardBody, eventCardClass, eventTier } from "./EventCard";
+import { evVars } from "./eventStyle";
 
 const isBanner = (i: EventInstance) => i.allDay || i.startDate !== i.endDate;
 
@@ -31,7 +31,6 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
   const instances = useInstances(anchor, anchor);
   const colorOf = useInstanceColor();
   const doneIds = useDoneEventIds();
-  const cals = useCalendarViews();
   const openPopover = useUI((s) => s.openEventPopover);
   const openEditor = useUI((s) => s.openEventEditor);
   const scroller = useRef<HTMLDivElement>(null);
@@ -42,7 +41,6 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
   const placed = useMemo(() => layoutDay(list.filter((i) => !isBanner(i)), anchor, tz), [list, anchor, tz]);
   const isToday = anchor === today;
   const nowMin = zoned(now, tz).minutes;
-  const calName = (id: string) => cals.find((c) => c.id === id)?.name ?? "";
 
   // open on the working day: a little before now when viewing today, otherwise 7 AM
   useEffect(() => {
@@ -61,43 +59,18 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
 
   const hours = Array.from({ length: 24 }, (_, h) => h);
 
-  /** An event card. `mins` is its height on the timeline; short events show less. */
+  /** An event card: the same component the week view uses. `mins` is its length on the timeline. */
   const Card = ({ i, mins, className, style }: { i: EventInstance; mins: number; className?: string; style?: React.CSSProperties }) => {
-    const done = doneIds.has(i.event.id);
-    const duration = i.allDay ? 0 : Math.round((i.end - i.start) / 60000);
-    const short = mins < 45;
+    const heightPx = mins * 2 - 6; // an hour is 8rem, about 120px
     return (
       <button
         type="button"
         data-event
         onClick={(e) => openPopover(i, toRect(e.currentTarget.getBoundingClientRect()))}
         style={{ ...evVars(colorOf(i)), ...style }}
-        className={cn(
-          "overflow-hidden rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-accent",
-          evSurface,
-          short ? "flex items-center gap-2.5 px-3" : "p-3.5",
-          className
-        )}
+        className={cn(eventCardClass(eventTier(heightPx)), className)}
       >
-        {short ? (
-          <>
-            <span className={cn("min-w-0 truncate", evTitle, done && "line-through")}>{i.title}</span>
-            <span className="tnum ml-auto shrink-0 text-xs text-on-solid/90">{i.allDay ? "All day" : fmt.timeRange(i.start, i.end)}</span>
-          </>
-        ) : (
-          <span className="flex items-start gap-3">
-            <span className="min-w-0 flex-1">
-              <span className={cn("block truncate", evTitle, done && "line-through")}>{i.title}</span>
-              {mins >= 90 && i.event.description && <span className="mt-1 line-clamp-2 block text-sm leading-relaxed text-on-solid/90">{i.event.description}</span>}
-              <span className="mt-2.5 flex flex-wrap items-center gap-2 text-xs text-on-solid">
-                <Chip icon={<Clock className="size-3" />}>{i.allDay ? "All day" : fmt.timeRange(i.start, i.end)}</Chip>
-                {duration > 0 && <Chip>{duration >= 60 && duration % 60 === 0 ? `${duration / 60} hr` : `${duration} mins`}</Chip>}
-                <Chip dot>{calName(i.calendarId)}</Chip>
-                {i.event.location && <Chip icon={<MapPin className="size-3" />}>{i.event.location}</Chip>}
-              </span>
-            </span>
-          </span>
-        )}
+        <EventCardBody inst={i} done={doneIds.has(i.event.id)} heightPx={heightPx} />
       </button>
     );
   };
@@ -191,15 +164,5 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
         </div>
       </div>
     </div>
-  );
-}
-
-function Chip({ children, icon, dot }: { children: ReactNode; icon?: ReactNode; dot?: boolean }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-sm bg-on-solid/20 px-2 py-1">
-      {icon}
-      {dot && <span className="size-2 rounded-full bg-on-solid" />}
-      {children}
-    </span>
   );
 }

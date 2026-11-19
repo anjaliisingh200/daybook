@@ -10,8 +10,9 @@ import { moveEvent, newDraft } from "@/lib/store/eventActions";
 import { useData } from "@/lib/store/data";
 import type { CalView, DateKey, EventInstance } from "@/lib/types";
 import { useDoneEventIds, useInstanceColor, useInstances, type Visible } from "./useCalendar";
-import { Lock, Repeat } from "lucide-react";
 import { DayHeaders } from "@/components/shell/DayHeaders";
+import { EventCardBody, eventCardClass, eventTier } from "./EventCard";
+import { evSurface, evTitle, evVars } from "./eventStyle";
 
 const isBanner = (i: EventInstance) => i.allDay || i.startDate !== i.endDate;
 const snap = (m: number, step = 15) => Math.round(m / step) * step;
@@ -21,15 +22,7 @@ type Drag =
   | { kind: "create"; day: number; a: number; b: number }
   | { kind: "move"; inst: EventInstance; day: number; start: number; dur: number };
 
-export function evVars(hex: string): React.CSSProperties {
-  return { ["--ev" as string]: hex };
-}
-
-/** Event titles use exactly the task card title style. */
-export const evTitle = "text-[0.9375rem] font-medium leading-snug";
-
-/** Event cards are the calendar's own colour, solid, with white text. */
-export const evSurface = "bg-[var(--ev)] text-on-solid hover:brightness-95";
+export { evSurface, evTitle, evVars } from "./eventStyle";
 
 export function TimeGrid({ view, anchor, visible }: { view: CalView; anchor: DateKey; visible: Visible }) {
   void view;
@@ -50,6 +43,9 @@ export function TimeGrid({ view, anchor, visible }: { view: CalView; anchor: Dat
   const setView = useUI((s) => s.setCalView);
   const defaultDuration = usePrefs((p) => p.defaultDuration);
   const h24 = usePrefs((p) => p.timeFormat) === "24";
+  const density = usePrefs((p) => p.density);
+  /** The grid hour height in px (matches --hour-h), so cards know how much room they have. */
+  const hourPx = density === "compact" ? 44 : density === "spacious" ? 68 : 56;
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const colsRef = useRef<HTMLDivElement>(null);
@@ -300,6 +296,7 @@ export function TimeGrid({ view, anchor, visible }: { view: CalView; anchor: Dat
                     color={colorOf(p.inst)}
                     dim={drag?.kind === "move" && drag.inst.key === p.inst.key}
                     readOnly={readOnlyIds.has(p.inst.calendarId)}
+                    hourPx={hourPx}
                     onPointerDown={(e) => startMove(e, p.inst, p.top)}
                     onClick={(el) => {
                       if (suppressClick.current) return;
@@ -340,6 +337,7 @@ function EventBlock({
   color,
   dim,
   readOnly,
+  hourPx,
   onPointerDown,
   onClick,
 }: {
@@ -347,13 +345,14 @@ function EventBlock({
   color: string;
   dim: boolean;
   readOnly: boolean;
+  hourPx: number;
   onPointerDown: (e: React.PointerEvent) => void;
   onClick: (el: HTMLElement) => void;
 }) {
-  const fmt = useFmt();
   const { inst } = p;
   const done = useDoneEventIds().has(inst.event.id);
   const h = p.bottom - p.top;
+  const heightPx = (h / 60) * hourPx - 2;
   const widthPct = 100 / p.cols;
   return (
     <button
@@ -362,9 +361,8 @@ function EventBlock({
       onPointerDown={onPointerDown}
       onClick={(e) => onClick(e.currentTarget)}
       className={cn(
-        "absolute overflow-hidden rounded-sm px-2 text-left text-[0.8125rem] leading-tight outline-none transition-[background,opacity,box-shadow] focus-visible:ring-2 focus-visible:ring-accent",
-        h < 40 ? "flex items-center py-0" : "py-1",
-        evSurface,
+        "absolute transition-[background,opacity,box-shadow]",
+        eventCardClass(eventTier(heightPx)),
         dim && "opacity-35",
         readOnly ? "cursor-pointer" : inst.event.recurrence ? "cursor-pointer" : "cursor-grab active:cursor-grabbing"
       )}
@@ -377,21 +375,7 @@ function EventBlock({
         zIndex: 2 + p.col,
       }}
     >
-      {h < 40 ? (
-        // short events: one tidy line, "Title  9:00 AM"
-        <span className="flex items-center gap-1.5 whitespace-nowrap leading-none">
-          <span className={cn("truncate", evTitle, done && "line-through")}>{inst.title}</span>
-          <span className="tnum shrink-0 text-[0.6875rem] text-on-solid/85">{fmt.time(inst.start, { compact: true })}</span>
-        </span>
-      ) : (
-        <span className="flex items-start gap-1">
-          <span className={cn("line-clamp-2 flex-1", evTitle, done && "line-through")}>{inst.title}</span>
-          {inst.isRecurring && <Repeat className="mt-0.5 size-3 shrink-0 text-on-solid/85" aria-label="Repeats" />}
-          {readOnly && <Lock className="mt-0.5 size-3 shrink-0 text-on-solid/85" aria-label="Read only" />}
-        </span>
-      )}
-      {h >= 52 && <span className="tnum mt-0.5 block truncate text-xs text-on-solid/90">{fmt.timeRange(inst.start, inst.end)}</span>}
-      {h >= 66 && inst.event.location && <span className="mt-0.5 block truncate text-xs text-on-solid/80">{inst.event.location}</span>}
+      <EventCardBody inst={inst} done={done} heightPx={heightPx} readOnly={readOnly} />
     </button>
   );
 }
