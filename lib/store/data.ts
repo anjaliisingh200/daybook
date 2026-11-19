@@ -291,7 +291,13 @@ export const useData = create<DataStore>((set, get) => {
    * Runs `fn` once at a time. Load and sync both ask for tasks; without this, two runs
    * saw the same event with no task yet and each created one, which made duplicates.
    */
-  const once = (fn: () => Promise<void>) => {
+  /** A short reason from a failed request, such as ": permission denied for table tasks". */
+const reason = (e: unknown) => {
+  const m = e && typeof e === "object" && "message" in e ? String((e as { message: unknown }).message) : "";
+  return m ? `: ${m}` : "";
+};
+
+const once = (fn: () => Promise<void>) => {
     let running: Promise<void> | null = null;
     return () => {
       if (!running) running = fn().finally(() => (running = null));
@@ -324,8 +330,10 @@ export const useData = create<DataStore>((set, get) => {
         const snap = await settledSnapshot(() => repo.load());
         set({ ...apply(snap), status: "ready", syncState: "idle" });
         void ensureTasks();
-      } catch {
+      } catch (e) {
+        console.error("Daybook load failed", e);
         set({ status: "error" });
+        toast(`Couldn't load your data${reason(e)}`, { tone: "error" });
       }
     },
 
@@ -341,9 +349,10 @@ export const useData = create<DataStore>((set, get) => {
         set({ ...apply(snap), syncState: "idle" });
         void ensureTasks();
         if (!opts?.silent) toast("Everything is up to date");
-      } catch {
+      } catch (e) {
+        console.error("Daybook sync failed", e);
         set({ syncState: "error" });
-        toast("Couldn't sync. We'll try again shortly.", { tone: "error" });
+        toast(`Couldn't sync${reason(e)}. We'll try again shortly.`, { tone: "error" });
       }
     },
 

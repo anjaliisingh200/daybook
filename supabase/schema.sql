@@ -46,3 +46,9 @@ begin
     );
   end loop;
 end $$;
+
+-- Let signed-in users reach the tables through the API. New Supabase projects do not do this
+-- automatically for tables made in the SQL editor. Row-level security above still limits
+-- every user to their own rows, and signed-out visitors get nothing.
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on public.task_lists, public.tasks, public.calendars, public.events to authenticated;

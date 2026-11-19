@@ -24,8 +24,17 @@ export class SupabaseRepository implements Repository {
     return (data ?? []).map((r) => r.data as T);
   }
 
+  /** The signed-in user's id, read from the local session (no network call). */
+  private async uid(): Promise<string> {
+    const { data } = await this.sb.auth.getSession();
+    const id = data.session?.user.id;
+    if (!id) throw new Error("You are signed out. Log in again.");
+    return id;
+  }
+
   private async put(table: Table, obj: { id: string }): Promise<void> {
-    const { error } = await this.sb.from(table).upsert({ id: obj.id, data: obj });
+    const user_id = await this.uid();
+    const { error } = await this.sb.from(table).upsert({ user_id, id: obj.id, data: obj }, { onConflict: "user_id,id" });
     if (error) throw error;
   }
 
