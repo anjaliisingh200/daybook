@@ -75,8 +75,6 @@ interface UIStore {
   eventEditor: EventDraft | null;
   openEventEditor: (draft: EventDraft) => void;
   closeEventEditor: () => void;
-  mobileSidebar: boolean;
-  setMobileSidebar: (v: boolean) => void;
 
   // tasks
   taskPanelId: string | null;
@@ -133,8 +131,6 @@ export const useUI = create<UIStore>((set, get) => ({
   eventEditor: null,
   openEventEditor: (draft) => set({ eventEditor: draft, eventPopover: null, quickCreate: null }),
   closeEventEditor: () => set({ eventEditor: null }),
-  mobileSidebar: false,
-  setMobileSidebar: (v) => set({ mobileSidebar: v }),
 
   taskPanelId: null,
   taskToDelete: null,
@@ -153,7 +149,7 @@ export const useUI = create<UIStore>((set, get) => ({
   setTaskQuery: (q) => set({ taskQuery: q }),
   taskFilters: NO_FILTERS,
   setTaskFilters: (f) => set({ taskFilters: f }),
-  completedOpen: false,
+  completedOpen: true,
   setCompletedOpen: (v) => set({ completedOpen: v }),
 
   settings: null,

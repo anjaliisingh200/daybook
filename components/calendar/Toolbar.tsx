@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Menu as MenuIcon, Plus, Search, X } from "lucide-react";
+import { Plus, Search, X } from "lucide-react";
 import { Button, IconButton } from "@/components/ui/Button";
 import { DateHeader } from "@/components/shell/DateHeader";
+import { weekRangeTitle } from "@/lib/weekTitle";
+import { MyCalendarsMenu } from "./MyCalendars";
 import { Popover } from "@/components/ui/Popover";
 import { cn } from "@/lib/cn";
 import { useFmt, useIsMobile, useToday, useTz } from "@/lib/hooks";
@@ -22,7 +24,6 @@ export function CalendarToolbar({ view, anchor, visible, go }: { view: CalView; 
   const mobile = useIsMobile();
   const setAnchor = useUI((s) => s.setCalAnchor);
   const setView = useUI((s) => s.setCalView);
-  const setMobileSidebar = useUI((s) => s.setMobileSidebar);
   const openEditor = useUI((s) => s.openEventEditor);
 
   const title = useMemo(() => {
@@ -30,9 +31,10 @@ export function CalendarToolbar({ view, anchor, visible, go }: { view: CalView; 
     if (view === "month" || view === "schedule") return mobile ? `${fmt.month(anchor, "short")} ${parseKey(anchor).y}` : fmt.monthYear(anchor);
     const a = visible.days[0] ?? anchor;
     const b = visible.days[visible.days.length - 1] ?? anchor;
+    if (!mobile) return weekRangeTitle(a, b, (d) => fmt.month(d, "short"));
     const A = parseKey(a);
     const B = parseKey(b);
-    if (A.m === B.m && A.y === B.y) return mobile ? `${fmt.month(a, "short")} ${A.y}` : fmt.monthYear(a);
+    if (A.m === B.m && A.y === B.y) return `${fmt.month(a, "short")} ${A.y}`;
     if (A.y === B.y) return `${fmt.month(a, "short")} – ${fmt.month(b, "short")} ${A.y}`;
     return `${fmt.month(a, "short")} ${A.y} – ${fmt.month(b, "short")} ${B.y}`;
   }, [view, anchor, visible, fmt, mobile]);
@@ -47,27 +49,24 @@ export function CalendarToolbar({ view, anchor, visible, go }: { view: CalView; 
   const stepLabel = view === "month" ? "month" : view === "day" ? "day" : view === "schedule" ? "week" : mobile ? "3 days" : "week";
 
   return (
-    <>
-      <DateHeader
-        title={title}
-        view={view}
-        views={viewOptions}
-        onView={setView}
-        onToday={() => setAnchor(today)}
-        onStep={go}
-        stepLabel={stepLabel}
-      />
-      <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-2 md:px-4">
-        <Button size="sm" variant="secondary" icon={<MenuIcon className="size-4" />} onClick={() => setMobileSidebar(true)}>
-          Calendars
-        </Button>
-        <CalendarSearch />
-        <div className="flex-1" />
-        <Button size="sm" variant="primary" icon={<Plus className="size-4" />} className="max-md:hidden" onClick={() => openEditor(newDraft({ day: anchor }))}>
-          Create
-        </Button>
-      </div>
-    </>
+    <DateHeader
+      title={title}
+      view={view}
+      views={viewOptions}
+      onView={setView}
+      onToday={() => setAnchor(today)}
+      onStep={go}
+      stepLabel={stepLabel}
+      right={
+        <>
+          <CalendarSearch />
+          <MyCalendarsMenu />
+          <Button size="sm" variant="primary" icon={<Plus className="size-4" />} className="max-md:hidden" onClick={() => openEditor(newDraft({ day: anchor }))}>
+            Create
+          </Button>
+        </>
+      }
+    />
   );
 }
 

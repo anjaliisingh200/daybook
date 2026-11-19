@@ -128,10 +128,10 @@ function Preview() {
                   {d.events.map((e) => (
                     <div
                       key={e.t}
-                      className="absolute inset-x-1 overflow-hidden rounded-md bg-[color-mix(in_srgb,var(--ev)_17%,var(--surface))] px-1.5 py-1 text-[0.6875rem] font-medium leading-tight"
+                      className="absolute inset-x-1 overflow-hidden rounded-md bg-[var(--ev)] px-1.5 py-1 text-[0.6875rem] font-medium leading-tight text-on-solid"
                       style={{ ["--ev" as string]: e.c, top: e.top, height: e.h }}
                     >
-                      <span className={cn("line-clamp-2", e.done && "line-through decoration-text")}>{e.t}</span>
+                      <span className={cn("line-clamp-2", e.done && "line-through")}>{e.t}</span>
                     </div>
                   ))}
                 </div>

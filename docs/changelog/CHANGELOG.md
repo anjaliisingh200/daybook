@@ -9,6 +9,48 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-19 — One header, no sidebar, solid event cards, tidier day views
+
+**Asked for:** put My calendars in the header and remove the left sidebar; event cards in the plain calendar colour, not light tints; search and Create in the same header; the Tasks tab with the same single header; Tasks day view stacked one under the other; a maximum width for the day view on both tabs; no Completed section and no "Thu 19" block in the day view.
+
+**What changed**
+- The left sidebar (side sheet with Create, mini month and calendar list) is removed. **My calendars** is now a button in the header with a dropdown: show or hide each calendar, "All", "Display only this", and colour.
+- Calendar header is one row: Today, previous and next, the date, Search, My calendars, Create, and the view switch. Search and Create no longer sit in a second row.
+- Tasks has the same single header: Search, Filter, Add task and the view switch. Phones keep a small search and filter row below, because the header has no room for them.
+- Event cards use the solid calendar colour with white text (week and day grid, all-day row, month banners). Completed events stay struck through.
+- Day view on both tabs is one centred column with a maximum width (about 48rem), not stretched. In Tasks the cards stack one under the other.
+- Day view hides the Completed section and the big day header (the page heading already names the day). Week view still shows both.
+
+**Files:** `components/calendar/MyCalendars.tsx` (new), `components/calendar/Toolbar.tsx`, `components/calendar/CalendarScreen.tsx`, `components/calendar/TimeGrid.tsx`, `components/calendar/MonthView.tsx`, `components/shell/DateHeader.tsx`, `components/tasks/TasksScreen.tsx`, `components/home/Hero.tsx`, `lib/store/ui.ts`; `components/calendar/Sidebar.tsx` deleted
+
+**Screenshots** (`screenshots/2026-11-19-one-header-and-day-views/`)
+![Tasks week, one header](screenshots/2026-11-19-one-header-and-day-views/hdr-tasks-week.png)
+![Calendar day view](screenshots/2026-11-19-one-header-and-day-views/hdr-calendar-day.png)
+![Tasks day view](screenshots/2026-11-19-one-header-and-day-views/day-tasks2.png)
+
+---
+
+## 2026-11-19 — Completed at the end, shared title style, week range, tidy-ups
+
+**Asked for:** remove the grid/list switch beside Add task; a COMPLETED section at the end of the Tasks page; event titles in the same style as task titles; the week view heading as a date range; remove the "Visibility and colours here apply to this app only" note.
+
+**What changed**
+- The grid/list layout switch beside **Add task** is removed. The toolbar now has Filter and Add task only.
+- The **Completed** section at the end of the Tasks page lists every completed task, newest first, and is open by default. Completed tasks also stay struck through in their day column.
+- In Week view the heading reads "Nov 15 – Nov 21, 2026" instead of "November 2026", on Calendar and Tasks (desktop). Across a year it reads "Dec 28, 2026 – Jan 3, 2027". Phones keep the short month and year.
+- The note under the calendar list ("Visibility and colours here apply to this app only…") is removed.
+- Event titles use exactly the task title style (14px, medium weight, same line height) in the week and day grid, the all-day row, the month view, the schedule list and the drag preview. Measured in the browser: task and event titles read the same size and weight.
+
+**Files:** `lib/weekTitle.ts`, `components/calendar/Toolbar.tsx`, `components/calendar/Sidebar.tsx`, `components/tasks/TasksScreen.tsx`, `components/tasks/TaskControls.tsx`, `lib/store/ui.ts`, `components/calendar/TimeGrid.tsx`, `components/calendar/MonthView.tsx`, `components/calendar/ScheduleView.tsx`
+
+**Screenshots** (`screenshots/2026-11-19-completed-and-titles/`)
+![Tasks with Completed at the end](screenshots/2026-11-19-completed-and-titles/tasks-end.png)
+![Week view titles](screenshots/2026-11-19-completed-and-titles/cal-titles.png)
+![Week range heading](screenshots/2026-11-19-completed-and-titles/cal-week-title.png)
+![Month view titles](screenshots/2026-11-19-completed-and-titles/cal-Month.png)
+
+---
+
 ## 2026-11-19 — Design system tab hidden in production
 
 **Asked for:** show the Design system tab only locally, not in production.

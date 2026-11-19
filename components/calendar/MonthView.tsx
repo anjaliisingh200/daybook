@@ -166,7 +166,7 @@ function MonthChip({ inst, day, color, onOpen }: { inst: EventInstance; day: Dat
     >
       {!banner && <span className="size-2 shrink-0 rounded-full" style={{ background: color }} />}
       {!banner && <span className="tnum shrink-0 text-text-2">{fmt.time(inst.start, { compact: true })}</span>}
-      <span className={cn("truncate", !banner && "font-medium", done && "line-through decoration-text")}>{banner && !startsHere && day !== inst.startDate && parseKey(day).d !== 1 ? " " : inst.title}</span>
+      <span className={cn("truncate text-[0.9375rem] font-medium leading-none", done && "line-through")}>{banner && !startsHere && day !== inst.startDate && parseKey(day).d !== 1 ? " " : inst.title}</span>
     </button>
   );
 }

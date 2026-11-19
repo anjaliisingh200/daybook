@@ -25,7 +25,11 @@ export function evVars(hex: string): React.CSSProperties {
   return { ["--ev" as string]: hex };
 }
 
-export const evSurface = "bg-[color-mix(in_srgb,var(--ev)_17%,var(--surface))] hover:bg-[color-mix(in_srgb,var(--ev)_26%,var(--surface))]";
+/** Event titles use exactly the task card title style. */
+export const evTitle = "text-[0.9375rem] font-medium leading-snug";
+
+/** Event cards are the calendar's own colour, solid, with white text. */
+export const evSurface = "bg-[var(--ev)] text-on-solid hover:brightness-95";
 
 export function TimeGrid({ view, anchor, visible }: { view: CalView; anchor: DateKey; visible: Visible }) {
   void view;
@@ -193,17 +197,22 @@ export function TimeGrid({ view, anchor, visible }: { view: CalView; anchor: Dat
     <div className="flex h-full flex-col">
       {/* scrollable hours */}
       <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto overscroll-contain">
+        {/* Day view is one readable column, not stretched across the screen. */}
+        <div className={days.length === 1 ? "mx-auto max-w-3xl" : "contents"}>
         <div className="sticky top-0 z-20 w-max min-w-full bg-bg">
         {/* day headers: shared with the Tasks tab */}
-      <DayHeaders
-        days={days}
-        gutter={tzOffsetLabel(tz, now).replace("GMT", "GMT ")}
-        minColumnWidth={dayMin}
-        onPick={(d) => {
-          setAnchor(d);
-          setView("day");
-        }}
-      />
+      {/* the day view needs no day header: the page heading already names the day */}
+      {days.length > 1 && (
+        <DayHeaders
+          days={days}
+          gutter={tzOffsetLabel(tz, now).replace("GMT", "GMT ")}
+          minColumnWidth={dayMin}
+          onPick={(d) => {
+            setAnchor(d);
+            setView("day");
+          }}
+        />
+      )}
 
         {/* all-day banners */}
         {lanes.count > 0 && (
@@ -224,8 +233,8 @@ export function TimeGrid({ view, anchor, visible }: { view: CalView; anchor: Dat
                   style={{ ...evVars(colorOf(inst)), gridColumn: `${s + 1} / ${e + 2}`, gridRow: lane + 1 }}
                   title={inst.title}
                 >
-                  <span className={cn("truncate", doneIds.has(inst.event.id) && "line-through decoration-text")}>{inst.title}</span>
-                    {!inst.allDay && <span className="shrink-0 font-normal text-text-2">{fmt.time(inst.start, { compact: true })}</span>}
+                  <span className={cn("truncate", evTitle, doneIds.has(inst.event.id) && "line-through")}>{inst.title}</span>
+                    {!inst.allDay && <span className="shrink-0 font-normal text-on-solid/85">{fmt.time(inst.start, { compact: true })}</span>}
                 </button>
               ))}
               {lanes.count > 3 && (
@@ -305,6 +314,7 @@ export function TimeGrid({ view, anchor, visible }: { view: CalView; anchor: Dat
             ))}
           </div>
         </div>
+        </div>
       </div>
     </div>
   );
@@ -355,18 +365,18 @@ function EventBlock({
       {h < 40 ? (
         // short events: one tidy line, "Title  9:00 AM"
         <span className="flex items-center gap-1.5 whitespace-nowrap leading-none">
-          <span className={cn("truncate font-medium", done && "line-through decoration-text")}>{inst.title}</span>
-          <span className="tnum shrink-0 text-[0.6875rem] text-text-2">{fmt.time(inst.start, { compact: true })}</span>
+          <span className={cn("truncate", evTitle, done && "line-through")}>{inst.title}</span>
+          <span className="tnum shrink-0 text-[0.6875rem] text-on-solid/85">{fmt.time(inst.start, { compact: true })}</span>
         </span>
       ) : (
         <span className="flex items-start gap-1">
-          <span className={cn("line-clamp-2 flex-1 font-medium", done && "line-through decoration-text")}>{inst.title}</span>
-          {inst.isRecurring && <Repeat className="mt-0.5 size-3 shrink-0 text-text-3" aria-label="Repeats" />}
-          {readOnly && <Lock className="mt-0.5 size-3 shrink-0 text-text-3" aria-label="Read only" />}
+          <span className={cn("line-clamp-2 flex-1", evTitle, done && "line-through")}>{inst.title}</span>
+          {inst.isRecurring && <Repeat className="mt-0.5 size-3 shrink-0 text-on-solid/85" aria-label="Repeats" />}
+          {readOnly && <Lock className="mt-0.5 size-3 shrink-0 text-on-solid/85" aria-label="Read only" />}
         </span>
       )}
-      {h >= 52 && <span className="tnum mt-0.5 block truncate text-xs text-text-2">{fmt.timeRange(inst.start, inst.end)}</span>}
-      {h >= 66 && inst.event.location && <span className="mt-0.5 block truncate text-xs text-text-3">{inst.event.location}</span>}
+      {h >= 52 && <span className="tnum mt-0.5 block truncate text-xs text-on-solid/90">{fmt.timeRange(inst.start, inst.end)}</span>}
+      {h >= 66 && inst.event.location && <span className="mt-0.5 block truncate text-xs text-on-solid/80">{inst.event.location}</span>}
     </button>
   );
 }
@@ -377,7 +387,7 @@ function GhostBlock({ start, dur, label, color, title, solid }: { start: number;
       className={cn("pointer-events-none absolute inset-x-[2px] z-[5] overflow-hidden rounded-[7px] border border-dashed px-2 py-1 text-xs", solid ? "border-accent bg-accent-soft" : "border-accent bg-accent-soft/80")}
       style={{ top: `calc(var(--hour-h) * ${start / 60} + 1px)`, height: `calc(var(--hour-h) * ${dur / 60} - 2px)`, ...(color ? { borderColor: color } : {}) }}
     >
-      {title && <div className="truncate font-semibold">{title}</div>}
+      {title && <div className={cn("truncate", evTitle)}>{title}</div>}
       {label && <div className="tnum text-text-2">{label}</div>}
     </div>
   );

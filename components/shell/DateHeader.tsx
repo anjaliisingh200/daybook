@@ -1,4 +1,5 @@
 "use client";
+import type { ReactNode } from "react";
 import { CalendarClock, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,6 +22,7 @@ export function DateHeader<T extends string>({
   onToday,
   onStep,
   stepLabel,
+  right,
 }: {
   title: string;
   view: T;
@@ -29,6 +31,8 @@ export function DateHeader<T extends string>({
   onToday: () => void;
   onStep: (dir: 1 | -1) => void;
   stepLabel: string;
+  /** Extra controls placed just before the view switch (Calendar: My calendars). */
+  right?: ReactNode;
 }) {
   return (
     <div className="flex h-14 shrink-0 items-center gap-1.5 border-b border-border px-2 md:gap-2 md:px-4">
@@ -49,6 +53,8 @@ export function DateHeader<T extends string>({
       <IconButton label="Today" onClick={onToday} className="md:hidden">
         <CalendarClock className="size-5" />
       </IconButton>
+
+      {right}
 
       <div className="w-[6.75rem] shrink-0 md:w-32">
         <Select value={view} onValueChange={(v) => onView(v as T)}>

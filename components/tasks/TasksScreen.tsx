@@ -4,6 +4,7 @@ import { CheckCheck, ChevronDown, ListFilter, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState, Skeleton } from "@/components/ui/Controls";
 import { DateHeader } from "@/components/shell/DateHeader";
+import { weekRangeTitle } from "@/lib/weekTitle";
 import { DayHeaders } from "@/components/shell/DayHeaders";
 import { cn } from "@/lib/cn";
 import { addDays, addMonths, dowOf, parseKey, startOfWeek } from "@/lib/dates";
@@ -14,7 +15,7 @@ import { usePrefs } from "@/lib/store/prefs";
 import { NO_FILTERS, useUI } from "@/lib/store/ui";
 import type { DateKey, Task } from "@/lib/types";
 import { MonthNav } from "./MonthNav";
-import { FilterMenu, LayoutToggle, TaskSearch, activeFilterCount } from "./TaskControls";
+import { FilterMenu, TaskSearch, activeFilterCount } from "./TaskControls";
 import { TaskCard } from "./TaskCard";
 import { buildGroups, columnOrderFor, dayKey, matches, passesFilters } from "./taskModel";
 
@@ -146,7 +147,7 @@ export function TasksScreen() {
     return {
       groups: columnsMode ? [] : buildGroups(outside, today, fmt, sort, showUndated),
       byDay,
-      completed: done.filter((t) => !inColumns(t)),
+      completed: done,
       counts,
       selectedHasTasks: selected ? topTasks.some((t) => t.due === selected) : true,
     };
@@ -209,7 +210,8 @@ export function TasksScreen() {
   let title: string;
   if (view === "day") title = mobile ? fmt.dayShort(anchor) : `${fmt.dayLong(anchor)}, ${parseKey(anchor).y}`;
   else if (view === "month") title = mobile ? `${fmt.month(anchor, "short")} ${parseKey(anchor).y}` : fmt.monthYear(anchor);
-  else if (A.m === B.m) title = mobile ? `${fmt.month(wStart, "short")} ${A.y}` : fmt.monthYear(wStart);
+  else if (!mobile) title = weekRangeTitle(wStart, wEnd, (d) => fmt.month(d, "short"));
+  else if (A.m === B.m) title = `${fmt.month(wStart, "short")} ${A.y}`;
   else if (A.y === B.y) title = `${fmt.month(wStart, "short")} – ${fmt.month(wEnd, "short")} ${A.y}`;
   else title = `${fmt.month(wStart, "short")} ${A.y} – ${fmt.month(wEnd, "short")} ${B.y}`;
 
@@ -233,26 +235,26 @@ export function TasksScreen() {
         onToday={goToday}
         onStep={step}
         stepLabel={view}
+        right={
+          mobile ? undefined : (
+            <>
+              <TaskSearch className="w-48 lg:w-60" />
+              <FilterMenu />
+              <Button variant="primary" size="sm" icon={<Plus className="size-4" />} onClick={() => openQuickAdd({ due: selected })}>
+                Add task
+              </Button>
+            </>
+          )
+        }
       />
 
-      {/* actions row (mirrors the calendar's) */}
-      <div className="flex min-h-12 shrink-0 items-center gap-2 border-b border-border px-2 py-1.5 md:px-4">
-        <TaskSearch className="min-w-0 flex-1 md:max-w-sm md:flex-none md:basis-80" />
-        <div className="hidden flex-1 md:block" />
-        {mobile ? (
-          <>
-            <FilterMenu compact />
-          </>
-        ) : (
-          <>
-            <FilterMenu />
-            <LayoutToggle />
-            <Button variant="primary" size="sm" icon={<Plus className="size-4" />} onClick={() => openQuickAdd({ due: selected })}>
-              Add task
-            </Button>
-          </>
-        )}
-      </div>
+      {/* phones have no room in the header, so search and filter get their own row */}
+      {mobile && (
+        <div className="flex min-h-12 shrink-0 items-center gap-2 border-b border-border px-2 py-1.5">
+          <TaskSearch className="min-w-0 flex-1" />
+          <FilterMenu compact />
+        </div>
+      )}
 
       {nFilters > 0 && (
         <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-border px-3 py-2 text-xs md:px-4">
@@ -281,9 +283,11 @@ export function TasksScreen() {
 
       {/* tasks */}
       <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto">
+        {/* Day view is a single readable column, not stretched across the screen. */}
+        <div className={view === "day" ? "mx-auto max-w-3xl" : "contents"}>
         {/* the day / date row lives inside the scroller so it is exactly as wide as the columns */}
         <div className="sticky top-0 z-10 w-max min-w-full bg-bg">
-      {view !== "month" ? (
+      {view === "day" ? null : view !== "month" ? (
         <DayHeaders days={days} selected={selected} onPick={pick} minColumnWidth={DAY_MIN_WIDTH} badge={columnsMode ? undefined : (d) => ((counts.get(d) ?? 0) > 0 ? <span>{counts.get(d)}</span> : null)} />
       ) : (
         <div className="shrink-0 border-b border-border px-3 py-3 md:px-6">
@@ -432,7 +436,7 @@ export function TasksScreen() {
                     d === today && "bg-surface"
                   )}
                 >
-                  <div className={single ? "grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3" : "flex flex-col gap-0"}>{items}</div>
+                  <div className="flex flex-col gap-0">{items}</div>
                   <button
                     onClick={() => openQuickAdd({ due: d })}
                     className="mt-auto flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-text-3 transition-colors hover:bg-surface-2 hover:text-text"
@@ -507,7 +511,7 @@ export function TasksScreen() {
                 </section>
               ))}
 
-              {showCompleted && (
+              {showCompleted && view !== "day" && (
                 <section className="mt-8" aria-label="Completed">
                   <button onClick={() => setCompletedOpen(!completedOpen)} aria-expanded={completedOpen} className="flex w-full items-center gap-2.5 rounded-lg py-2 text-left">
                     <ChevronDown className={cn("size-4 text-text-3 transition-transform", !completedOpen && "-rotate-90")} />
@@ -529,6 +533,7 @@ export function TasksScreen() {
               )}
             </>
           )}
+        </div>
         </div>
       </div>
 

@@ -6,13 +6,11 @@ import { useData } from "@/lib/store/data";
 import { useHotkeys, useToday, useTz } from "@/lib/hooks";
 import { Skeleton } from "@/components/ui/Controls";
 import { CalendarToolbar } from "./Toolbar";
-import { Sidebar } from "./Sidebar";
 import { TimeGrid } from "./TimeGrid";
 import { MonthView } from "./MonthView";
 import { ScheduleView } from "./ScheduleView";
 import { stepAnchor, useCalView, useVisible } from "./useCalendar";
 import { newDraft } from "@/lib/store/eventActions";
-import { LeftSheet } from "@/components/ui/Modal";
 
 export function CalendarScreen() {
   const { view, anchor } = useCalView();
@@ -21,8 +19,6 @@ export function CalendarScreen() {
   const weekStart = usePrefs((p) => p.weekStart);
   const today = useToday();
   const tz = useTz();
-  const sheetOpen = useUI((s) => s.mobileSidebar);
-  const setSheetOpen = useUI((s) => s.setMobileSidebar);
   const setAnchor = useUI((s) => s.setCalAnchor);
   const setView = useUI((s) => s.setCalView);
   const openEditor = useUI((s) => s.openEventEditor);
@@ -47,11 +43,6 @@ export function CalendarScreen() {
 
   return (
     <div className="flex h-full min-h-0">
-      {/* Calendars live in a side sheet, opened from the menu button */}
-      <LeftSheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="Calendars">
-        <Sidebar onNavigate={() => setSheetOpen(false)} />
-      </LeftSheet>
-
       <section className="flex min-w-0 flex-1 flex-col">
         <CalendarToolbar view={view} anchor={anchor} visible={visible} go={go} />
         <div className="relative min-h-0 flex-1">

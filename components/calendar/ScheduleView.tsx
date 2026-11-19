@@ -82,7 +82,7 @@ export function AgendaList({ days, perDay, emptyLabel, showHeader }: { days: Dat
                     <span className="mt-1.5 size-2.5 shrink-0 rounded-full" style={{ background: colorOf(i) }} />
                     <span className="tnum w-[10.5rem] shrink-0 whitespace-nowrap pt-px text-sm text-text-2 max-md:w-[8.5rem] max-md:text-xs max-md:leading-5">{i.allDay ? "All day" : fmt.timeRange(i.start, i.end)}</span>
                     <span className="min-w-0 flex-1">
-                      <span className="flex items-center gap-1.5 text-sm font-medium">
+                      <span className="flex items-center gap-1.5 text-[0.9375rem] font-medium leading-snug">
                         <span className={cn("truncate", doneIds.has(i.event.id) && "line-through decoration-text")}>{i.title}</span>
                         {i.isRecurring && <Repeat className="size-3 shrink-0 text-text-3" />}
                       </span>

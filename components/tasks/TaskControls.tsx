@@ -1,11 +1,9 @@
 "use client";
-import { LayoutGrid, List, ListFilter, Search, X } from "lucide-react";
+import { ListFilter, Search, X } from "lucide-react";
 import { useRef, useEffect } from "react";
 import { Button, IconButton } from "@/components/ui/Button";
-import { Segmented } from "@/components/ui/Controls";
 import { Dropdown } from "@/components/ui/Popover";
 import { cn } from "@/lib/cn";
-import { usePrefs } from "@/lib/store/prefs";
 import { NO_FILTERS, useUI, type TaskFilters } from "@/lib/store/ui";
 import type { Priority } from "@/lib/types";
 import { PRIORITY_META } from "./TaskCard";
@@ -102,23 +100,6 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
     >
       {children}
     </button>
-  );
-}
-
-export function LayoutToggle() {
-  const layout = usePrefs((p) => p.taskLayout);
-  const set = usePrefs((p) => p.set);
-  return (
-    <Segmented
-      size="sm"
-      label="Layout"
-      value={layout}
-      onChange={(v) => set({ taskLayout: v })}
-      options={[
-        { value: "grid", label: <LayoutGrid className="size-4" />, title: "Card grid" },
-        { value: "list", label: <List className="size-4" />, title: "Single column" },
-      ]}
-    />
   );
 }
 
