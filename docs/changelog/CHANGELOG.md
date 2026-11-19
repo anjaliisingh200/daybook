@@ -9,6 +9,25 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-19 — Timeline day view (branch `day-view-timeline`, not on main)
+
+**Asked for:** the day view in the style of the reference image (a timeline with a rail, big times and tall cards), with every hour still shown. Kept on its own branch so it can be dropped.
+
+**What changed (Calendar → Day only; week, month and schedule are untouched)**
+- A rail down the left with a big label for every hour (`07:00` with `PM` underneath) and a small square marker. Hours with events are dark; empty hours are faint.
+- Each event is a tall outlined card in the hour it starts: a square in the calendar colour, the title, the description (two lines), and tags for the time range, the duration, the calendar and the location. An "Open" link on the right.
+- The event happening right now has a thick border in its calendar colour and a "Happening now" label. Completed events show the struck-through title with a green "✓ DONE".
+- A red "Now · 7:44 PM" pill sits on a line at the current minute, between the cards.
+- Clicking an empty hour opens a new event at that hour. All-day events sit in an "All day" row at the top.
+- Not in this version: dragging to create or move events in the day view.
+
+**Files:** `components/calendar/DayTimeline.tsx` (new), `components/calendar/CalendarScreen.tsx`
+
+**Screenshots** (`screenshots/2026-11-19-day-timeline/`)
+![Day timeline](screenshots/2026-11-19-day-timeline/day-timeline-a.png)
+
+---
+
 ## 2026-11-19 — One header, no sidebar, solid event cards, tidier day views
 
 **Asked for:** put My calendars in the header and remove the left sidebar; event cards in the plain calendar colour, not light tints; search and Create in the same header; the Tasks tab with the same single header; Tasks day view stacked one under the other; a maximum width for the day view on both tabs; no Completed section and no "Thu 19" block in the day view.

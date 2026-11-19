@@ -7,6 +7,7 @@ import { useHotkeys, useToday, useTz } from "@/lib/hooks";
 import { Skeleton } from "@/components/ui/Controls";
 import { CalendarToolbar } from "./Toolbar";
 import { TimeGrid } from "./TimeGrid";
+import { DayTimeline } from "./DayTimeline";
 import { MonthView } from "./MonthView";
 import { ScheduleView } from "./ScheduleView";
 import { stepAnchor, useCalView, useVisible } from "./useCalendar";
@@ -52,6 +53,8 @@ export function CalendarScreen() {
             <MonthView anchor={anchor} visible={visible} />
           ) : view === "schedule" ? (
             <ScheduleView anchor={anchor} visible={visible} />
+          ) : view === "day" ? (
+            <DayTimeline anchor={anchor} />
           ) : (
             <TimeGrid view={view} anchor={anchor} visible={visible} />
           )}
