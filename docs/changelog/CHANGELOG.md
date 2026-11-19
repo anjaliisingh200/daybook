@@ -9,6 +9,32 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-19 — Login, card moves, and clean-up
+
+**Asked for:** a login; a simple home page with only a hero and a Log in button that opens a log in / sign up popup, then opens the app; keyboard and touch ways to move task cards; strikethrough on calendar events whose task is complete; no overdue marks in the Tasks tab; fix the duplicate "Design stand-up" tasks.
+
+**What changed**
+- Home page is one hero with a Log in button. The popup has Log in and Sign up; signing in opens the Calendar. New accounts start empty.
+- Sign-in uses Supabase. Tasks and events save to the signed-in account (`supabase/schema.sql`, row-level security). Without Supabase keys the app still runs on local sample data with no login. Settings → Account has Sign out.
+- Alt+Left / Alt+Right moves a focused task card one day and keeps focus. On touch screens, press and hold a card, then drag it to another day.
+- Calendar event titles are struck through when the linked task is completed (week, all-day row, month, schedule).
+- Overdue marks removed from task cards, day counts and month dots. The Overdue filter and section remain.
+- Duplicate tasks fixed: a load or sync that overlapped a write could drop and re-create tasks. Snapshots are now refetched if a write overlapped them.
+- Also in this batch: light only (dark mode removed), colours from tokens only, repeating tasks create their occurrences a month ahead, tasks need a date, time is optional with no default, the "All day" toggle and "Everything else" section removed.
+
+**Not done yet:** Supabase sign-in has not been tried against a real project. Google Calendar and Tasks sync is still to come.
+
+**Files:** `app/page.tsx`, `components/home/*`, `proxy.ts`, `lib/supabase/*`, `lib/data/supabase/supabaseRepository.ts`, `lib/store/data.ts`, `components/tasks/TasksScreen.tsx`, `components/tasks/TaskCard.tsx`, `components/calendar/*`, `components/settings/SettingsDialog.tsx`, `supabase/schema.sql`
+
+**Screenshots** (`screenshots/2026-11-19-login-and-card-moves/`)
+![Home](screenshots/2026-11-19-login-and-card-moves/hero.png)
+![Log in popup](screenshots/2026-11-19-login-and-card-moves/popup-login.png)
+![Sign up popup](screenshots/2026-11-19-login-and-card-moves/popup-signup.png)
+![Struck-through event](screenshots/2026-11-19-login-and-card-moves/strike.png)
+![Tasks after a card move](screenshots/2026-11-19-login-and-card-moves/moves.png)
+
+---
+
 ## 2026-11-19 — Every calendar event has a task
 
 **Asked for:** every event should have a task (for example "Design stand-up" appears in the Tasks view); linked both ways; recurring events get one repeating task; all-day events get a task with no time; deleting the event deletes its task after confirmation; completing the task keeps the event.

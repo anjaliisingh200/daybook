@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useState, type ReactNode } from "react";
+import { supabaseBrowser } from "@/lib/supabase/browser";
 import { Bell, CalendarDays, CheckCircle2, Globe, Keyboard, Palette, RefreshCw, UserRound, X } from "lucide-react";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
@@ -487,6 +488,13 @@ function Account() {
   const fmt = useFmt();
   const when = syncedAt ? `${fmt.date(new Date(syncedAt).toISOString().slice(0, 10))}, ${fmt.time(syncedAt)}` : "Never";
 
+  const signOut = async () => {
+    await supabaseBrowser().auth.signOut();
+    // A full page load, so the signed-out app starts with no data in memory.
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.assign(`${window.location.origin}/`);
+  };
+
   return (
     <>
       <Title sub="Where your data comes from and whether it is in step.">Account &amp; sync</Title>
@@ -496,7 +504,7 @@ function Account() {
           <div className="flex size-10 items-center justify-center rounded-full bg-accent text-base font-semibold text-on-accent">A</div>
           <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold">Anjali</div>
-            <div className="text-[0.8125rem] text-text-2">{kind === "mock" ? "Sample data. No Google account connected yet." : "Connected to Google"}</div>
+            <div className="text-[0.8125rem] text-text-2">{kind === "mock" ? "Sample data. No Google account connected yet." : kind === "supabase" ? "Signed in. Your data is saved to your account." : "Connected to Google"}</div>
           </div>
           <Badge tone={kind === "mock" ? "muted" : "accent"}>{kind === "mock" ? "Demo mode" : "Connected"}</Badge>
         </div>
@@ -504,6 +512,11 @@ function Account() {
           <Button variant="primary" size="sm" onClick={() => toast("Google sign-in is the next build phase. Everything here uses sample data.")}>
             Connect Google account
           </Button>
+          {kind === "supabase" && (
+            <Button size="sm" variant="secondary" onClick={() => void signOut()}>
+              Sign out
+            </Button>
+          )}
           <Button size="sm" variant="secondary" icon={<RefreshCw className={cn("size-3.5", syncState === "syncing" && "animate-spin")} />} onClick={() => void sync()} disabled={syncState === "syncing"}>
             Sync now
           </Button>

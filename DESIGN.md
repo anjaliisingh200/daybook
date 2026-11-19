@@ -9,21 +9,23 @@ Status: **implemented** (Phase 3). Tokens live in `app/globals.css`; components 
 
 ## Tokens
 
-| Role | Light | Dark |
-|---|---|---|
-| `--bg` page | `#ffffff` | `#171512` |
-| `--surface` card/panel | `#ffffff` | `#211e19` |
-| `--surface-2` sunken/hover | `#f6f4ef` | `#2a2620` |
-| `--raised` active pill | `#ffffff` | `#3d372e` |
-| `--border` | `#e8e4da` | `#35302a` |
-| `--text` | `#26231f` | `#ece6d9` |
-| `--text-2` / `--text-3` | `#5f584d` / `#8f8777` | `#b3ab9b` / `#837b6c` |
-| `--danger` (terracotta) | `#b2513a` | `#d98a72` |
-| Accent (olive default) | `#646b3f` | `#a3ac72` |
-| `--semantic-primary` button fill | `#1163ff` | `#1163ff` |
-| `--semantic-destructive` destructive button fill (white text) | `#b2513a` | `#b84f37` |
+There is no dark mode. Every colour decision lives in a token in `app/globals.css`.
 
-- **Accents** (user choice): olive, terracotta, taupe, charcoal, plum, ochre, each with a light and dark value (`lib/colors.ts`).
+| Role | Value |
+|---|---|
+| `--bg` page | `#ffffff` |
+| `--surface` card/panel | `#ffffff` |
+| `--surface-2` sunken/hover | `#f6f4ef` |
+| `--raised` active pill | `#ffffff` |
+| `--border` | `#e8e4da` |
+| `--text` | `#26231f` |
+| `--text-2` / `--text-3` | `#5f584d` / `#766f63` |
+| `--danger` (terracotta) | `#b2513a` |
+| Accent (olive default) | `#646b3f` |
+| `--semantic-primary` button fill | `#1163ff` |
+| `--semantic-destructive` destructive button fill (white text) | `#b2513a` |
+
+- **Accents** (user choice): olive, terracotta, taupe, charcoal, plum, ochre, each with a base and a hover value (`lib/colors.ts`).
 - **Calendar/list colours**: terracotta, clay, ochre, olive, sage, moss, rose, plum, taupe, charcoal. Events render as a soft tint of their colour, so text stays charcoal and legible.
 - **Priority**: high = terracotta, medium = ochre, low = muted grey; always paired with an icon, never colour alone.
 - **Type**: Instrument Sans (UI) and Instrument Serif (dates and headings: month titles, date numbers, empty states).

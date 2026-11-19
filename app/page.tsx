@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { Hero } from "@/components/home/Hero";
 
 export default function Home() {
-  redirect("/calendar");
+  return <Hero />;
 }

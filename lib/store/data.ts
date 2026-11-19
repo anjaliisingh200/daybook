@@ -1,4 +1,6 @@
 "use client";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { SupabaseRepository } from "@/lib/data/supabase/supabaseRepository";
 import { create } from "zustand";
 import type { CalendarEvent, CalendarInfo, NewTaskInput, Snapshot, Task, TaskList, TaskPatch } from "@/lib/types";
 import type { NewEventInput, Repository } from "@/lib/data/repository";
@@ -24,7 +26,7 @@ import { usePrefs } from "./prefs";
  */
 
 // Swap this one line for `new GoogleRepository()` in the integration phase.
-export const repo: Repository = new MockRepository();
+export const repo: Repository = isSupabaseConfigured ? new SupabaseRepository() : new MockRepository();
 
 export type SyncState = "idle" | "syncing" | "error" | "offline";
 

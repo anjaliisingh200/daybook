@@ -11,7 +11,7 @@ import type { CalendarEvent, NewTaskInput, Snapshot, Task, TaskPatch } from "@/l
 export type NewEventInput = Omit<CalendarEvent, "id" | "created" | "updated">;
 
 export interface Repository {
-  readonly kind: "mock" | "google";
+  readonly kind: "mock" | "supabase" | "google";
 
   /** First load. */
   load(): Promise<Snapshot>;

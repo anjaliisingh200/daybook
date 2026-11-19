@@ -21,6 +21,15 @@ npm run shots -- <name>   # screenshots for the change log (dev server must be r
 
 No environment variables are needed yet. All data is sample data, kept in your browser's localStorage (Settings → Account & sync → Reset sample data restores it).
 
+## Sign-in and saving your data (Supabase)
+
+Without any setup the app runs on local sample data with no login. To turn on sign-in and save data to your own account:
+
+1. Create a free project at supabase.com.
+2. In the project, open **SQL Editor**, paste the contents of `supabase/schema.sql`, and run it. This creates the tables and makes each user see only their own rows.
+3. Copy `.env.local.example` to `.env.local` and fill in the project URL and anon key from **Project Settings → API**. Never commit `.env.local`.
+4. Restart `npm run dev`. The home page now shows **Log in**; new accounts start empty.
+
 ## What works today
 
 **Calendar**: Day, Week (3 days on phones), Month and Schedule views · mini month · multiple calendars with show/hide and colour (this app only) · click or drag a time slot to create · drag an event to move it · event popover · full editor (all-day, repeat, location, description, colour) · recurring events (edit/delete *this event* or *all events*) · search · time zone aware · keyboard shortcuts.
