@@ -11,14 +11,14 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ## 2026-11-19 — Timeline day view (branch `day-view-timeline`, not on main)
 
-**Asked for:** the day view in the style of the reference image (a timeline with a rail, big times and tall cards), with every hour still shown. Kept on its own branch so it can be dropped.
+**Asked for:** the day view in the style of the reference image (a timeline with a rail, big times and outlined cards), with every hour still shown. Kept on its own branch so it can be dropped. Follow-ups: no "Done" label or check mark, the UI font for the times, equal hour spacing, no Open button, a blue Now tag with the time under it, before the rail.
 
 **What changed (Calendar → Day only; week, month and schedule are untouched)**
-- A rail down the left with a big label for every hour (`07:00` with `PM` underneath) and a small square marker. Hours with events are dark; empty hours are faint.
-- Each event is a tall outlined card in the hour it starts: a square in the calendar colour, the title, the description (two lines), and tags for the time range, the duration, the calendar and the location. An "Open" link on the right.
-- The event happening right now has a thick border in its calendar colour and a "Happening now" label. Completed events show the struck-through title with a green "✓ DONE".
-- A red "Now · 7:44 PM" pill sits on a line at the current minute, between the cards.
-- Clicking an empty hour opens a new event at that hour. All-day events sit in an "All day" row at the top.
+- A rail with a label for every hour (`07:00`, `PM` underneath) in the normal UI font and weight, with a small square marker. Every hour is exactly the same height, with or without events.
+- Events are outlined cards placed at their real time inside the hour, sized by duration. Short events show one line (title and time); longer ones show the title, the description when there is room, and tags for time range, duration, calendar and location. Overlapping events sit side by side.
+- The event happening now has a thick border in its calendar colour. Completed events keep the struck-through title, with no label.
+- A blue "Now" tag (the primary colour) with the time stacked under it sits to the left of the rail, with a short line to a dot on the rail.
+- Clicking an empty spot opens a new event at that time (30-minute steps). All-day events sit in an "All day" row at the top.
 - Not in this version: dragging to create or move events in the day view.
 
 **Files:** `components/calendar/DayTimeline.tsx` (new), `components/calendar/CalendarScreen.tsx`
