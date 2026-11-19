@@ -1,0 +1,27 @@
+/** Quick create: duration choices, default 30 min, and the popover stays open when the calendar changes. Needs the dev server on :3000. */
+import { chromium } from "playwright-core";
+const b = await chromium.launch({ channel: "msedge", headless: true });
+const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+await p.goto("http://localhost:3000/calendar?qc=" + Date.now(), { waitUntil: "load", timeout: 120000 });
+await p.waitForTimeout(8000);
+const grid = p.locator("[data-day]").nth(3);
+const box = await grid.boundingBox();
+await p.mouse.move(box.x + 30, box.y + box.height * 0.9);
+await p.mouse.down();
+await p.mouse.up();
+await p.waitForTimeout(800);
+const pop = () => p.evaluate(() => { const d = [...document.querySelectorAll("[data-layer]")].find((x) => x.querySelector('input[aria-label="Event title"]')); return d ? { open: true, summary: d.innerText.split("\n").slice(0, 4).join(" | ") } : { open: false }; });
+const first = await pop();
+await p.locator('[data-layer] input[aria-label="Event title"]').fill("Quick test");
+await p.locator('[data-layer] button', { hasText: "1 hr" }).click();
+await p.waitForTimeout(300);
+const afterDuration = await pop();
+await p.locator('[data-layer] button[aria-haspopup="true"]').first().click().catch(() => {});
+await p.waitForTimeout(300);
+const opt = p.locator('[role="listbox"] [role="option"]').nth(1);
+if (await opt.count()) await opt.click();
+await p.waitForTimeout(400);
+const afterCalendar = await pop();
+const title = await p.locator('[data-layer] input[aria-label="Event title"]').inputValue().catch(() => null);
+console.log(JSON.stringify({ first, afterDuration, afterCalendar, titleKept: title }));
+await b.close();

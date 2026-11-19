@@ -1,0 +1,304 @@
+@import "tailwindcss";
+
+/* `dark:` follows the app's theme setting (data-theme), not just the OS. */
+
+/* ──────────────────────────────────────────────────────────────
+   Daybook design tokens
+   Warm neutrals · charcoal type · restrained accent · NO BLUE.
+   Every colour in the product comes from a variable below.
+   ────────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: light;
+
+  /* surfaces */
+  --bg: #ffffff; /* white page */
+  --surface: #ffffff; /* white cards, panels */
+  --surface-2: #f6f4ef; /* sunken / hover (soft warm grey) */
+  --surface-3: #ece8df; /* pressed */
+  --raised: #ffffff; /* active pill on a sunken track */
+  --overlay: rgb(37 34 30 / 0.38);
+
+  /* lines */
+  --border: #e8e4da;
+  --border-strong: #d3cdbf;
+
+  /* text */
+  --text: #26231f;
+  --text-2: #5f584d;
+  --text-3: #766f63; /* muted text: 4.9:1 on white */
+  --text-on-accent: #fbf8f1;
+  --on-solid: #ffffff; /* text and icons on any solid fill */
+  /* toasts and tooltips */
+  --tooltip-bg: #2b2823;
+  --tooltip-text: #f4efe4;
+  --tooltip-key: rgb(255 255 255 / 0.15);
+  --toast-danger: #e8a08b;
+  --toast-accent: #d8e0a8;
+  --toast-hover: rgb(255 255 255 / 0.1);
+
+  /* accent (set by prefs; olive by default) */
+  --accent: #646b3f;
+  --accent-hover: #555b35;
+  --accent-soft: color-mix(in srgb, var(--accent) 13%, var(--surface));
+  --accent-line: color-mix(in srgb, var(--accent) 38%, var(--surface));
+
+  /* primary button: the one blue in the product, chosen by the designer */
+  --semantic-primary: #1163ff;
+  --semantic-primary-hover: #0c52d9;
+  --semantic-on-primary: #ffffff;
+
+  /* date highlights (today, selected day) follow the primary; retune here to change them alone */
+  --semantic-date-highlight: var(--semantic-primary);
+  --semantic-date-highlight-text: var(--semantic-on-primary);
+
+  /* meaning */
+  --danger: #b2513a; /* muted terracotta: overdue, destructive */
+  --danger-soft: color-mix(in srgb, var(--danger) 11%, var(--surface));
+  --semantic-destructive: #b2513a; /* destructive button fill, always paired with white text */
+  --warn: #a27a2c;
+  --ok: #6b7a48;
+  --success: #2e8b57; /* toggles and success states */
+
+  /* priority (never blue) */
+  --prio-high: #b2513a;
+  --prio-medium: #a27a2c;
+  --prio-low: #8f8777;
+
+  /* elevation */
+  --shadow-sm: 0 1px 2px rgb(60 48 30 / 0.06);
+  --shadow-md: 0 4px 14px -2px rgb(60 48 30 / 0.12), 0 1px 3px rgb(60 48 30 / 0.06);
+  --shadow-lg: 0 18px 44px -8px rgb(60 48 30 / 0.22), 0 4px 10px rgb(60 48 30 / 0.08);
+
+  /* density: scales key heights/paddings */
+  --hour-h: 56px;
+  --card-pad: 14px;
+  --row-pad: 10px;
+}
+
+
+:root[data-density="compact"] {
+  --hour-h: 44px;
+  --card-pad: 11px;
+  --row-pad: 7px;
+}
+:root[data-density="spacious"] {
+  --hour-h: 68px;
+  --card-pad: 18px;
+  --row-pad: 13px;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-raised: var(--raised);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-on-accent: var(--text-on-accent);
+  --color-danger: var(--danger);
+  --color-on-solid: var(--on-solid);
+  --color-tooltip: var(--tooltip-bg);
+  --color-tooltip-text: var(--tooltip-text);
+  --color-tooltip-key: var(--tooltip-key);
+  --color-toast-danger: var(--toast-danger);
+  --color-toast-accent: var(--toast-accent);
+  --color-toast-hover: var(--toast-hover);
+  --color-danger-soft: var(--danger-soft);
+  --color-semantic-destructive: var(--semantic-destructive);
+  --color-semantic-primary: var(--semantic-primary);
+  --color-semantic-primary-hover: var(--semantic-primary-hover);
+  --color-semantic-on-primary: var(--semantic-on-primary);
+  --color-semantic-date-highlight: var(--semantic-date-highlight);
+  --color-semantic-date-highlight-text: var(--semantic-date-highlight-text);
+  --color-warn: var(--warn);
+  --color-ok: var(--ok);
+  --color-success: var(--success);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --font-sans: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), ui-serif, Georgia, serif;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+}
+
+html {
+  font-size: 15px;
+  -webkit-text-size-adjust: 100%;
+}
+html[data-fontsize="small"] { font-size: 14px; }
+html[data-fontsize="large"] { font-size: 16.5px; }
+
+html,
+body {
+  height: 100%;
+  /* No browser back/forward swipe: a sideways touch drag on a task card must not navigate. */
+  overscroll-behavior-x: none;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+}
+
+/* No blue, anywhere. Override every browser default that leaks blue. */
+::selection {
+  background: color-mix(in srgb, var(--accent) 26%, transparent);
+  color: inherit;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* Text fields draw their own focus treatment (border + soft ring). */
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
+}
+input,
+textarea,
+select,
+button {
+  accent-color: var(--accent);
+  font: inherit;
+}
+/* Text colour for form fields only. Buttons take their colour from their variant classes. */
+input,
+textarea,
+select {
+  color: inherit;
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-3);
+}
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 40px var(--surface) inset;
+  -webkit-text-fill-color: var(--text);
+}
+button {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Quiet scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 8px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.font-display {
+  font-family: var(--font-display), ui-serif, Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── micro-interactions ── */
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(4px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes sheet-in {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(18px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-18px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes shimmer {
+  0% { background-position: -300px 0; }
+  100% { background-position: 300px 0; }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes check-pop {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+@keyframes flash-ring {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); }
+  100% { box-shadow: 0 0 0 10px transparent; }
+}
+
+.anim-pop { animation: pop-in 0.14s cubic-bezier(0.2, 0.8, 0.3, 1); }
+.anim-fade { animation: fade-in 0.16s ease-out; }
+.anim-sheet { animation: sheet-in 0.2s cubic-bezier(0.2, 0.8, 0.3, 1); }
+.anim-left { animation: slide-in-left 0.2s cubic-bezier(0.2, 0.8, 0.3, 1); }
+.anim-right { animation: slide-in-right 0.2s cubic-bezier(0.2, 0.8, 0.3, 1); }
+.anim-toast { animation: toast-in 0.2s cubic-bezier(0.2, 0.8, 0.3, 1); }
+.anim-check { animation: check-pop 0.28s cubic-bezier(0.3, 1.4, 0.5, 1); }
+.anim-flash { animation: flash-ring 0.9s ease-out; }
+
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 0%, var(--surface-3) 50%, var(--surface-2) 100%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: 8px;
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Safe areas for Android/iOS browsers */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }

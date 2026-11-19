@@ -1,0 +1,21 @@
+/** Creates a task with a time and checks its calendar event appears. Needs the dev server on :3000. */
+import { chromium } from "playwright-core";
+const b = await chromium.launch({ channel: "msedge", headless: true });
+const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+const errs = []; p.on("pageerror", (e) => errs.push(String(e).slice(0, 200)));
+const title = "Standup with design team " + Date.now().toString().slice(-4);
+await p.goto("http://localhost:3000/tasks?l=" + Date.now(), { waitUntil: "load", timeout: 120000 });
+await p.waitForTimeout(6000);
+await p.getByRole("button", { name: "Add task" }).first().click();
+await p.waitForTimeout(800);
+const a = p.locator('aside[aria-label="New task"]');
+await a.getByLabel("Title").fill(title);
+await p.waitForTimeout(300);
+await a.getByRole("button", { name: "Save" }).click();
+await p.waitForTimeout(1500);
+await p.goto("http://localhost:3000/calendar?l=" + Date.now(), { waitUntil: "load", timeout: 120000 });
+await p.waitForTimeout(6000);
+const onCalendar = await p.getByText(title).count();
+await p.screenshot({ path: "docs/changelog/screenshots/2026-11-19-task-time/calendar-after-task-time.png" });
+console.log(JSON.stringify({ eventOnCalendar: onCalendar, errors: errs }));
+await b.close();
