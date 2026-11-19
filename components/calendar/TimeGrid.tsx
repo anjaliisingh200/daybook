@@ -49,6 +49,7 @@ export function TimeGrid({ view, anchor, visible }: { view: CalView; anchor: Dat
   const setAnchor = useUI((s) => s.setCalAnchor);
   const setView = useUI((s) => s.setCalView);
   const defaultDuration = usePrefs((p) => p.defaultDuration);
+  const h24 = usePrefs((p) => p.timeFormat) === "24";
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const colsRef = useRef<HTMLDivElement>(null);
@@ -183,6 +184,8 @@ export function TimeGrid({ view, anchor, visible }: { view: CalView; anchor: Dat
   const visibleLanes = showAllBanners ? lanes.count : Math.min(lanes.count, 3);
 
   const todayIdx = days.indexOf(today);
+  /** Hour labels in the timeline style: "07:00" with "PM" underneath. */
+  const hourLabel = (h: number) => (h24 ? { big: `${String(h).padStart(2, "0")}:00`, small: "" } : { big: `${String(h % 12 || 12).padStart(2, "0")}:00`, small: h < 12 ? "AM" : "PM" });
   const nowMin = zoned(now, tz).minutes;
   const pending = quick && !quick.draft.allDay ? days.indexOf(quick.draft.startDate) : -1;
 
@@ -229,7 +232,7 @@ export function TimeGrid({ view, anchor, visible }: { view: CalView; anchor: Dat
                   key={inst.key}
                   data-event
                   onClick={(ev) => openPopover(inst, toRect(ev.currentTarget.getBoundingClientRect()))}
-                  className={cn("z-[1] mx-[3px] flex min-w-0 items-center gap-1 truncate rounded-[5px] px-1.5 text-left text-xs font-medium", evSurface)}
+                  className={cn("z-[1] mx-[3px] flex min-w-0 items-center gap-1 truncate rounded-sm px-1.5 text-left text-xs font-medium", evSurface)}
                   style={{ ...evVars(colorOf(inst)), gridColumn: `${s + 1} / ${e + 2}`, gridRow: lane + 1 }}
                   title={inst.title}
                 >
@@ -253,11 +256,23 @@ export function TimeGrid({ view, anchor, visible }: { view: CalView; anchor: Dat
         </div>
         <div className="relative flex select-none" style={{ height: "calc(var(--hour-h) * 24)" }}>
           <div className="sticky left-0 z-10 w-12 shrink-0 bg-bg md:w-16" aria-hidden>
+            <div className="absolute inset-y-0 right-0 w-px bg-border" />
             {Array.from({ length: 23 }, (_, i) => i + 1).map((h) => (
-              <span key={h} className="tnum absolute right-2 -translate-y-1/2 text-[0.6875rem] text-text-3 md:right-3" style={{ top: `calc(var(--hour-h) * ${h})` }}>
-                {fmt.minutes(h * 60, { compact: true })}
+              <span key={h} className="absolute right-2 -translate-y-1 bg-bg pl-0.5 text-right text-text-2 md:right-3" style={{ top: `calc(var(--hour-h) * ${h})` }}>
+                <span className="tnum block text-[0.8125rem] font-normal leading-none md:text-base">{hourLabel(h).big}</span>
+                {hourLabel(h).small && <span className="mt-0.5 block text-[0.6875rem] leading-none md:text-xs">{hourLabel(h).small}</span>}
               </span>
             ))}
+            {Array.from({ length: 23 }, (_, i) => i + 1).map((h) => (
+              <span key={`m${h}`} className="absolute -right-[3px] size-[7px] -translate-y-1/2 bg-border" style={{ top: `calc(var(--hour-h) * ${h})` }} />
+            ))}
+            {todayIdx >= 0 && (
+              <div className="absolute right-1.5 z-[2] -translate-y-1/2 rounded-sm bg-semantic-primary px-1.5 py-1 leading-tight text-semantic-on-primary" style={{ top: `calc(var(--hour-h) * ${nowMin / 60})` }}>
+                <div className="text-[0.625rem] opacity-90">Now</div>
+                <div className="tnum text-xs font-medium">{fmt.time(now)}</div>
+                <span className="absolute -right-1.5 top-1/2 -translate-y-1/2 border-y-[5px] border-l-[5px] border-y-transparent border-l-semantic-primary" />
+              </div>
+            )}
           </div>
 
           <div
@@ -305,8 +320,8 @@ export function TimeGrid({ view, anchor, visible }: { view: CalView; anchor: Dat
                 {/* now line */}
                 {di === todayIdx && (
                   <div className="pointer-events-none absolute inset-x-0 z-10" style={{ top: `calc(var(--hour-h) * ${nowMin / 60})` }}>
-                    <div className="relative h-px bg-danger">
-                      <span className="absolute -left-1 -top-[4.5px] size-2.5 rounded-full bg-danger" />
+                    <div className="relative h-px bg-semantic-primary">
+                      <span className="absolute -left-1 -top-[4.5px] size-2.5 rounded-full bg-semantic-primary" />
                     </div>
                   </div>
                 )}
@@ -347,7 +362,7 @@ function EventBlock({
       onPointerDown={onPointerDown}
       onClick={(e) => onClick(e.currentTarget)}
       className={cn(
-        "absolute overflow-hidden rounded-[7px] px-2 text-left text-[0.8125rem] leading-tight outline-none transition-[background,opacity,box-shadow] focus-visible:ring-2 focus-visible:ring-accent",
+        "absolute overflow-hidden rounded-sm px-2 text-left text-[0.8125rem] leading-tight outline-none transition-[background,opacity,box-shadow] focus-visible:ring-2 focus-visible:ring-accent",
         h < 40 ? "flex items-center py-0" : "py-1",
         evSurface,
         dim && "opacity-35",
@@ -384,7 +399,7 @@ function EventBlock({
 function GhostBlock({ start, dur, label, color, title, solid }: { start: number; dur: number; label?: string; color?: string; title?: string; solid?: boolean }) {
   return (
     <div
-      className={cn("pointer-events-none absolute inset-x-[2px] z-[5] overflow-hidden rounded-[7px] border border-dashed px-2 py-1 text-xs", solid ? "border-accent bg-accent-soft" : "border-accent bg-accent-soft/80")}
+      className={cn("pointer-events-none absolute inset-x-[2px] z-[5] overflow-hidden rounded-sm border border-dashed px-2 py-1 text-xs", solid ? "border-accent bg-accent-soft" : "border-accent bg-accent-soft/80")}
       style={{ top: `calc(var(--hour-h) * ${start / 60} + 1px)`, height: `calc(var(--hour-h) * ${dur / 60} - 2px)`, ...(color ? { borderColor: color } : {}) }}
     >
       {title && <div className={cn("truncate", evTitle)}>{title}</div>}

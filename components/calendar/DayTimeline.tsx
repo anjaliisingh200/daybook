@@ -81,13 +81,11 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
       >
         {short ? (
           <>
-            <span className="size-2.5 shrink-0 bg-on-solid/90" />
             <span className={cn("min-w-0 truncate", evTitle, done && "line-through")}>{i.title}</span>
             <span className="tnum ml-auto shrink-0 text-xs text-on-solid/90">{i.allDay ? "All day" : fmt.timeRange(i.start, i.end)}</span>
           </>
         ) : (
           <span className="flex items-start gap-3">
-            <span className="mt-1.5 size-3 shrink-0 bg-on-solid/90" />
             <span className="min-w-0 flex-1">
               <span className={cn("block truncate", evTitle, done && "line-through")}>{i.title}</span>
               {mins >= 90 && i.event.description && <span className="mt-1 line-clamp-2 block text-sm leading-relaxed text-on-solid/90">{i.event.description}</span>}
@@ -147,7 +145,7 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
                   className="absolute right-6 z-[1] -translate-y-1 bg-bg pl-1 text-right text-text-2"
                   style={{ top: at(h * 60) }}
                 >
-                  <div className={cn("tnum text-[1.25rem] font-normal leading-none", isToday && Math.floor(nowMin / 60) === h && "text-semantic-primary")}>{label(h).big}</div>
+                  <div className="tnum text-[1.25rem] font-normal leading-none">{label(h).big}</div>
                   {label(h).small && <div className="mt-1 text-sm font-normal leading-none">{label(h).small}</div>}
                 </div>
               ))}
