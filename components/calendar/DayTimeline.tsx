@@ -10,7 +10,7 @@ import { usePrefs } from "@/lib/store/prefs";
 import { toRect, useUI } from "@/lib/store/ui";
 import type { DateKey, EventInstance } from "@/lib/types";
 import { useDoneEventIds, useInstanceColor, useInstances } from "./useCalendar";
-import { evTitle, evVars } from "./TimeGrid";
+import { evSurface, evTitle, evVars } from "./TimeGrid";
 
 const isBanner = (i: EventInstance) => i.allDay || i.startDate !== i.endDate;
 
@@ -60,12 +60,10 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
   };
 
   const hours = Array.from({ length: 24 }, (_, h) => h);
-  const hasEvent = (h: number) => placed.some((p) => p.top < (h + 1) * 60 && p.bottom > h * 60);
 
   /** An event card. `mins` is its height on the timeline; short events show less. */
   const Card = ({ i, mins, className, style }: { i: EventInstance; mins: number; className?: string; style?: React.CSSProperties }) => {
     const done = doneIds.has(i.event.id);
-    const current = isToday && !i.allDay && i.start <= now && now < i.end;
     const duration = i.allDay ? 0 : Math.round((i.end - i.start) / 60000);
     const short = mins < 45;
     return (
@@ -75,28 +73,28 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
         onClick={(e) => openPopover(i, toRect(e.currentTarget.getBoundingClientRect()))}
         style={{ ...evVars(colorOf(i)), ...style }}
         className={cn(
-          "overflow-hidden rounded-sm border bg-surface text-left outline-none transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-accent",
+          "overflow-hidden rounded-sm text-left outline-none focus-visible:ring-2 focus-visible:ring-accent",
+          evSurface,
           short ? "flex items-center gap-2.5 px-3" : "p-3.5",
-          current ? "border-2 border-[var(--ev)]" : "border-border",
           className
         )}
       >
         {short ? (
           <>
-            <span className="size-2.5 shrink-0 bg-[var(--ev)]" />
+            <span className="size-2.5 shrink-0 bg-on-solid/90" />
             <span className={cn("min-w-0 truncate", evTitle, done && "line-through")}>{i.title}</span>
-            <span className="tnum ml-auto shrink-0 text-xs text-text-2">{i.allDay ? "All day" : fmt.timeRange(i.start, i.end)}</span>
+            <span className="tnum ml-auto shrink-0 text-xs text-on-solid/90">{i.allDay ? "All day" : fmt.timeRange(i.start, i.end)}</span>
           </>
         ) : (
           <span className="flex items-start gap-3">
-            <span className="mt-1.5 size-3 shrink-0 bg-[var(--ev)]" />
+            <span className="mt-1.5 size-3 shrink-0 bg-on-solid/90" />
             <span className="min-w-0 flex-1">
               <span className={cn("block truncate", evTitle, done && "line-through")}>{i.title}</span>
-              {mins >= 90 && i.event.description && <span className="mt-1 line-clamp-2 block text-sm leading-relaxed text-text-2">{i.event.description}</span>}
-              <span className="mt-2.5 flex flex-wrap items-center gap-2 text-xs text-text-2">
+              {mins >= 90 && i.event.description && <span className="mt-1 line-clamp-2 block text-sm leading-relaxed text-on-solid/90">{i.event.description}</span>}
+              <span className="mt-2.5 flex flex-wrap items-center gap-2 text-xs text-on-solid">
                 <Chip icon={<Clock className="size-3" />}>{i.allDay ? "All day" : fmt.timeRange(i.start, i.end)}</Chip>
                 {duration > 0 && <Chip>{duration >= 60 && duration % 60 === 0 ? `${duration / 60} hr` : `${duration} mins`}</Chip>}
-                <Chip dot={colorOf(i)}>{calName(i.calendarId)}</Chip>
+                <Chip dot>{calName(i.calendarId)}</Chip>
                 {i.event.location && <Chip icon={<MapPin className="size-3" />}>{i.event.location}</Chip>}
               </span>
             </span>
@@ -146,7 +144,7 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
               {hours.map((h) => (
                 <div
                   key={h}
-                  className={cn("absolute right-6 z-[1] -translate-y-1 bg-bg pl-1 text-right", hasEvent(h) ? "text-text" : "text-text-3")}
+                  className="absolute right-6 z-[1] -translate-y-1 bg-bg pl-1 text-right text-text-2"
                   style={{ top: at(h * 60) }}
                 >
                   <div className={cn("tnum text-[1.25rem] font-normal leading-none", isToday && Math.floor(nowMin / 60) === h && "text-semantic-primary")}>{label(h).big}</div>
@@ -170,7 +168,7 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
           {/* rail */}
           <div className="relative w-px shrink-0 bg-border" aria-hidden>
             {hours.map((h) => (
-              <span key={h} className={cn("absolute left-1/2 size-2 -translate-x-1/2 bg-border", hasEvent(h) && "size-2.5 bg-text-2")} style={{ top: at(h * 60) }} />
+              <span key={h} className="absolute left-1/2 size-2 -translate-x-1/2 bg-border" style={{ top: at(h * 60) }} />
             ))}
           </div>
 
@@ -185,6 +183,9 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
             }}
           >
             <div className="relative h-full">
+              {hours.map((h) => (
+                <div key={h} aria-hidden className="pointer-events-none absolute -left-6 right-0 h-px bg-border" style={{ top: at(h * 60) }} />
+              ))}
               {placed.map(cardAt)}
 
             </div>
@@ -195,11 +196,11 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
   );
 }
 
-function Chip({ children, icon, dot }: { children: ReactNode; icon?: ReactNode; dot?: string }) {
+function Chip({ children, icon, dot }: { children: ReactNode; icon?: ReactNode; dot?: boolean }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-sm bg-surface-2 px-2 py-1">
+    <span className="inline-flex items-center gap-1.5 rounded-sm bg-on-solid/20 px-2 py-1">
       {icon}
-      {dot && <span className="size-2 rounded-full" style={{ background: dot }} />}
+      {dot && <span className="size-2 rounded-full bg-on-solid" />}
       {children}
     </span>
   );

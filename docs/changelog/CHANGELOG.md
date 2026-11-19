@@ -14,9 +14,9 @@ A running record of every change requested, newest first, with screenshots. It l
 **Asked for:** the day view in the style of the reference image (a timeline with a rail, big times and outlined cards), with every hour still shown. Kept on its own branch so it can be dropped. Follow-ups: no "Done" label or check mark, the UI font for the times, equal hour spacing, no Open button, a blue Now tag with the time under it, before the rail.
 
 **What changed (Calendar → Day only; week, month and schedule are untouched)**
-- A rail with a label for every hour (`07:00`, `PM` underneath) in the normal UI font and weight, with a small square marker. Every hour is exactly the same height, with or without events.
-- Events are outlined cards placed at their real time inside the hour, sized by duration. Short events show one line (title and time); longer ones show the title, the description when there is room, and tags for time range, duration, calendar and location. Overlapping events sit side by side.
-- The event happening now has a thick border in its calendar colour. Completed events keep the struck-through title, with no label.
+- A rail with a label for every hour (`07:00`, `PM` underneath) in the normal UI font and weight, with a small square marker and a thin line across the day at every hour. Labels and markers look the same whether or not an hour has events. Every hour is exactly the same height.
+- Events are cards in the same solid calendar colour with white text as in the week view, placed at their real time inside the hour and sized by duration. Short events show one line (title and time); longer ones show the title, the description when there is room, and tags for time range, duration, calendar and location. Overlapping events sit side by side.
+- Completed events keep the struck-through title, with no label.
 - A blue "Now" tag (the primary colour) with the time stacked under it sits to the left of the rail, with a short line to a dot on the rail.
 - Clicking an empty spot opens a new event at that time (30-minute steps). All-day events sit in an "All day" row at the top.
 - Not in this version: dragging to create or move events in the day view.
