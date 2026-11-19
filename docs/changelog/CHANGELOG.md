@@ -9,6 +9,25 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-19 — Better home page
+
+**Asked for:** improve the home page design, keep one hero section only.
+
+**What changed**
+- Still one hero. Headline "Plan the day. Finish the work.", a short line, **Log in** and **Create an account** buttons, and three one-line benefits.
+- A small picture of the real app sits beside it: a week of coloured events with today highlighted, and three task cards, one completed and struck through. On phones it sits below the text and shows three days.
+- **Create an account** opens the popup on the Sign up tab; **Log in** opens it on Log in. A small Log in button is also in the top corner.
+- Colours come from the existing tokens and calendar palette. Without Supabase keys the buttons read "Open Daybook" and go straight to the app.
+
+**Files:** `components/home/Hero.tsx`
+
+**Screenshots** (`screenshots/2026-11-19-home-page/`)
+![Desktop](screenshots/2026-11-19-home-page/home-desktop.png)
+![Phone](screenshots/2026-11-19-home-page/home-mobile.png)
+![Sign up popup](screenshots/2026-11-19-home-page/home-signup.png)
+
+---
+
 ## 2026-11-19 — Login, card moves, and clean-up
 
 **Asked for:** a login; a simple home page with only a hero and a Log in button that opens a log in / sign up popup, then opens the app; keyboard and touch ways to move task cards; strikethrough on calendar events whose task is complete; no overdue marks in the Tasks tab; fix the duplicate "Design stand-up" tasks.
