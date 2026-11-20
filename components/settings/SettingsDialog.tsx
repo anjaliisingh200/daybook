@@ -81,11 +81,10 @@ export function SettingsDialog() {
 
 // ───────────────────────────── building blocks ─────────────────────────────
 
-type Source = "app" | "google-default" | "unsupported";
+type Source = "unsupported";
 
 function Source({ kind }: { kind: Source }) {
-  if (kind === "app") return <Badge tone="muted">This app only</Badge>;
-  if (kind === "google-default") return <Badge tone="muted">Starts from Google · app only</Badge>;
+  void kind;
   return <Badge tone="muted">Not supported by Google</Badge>;
 }
 
@@ -138,7 +137,7 @@ function General() {
   return (
     <>
       <Title sub="How dates, times and language are shown. These are preferences for Daybook; they never change your Google account.">General</Title>
-      <Row label="Language" source="app" desc="Used for month and weekday names. More languages can be added later.">
+      <Row label="Language" desc="Used for month and weekday names. More languages can be added later.">
         <Select
           value={p.language}
           onChange={(v) => p.set({ language: v, region: "custom" })}
@@ -149,7 +148,7 @@ function General() {
           ]}
         />
       </Row>
-      <Row label="Regional preset" source="app" desc="Sets language, week start, date format and time format together. You can still adjust each one.">
+      <Row label="Regional preset" desc="Sets language, week start, date format and time format together. You can still adjust each one.">
         <Select
           value={p.region}
           onChange={(v) => v !== "custom" && p.applyRegion(v)}
@@ -161,10 +160,10 @@ function General() {
           ]}
         />
       </Row>
-      <Row label="Date format" source="google-default" desc="Google Calendar has a date-order setting we can read, but not change.">
+      <Row label="Date format" desc="Google Calendar has a date-order setting we can read, but not change.">
         <Select value={p.dateFormat} onChange={(v) => p.set({ dateFormat: v, region: "custom" })} options={dateOptions} />
       </Row>
-      <Row label="Time format" source="google-default">
+      <Row label="Time format">
         <Segmented
           value={p.timeFormat}
           onChange={(v) => p.set({ timeFormat: v, region: "custom" })}
@@ -174,7 +173,7 @@ function General() {
           ]}
         />
       </Row>
-      <Row label="Time zone" source="google-default" desc="Events are shown in this zone. Recurring events keep their own zone, so they stay correct across daylight saving.">
+      <Row label="Time zone" desc="Events are shown in this zone. Recurring events keep their own zone, so they stay correct across daylight saving.">
         <TimeZonePicker />
       </Row>
       <Note>Google Calendar&apos;s own language, time zone and format settings can be read through the API but not changed. Changing them here affects only how Daybook looks.</Note>
@@ -246,7 +245,7 @@ function CalendarSettings() {
   return (
     <>
       <Title sub="How the calendar looks and behaves in Daybook.">Calendar</Title>
-      <Row label="Default view" source="app">
+      <Row label="Default view">
         <Select
           value={p.defaultView}
           onChange={(v) => {
@@ -261,7 +260,7 @@ function CalendarSettings() {
           ]}
         />
       </Row>
-      <Row label="Week starts on" source="google-default">
+      <Row label="Week starts on">
         <Select
           value={p.weekStart}
           onChange={(v) => p.set({ weekStart: v as 0 | 1 | 6, region: "custom" })}
@@ -272,10 +271,10 @@ function CalendarSettings() {
           ]}
         />
       </Row>
-      <Row label="Show weekends" source="google-default" desc="Hides Saturday and Sunday from the week view.">
+      <Row label="Show weekends" desc="Hides Saturday and Sunday from the week view.">
         <Switch label="Show weekends" checked={!p.hideWeekends} onChange={(v) => p.set({ hideWeekends: !v })} />
       </Row>
-      <Row label="Default event length" source="google-default" desc="Used when you click a time slot or create an event.">
+      <Row label="Default event length" desc="Used when you click a time slot or create an event.">
         <Select
           value={p.defaultDuration}
           onChange={(v) => p.set({ defaultDuration: v })}
@@ -285,7 +284,6 @@ function CalendarSettings() {
       <div className="pt-6">
         <div className="mb-1 flex items-center gap-2">
           <h4 className="text-sm font-semibold">Calendars</h4>
-          <Badge tone="muted">Visibility and colours: this app only</Badge>
         </div>
         <p className="mb-2 text-[0.8125rem] text-text-2">Hiding or recolouring a calendar here does not change it in Google Calendar.</p>
         <ul>
@@ -319,14 +317,14 @@ function TaskSettings() {
   return (
     <>
       <Title sub="How your Google Tasks are organised here.">Tasks</Title>
-      <Row label="Default list" source="app" desc="Where new tasks go unless you choose another list.">
+      <Row label="Default list" desc="Where new tasks go unless you choose another list.">
         <Select
           value={p.defaultListId ?? lists[0]?.id ?? ""}
           onChange={(v) => p.set({ defaultListId: v })}
           options={lists.map((l) => ({ value: l.id, label: l.title, swatch: hexOf(l.color) }))}
         />
       </Row>
-      <Row label="Default sorting" source="app" desc="Applies inside each date group; the groups themselves stay the same.">
+      <Row label="Default sorting" desc="Applies inside each date group; the groups themselves stay the same.">
         <Select
           value={p.taskSort}
           onChange={(v) => p.set({ taskSort: v })}
@@ -338,7 +336,7 @@ function TaskSettings() {
           ]}
         />
       </Row>
-      <Row label="Default layout" source="app">
+      <Row label="Default layout">
         <Segmented
           value={p.taskLayout}
           onChange={(v) => p.set({ taskLayout: v })}
@@ -348,16 +346,16 @@ function TaskSettings() {
           ]}
         />
       </Row>
-      <Row label="Manual order in day columns" source="app" desc="Off: each day lists tasks by priority, then newest. On: a task stays where you drop it.">
+      <Row label="Manual order in day columns" desc="Off: each day lists tasks by priority, then newest. On: a task stays where you drop it.">
         <Switch label="Manual order in day columns" checked={p.manualOrder} onChange={(v) => p.set({ manualOrder: v })} />
       </Row>
-      <Row label="Show completed tasks" source="app" desc="Shows the collapsible Completed section at the bottom.">
+      <Row label="Show completed tasks" desc="Shows the collapsible Completed section at the bottom.">
         <Switch label="Show completed tasks" checked={p.showCompleted} onChange={(v) => p.set({ showCompleted: v })} />
       </Row>
-      <Row label="Show tasks without a due date" source="app">
+      <Row label="Show tasks without a due date">
         <Switch label="Show undated tasks" checked={p.showUndated} onChange={(v) => p.set({ showUndated: v })} />
       </Row>
-      <Row label="Overdue tasks" source="app" desc="How a missed due date looks on a card.">
+      <Row label="Overdue tasks" desc="How a missed due date looks on a card.">
         <Segmented
           value={p.overdueStyle}
           onChange={(v) => p.set({ overdueStyle: v })}
@@ -388,21 +386,21 @@ function Notifications() {
   return (
     <>
       <Title sub="Reminders from Daybook while it is open. Your phone's Google Calendar app keeps sending its own.">Notifications</Title>
-      <Row label="Event reminders" source="app" desc="A heads-up shortly before an event starts. Each event reminds you once, even across tabs and refreshes.">
+      <Row label="Event reminders" desc="A heads-up shortly before an event starts. Each event reminds you once, even across tabs and refreshes.">
         <Switch label="Event reminders" checked={p.remindEvents} onChange={(v) => p.set({ remindEvents: v })} />
       </Row>
-      <Row label="Remind me" source="app">
+      <Row label="Remind me">
         <Select
           value={p.remindLead}
           onChange={(v) => p.set({ remindLead: v })}
           options={[5, 10, 15, 30, 60].map((m) => ({ value: m, label: `${m} minutes before` }))}
         />
       </Row>
-      <Row label="Browser notifications" source="app" desc={perm === "denied" ? "Blocked in your browser settings." : perm === "unsupported" ? "Not supported in this browser." : "Also show a system notification while the app is open."}>
+      <Row label="Browser notifications" desc={perm === "denied" ? "Blocked in your browser settings." : perm === "unsupported" ? "Not supported in this browser." : "Also show a system notification while the app is open."}>
         <Switch label="Browser notifications" checked={p.browserNotifications && perm === "granted"} disabled={perm === "unsupported"} onChange={(v) => void enableBrowser(v)} />
       </Row>
       <Row label="Task reminders" source="unsupported" desc="Google Tasks has no reminders or times, so there is nothing to sync. Daybook can't invent one without adding data that Google doesn't hold." />
-      <Row label="Overdue summary on open" source="app" desc="One quiet message per session when tasks are overdue.">
+      <Row label="Overdue summary on open" desc="One quiet message per session when tasks are overdue.">
         <Switch label="Overdue summary" checked={p.overdueSummary} onChange={(v) => p.set({ overdueSummary: v })} />
       </Row>
       <div className="pt-4">
@@ -427,7 +425,7 @@ function Appearance() {
   return (
     <>
       <Title sub="Colour, density and type size. All of it is private to this device and app.">Appearance</Title>
-      <Row label="Interface density" source="app" desc="Changes spacing in the calendar grid and task cards.">
+      <Row label="Interface density" desc="Changes spacing in the calendar grid and task cards.">
         <Segmented
           value={p.density}
           onChange={(v) => p.set({ density: v })}
@@ -438,7 +436,7 @@ function Appearance() {
           ]}
         />
       </Row>
-      <Row label="Font size" source="app">
+      <Row label="Font size">
         <Segmented
           value={p.fontSize}
           onChange={(v) => p.set({ fontSize: v })}
@@ -449,7 +447,7 @@ function Appearance() {
           ]}
         />
       </Row>
-      <Row label="Accent colour" source="app" desc="Used for buttons, today, selections and focus." stack>
+      <Row label="Accent colour" desc="Used for buttons, today, selections and focus." stack>
         <div className="flex flex-wrap gap-3" role="radiogroup" aria-label="Accent colour">
           {Object.entries(ACCENTS).map(([k, a]) => (
             <button

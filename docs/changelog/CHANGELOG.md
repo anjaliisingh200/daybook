@@ -19,14 +19,16 @@ A running record of every change requested, newest first, with screenshots. It l
 - The two tabs share the choice: pick Day on the Calendar and Tasks opens in Day; change it on Tasks and the Calendar follows. Schedule exists only on the Calendar, so it does not change Tasks.
 - The "Synced … ago" pill is removed from the header. Last sync time and Sync now are in Settings → Account & sync. A failed sync still shows a message.
 - The settings gear is removed. **Settings** is now an item in the user (round letter) menu.
+- Settings no longer shows the "This app only" and "Starts from Google · app only" badges next to each setting, or the "Visibility and colours: this app only" badge on the Calendars list. The one "Not supported by Google" badge is unchanged.
 
-**Files:** `components/shell/ViewSwitch.tsx` (new), `components/shell/Header.tsx`, `components/shell/DateHeader.tsx`, `components/calendar/Toolbar.tsx`, `components/calendar/DayTimeline.tsx`, `components/tasks/TasksScreen.tsx`, `lib/store/ui.ts`; `components/shell/SyncPill.tsx` deleted
+**Files:** `components/shell/ViewSwitch.tsx` (new), `components/shell/Header.tsx`, `components/shell/DateHeader.tsx`, `components/calendar/Toolbar.tsx`, `components/calendar/DayTimeline.tsx`, `components/tasks/TasksScreen.tsx`, `lib/store/ui.ts`; `components/settings/SettingsDialog.tsx`; `components/shell/SyncPill.tsx` deleted
 
 **Screenshots** (`screenshots/2026-11-20-header-view-switch/`)
 ![Calendar header](screenshots/2026-11-20-header-view-switch/header-calendar.png)
 ![Tasks follows Day](screenshots/2026-11-20-header-view-switch/tasks-follows-day.png)
 ![User menu](screenshots/2026-11-20-header-view-switch/user-menu.png)
 ![Day spacing](screenshots/2026-11-20-header-view-switch/day-spacing.png)
+![Settings, Calendar section](screenshots/2026-11-20-header-view-switch/settings-calendar.png)
 
 ---
 
