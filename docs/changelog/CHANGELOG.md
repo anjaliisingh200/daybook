@@ -17,11 +17,12 @@ A running record of every change requested, newest first, with screenshots. It l
 - Day view: event cards now touch the vertical rail (no gap), the hour lines start at the rail, and each hour's square is centred on its line instead of sitting above it.
 - The Day / Week / Month switch stays in the second header row, where it was, on both Calendar and Tasks.
 - The two tabs share the choice: pick Day on the Calendar and Tasks opens in Day; change it on Tasks and the Calendar follows. Schedule exists only on the Calendar, so it does not change Tasks.
+- Week views keep today in view: when today is in the week shown, its column is scrolled on screen (centred when a narrow window cut it off), on both Calendar and Tasks, on load and again after moving to another week and pressing Today. The Calendar also re-scrolls to the current time each time the week changes, not only on load.
 - The "Synced … ago" pill is removed from the header. Last sync time and Sync now are in Settings → Account & sync. A failed sync still shows a message.
 - The settings gear is removed. **Settings** is now an item in the user (round letter) menu.
 - Settings no longer shows the "This app only" and "Starts from Google · app only" badges next to each setting, or the "Visibility and colours: this app only" badge on the Calendars list. The one "Not supported by Google" badge is unchanged.
 
-**Files:** `components/shell/Header.tsx`, `components/calendar/DayTimeline.tsx`, `lib/store/ui.ts`; `components/settings/SettingsDialog.tsx`; `components/shell/SyncPill.tsx` deleted
+**Files:** `lib/scroll.ts` (new), `components/calendar/TimeGrid.tsx`, `components/tasks/TasksScreen.tsx`, `components/shell/Header.tsx`, `components/calendar/DayTimeline.tsx`, `lib/store/ui.ts`; `components/settings/SettingsDialog.tsx`; `components/shell/SyncPill.tsx` deleted
 
 **Screenshots** (`screenshots/2026-11-20-header-view-switch/`)
 ![Calendar header](screenshots/2026-11-20-header-view-switch/header-calendar.png)
@@ -29,6 +30,7 @@ A running record of every change requested, newest first, with screenshots. It l
 ![User menu](screenshots/2026-11-20-header-view-switch/user-menu.png)
 ![Day spacing](screenshots/2026-11-20-header-view-switch/day-spacing.png)
 ![Settings, Calendar section](screenshots/2026-11-20-header-view-switch/settings-calendar.png)
+![Week with today in view at a narrow width](screenshots/2026-11-20-header-view-switch/week-today-in-view.png)
 
 ---
 

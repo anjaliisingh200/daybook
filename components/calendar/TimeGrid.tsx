@@ -11,6 +11,7 @@ import { useData } from "@/lib/store/data";
 import type { CalView, DateKey, EventInstance } from "@/lib/types";
 import { useDoneEventIds, useInstanceColor, useInstances, type Visible } from "./useCalendar";
 import { DayHeaders } from "@/components/shell/DayHeaders";
+import { revealColumn } from "@/lib/scroll";
 import { EventCardBody, eventCardClass, eventTier } from "./EventCard";
 import { evSurface, evTitle, evVars } from "./eventStyle";
 
@@ -76,8 +77,12 @@ export function TimeGrid({ view, anchor, visible }: { view: CalView; anchor: Dat
     const nowMin = zoned(Date.now(), tz).minutes;
     const target = days.includes(today) ? Math.max(0, nowMin / 60 - 2) : 7;
     el.scrollTop = target * hourPx;
+    // when today is in this week, make sure its column is on screen too
+    el.scrollLeft = 0;
+    const col = el.querySelector<HTMLElement>(`[data-day="${today}"]`);
+    if (col) revealColumn(el, col, 64);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [days.length, tz]);
+  }, [days[0], days.length, tz]);
 
   // ── pointer helpers ──
   const pos = (e: { clientX: number; clientY: number }) => {

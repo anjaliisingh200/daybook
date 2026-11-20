@@ -6,6 +6,7 @@ import { EmptyState, Skeleton } from "@/components/ui/Controls";
 import { DateHeader } from "@/components/shell/DateHeader";
 import { weekRangeTitle } from "@/lib/weekTitle";
 import { DayHeaders } from "@/components/shell/DayHeaders";
+import { revealColumn } from "@/lib/scroll";
 import { cn } from "@/lib/cn";
 import { addDays, addMonths, dowOf, parseKey, startOfWeek } from "@/lib/dates";
 import { hexOf } from "@/lib/colors";
@@ -152,6 +153,15 @@ export function TasksScreen() {
       selectedHasTasks: selected ? topTasks.some((t) => t.due === selected) : true,
     };
   }, [tasks, query, filters, today, sort, showUndated, fmt, listMap, selected, days, columnsMode, manualOrder]);
+
+  // keep today's column on screen: on load, and whenever the week changes
+  useEffect(() => {
+    const sc = scrollRef.current;
+    if (status !== "ready" || !columnsMode || !sc) return;
+    sc.scrollLeft = 0;
+    const col = sc.querySelector<HTMLElement>(`[data-day="${today}"]`);
+    if (col) revealColumn(sc, col);
+  }, [status, columnsMode, days, today]);
 
   const scrollToDay = useCallback((d: DateKey) => {
     requestAnimationFrame(() => {
