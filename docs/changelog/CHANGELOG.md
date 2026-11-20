@@ -9,19 +9,19 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
-## 2026-11-20 — View switch in the top header, no Synced pill, Settings in the user menu
+## 2026-11-20 — Tasks follows the Calendar view, no Synced pill, Settings in the user menu
 
-**Asked for:** in the day view, no gap between the cards and the vertical line, and each hour line centred on its square; move the Day / Week / Month switch up to the top header, and make Tasks follow the Calendar's view; remove "Synced"; move the settings icon into the user menu.
+**Asked for:** in the day view, no gap between the cards and the vertical line, and each hour line centred on its square; make Tasks follow the Calendar's view (the Day / Week / Month switch was tried in the top header and put back in its original place); remove "Synced"; move the settings icon into the user menu.
 
 **What changed**
 - Day view: event cards now touch the vertical rail (no gap), the hour lines start at the rail, and each hour's square is centred on its line instead of sitting above it.
-- The Day / Week / Month switch is in the top header, on the right, on both Calendar and Tasks. It is gone from the second header row.
+- The Day / Week / Month switch stays in the second header row, where it was, on both Calendar and Tasks.
 - The two tabs share the choice: pick Day on the Calendar and Tasks opens in Day; change it on Tasks and the Calendar follows. Schedule exists only on the Calendar, so it does not change Tasks.
 - The "Synced … ago" pill is removed from the header. Last sync time and Sync now are in Settings → Account & sync. A failed sync still shows a message.
 - The settings gear is removed. **Settings** is now an item in the user (round letter) menu.
 - Settings no longer shows the "This app only" and "Starts from Google · app only" badges next to each setting, or the "Visibility and colours: this app only" badge on the Calendars list. The one "Not supported by Google" badge is unchanged.
 
-**Files:** `components/shell/ViewSwitch.tsx` (new), `components/shell/Header.tsx`, `components/shell/DateHeader.tsx`, `components/calendar/Toolbar.tsx`, `components/calendar/DayTimeline.tsx`, `components/tasks/TasksScreen.tsx`, `lib/store/ui.ts`; `components/settings/SettingsDialog.tsx`; `components/shell/SyncPill.tsx` deleted
+**Files:** `components/shell/Header.tsx`, `components/calendar/DayTimeline.tsx`, `lib/store/ui.ts`; `components/settings/SettingsDialog.tsx`; `components/shell/SyncPill.tsx` deleted
 
 **Screenshots** (`screenshots/2026-11-20-header-view-switch/`)
 ![Calendar header](screenshots/2026-11-20-header-view-switch/header-calendar.png)

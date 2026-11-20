@@ -7,7 +7,6 @@ import { cn } from "@/lib/cn";
 import { Menu } from "@/components/ui/Menu";
 import { Badge } from "@/components/ui/Controls";
 import { LogoMark } from "./Logo";
-import { ViewSwitch } from "./ViewSwitch";
 import { useUI } from "@/lib/store/ui";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -65,8 +64,7 @@ export function Header() {
         </ul>
       </nav>
 
-      <div className="ml-auto flex items-center gap-2">
-        <ViewSwitch />
+      <div className="ml-auto flex items-center gap-1">
         <Menu
           placement="bottom-end"
           className="w-64"

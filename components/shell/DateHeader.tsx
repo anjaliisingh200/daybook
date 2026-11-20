@@ -2,23 +2,36 @@
 import type { ReactNode } from "react";
 import { CalendarClock, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button, IconButton } from "@/components/ui/Button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+export interface ViewOption<T extends string> {
+  value: T;
+  label: string;
+  hint?: string;
+}
 
 /**
  * The one header both tabs share: Today, previous/next, the date being shown,
- * and any extra controls. The Day / Week / Month switch lives in the top app header.
+ * and the Day / Week / Month switch. Nothing else lives here.
  */
-export function DateHeader({
+export function DateHeader<T extends string>({
   title,
+  view,
+  views,
+  onView,
   onToday,
   onStep,
   stepLabel,
   right,
 }: {
   title: string;
+  view: T;
+  views: ViewOption<T>[];
+  onView: (v: T) => void;
   onToday: () => void;
   onStep: (dir: 1 | -1) => void;
   stepLabel: string;
-  /** Extra controls on the right (Calendar: search, My calendars, Create). */
+  /** Extra controls placed just before the view switch (Calendar: My calendars). */
   right?: ReactNode;
 }) {
   return (
@@ -42,6 +55,21 @@ export function DateHeader({
       </IconButton>
 
       {right}
+
+      <div className="w-[6.75rem] shrink-0 md:w-32">
+        <Select value={view} onValueChange={(v) => onView(v as T)}>
+          <SelectTrigger aria-label="View" className="h-8">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent align="end">
+            {views.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 }

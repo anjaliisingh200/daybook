@@ -23,6 +23,7 @@ export function CalendarToolbar({ view, anchor, visible, go }: { view: CalView; 
   const today = useToday();
   const mobile = useIsMobile();
   const setAnchor = useUI((s) => s.setCalAnchor);
+  const setView = useUI((s) => s.setCalView);
   const openEditor = useUI((s) => s.openEventEditor);
 
   const title = useMemo(() => {
@@ -38,11 +39,21 @@ export function CalendarToolbar({ view, anchor, visible, go }: { view: CalView; 
     return `${fmt.month(a, "short")} ${A.y} – ${fmt.month(b, "short")} ${B.y}`;
   }, [view, anchor, visible, fmt, mobile]);
 
+  const viewOptions = [
+    { value: "day" as const, label: "Day", hint: "D" },
+    { value: "week" as const, label: mobile ? "3 days" : "Week", hint: "W" },
+    { value: "month" as const, label: "Month", hint: "M" },
+    { value: "schedule" as const, label: "Schedule", hint: "A" },
+  ];
+
   const stepLabel = view === "month" ? "month" : view === "day" ? "day" : view === "schedule" ? "week" : mobile ? "3 days" : "week";
 
   return (
     <DateHeader
       title={title}
+      view={view}
+      views={viewOptions}
+      onView={setView}
       onToday={() => setAnchor(today)}
       onStep={go}
       stepLabel={stepLabel}

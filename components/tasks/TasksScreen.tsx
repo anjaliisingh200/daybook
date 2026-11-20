@@ -225,6 +225,13 @@ export function TasksScreen() {
     <div className="flex h-full min-h-0 flex-col">
       <DateHeader
         title={title}
+        view={view}
+        views={[
+          { value: "day", label: "Day" },
+          { value: "week", label: "Week" },
+          { value: "month", label: "Month" },
+        ]}
+        onView={setView}
         onToday={goToday}
         onStep={step}
         stepLabel={view}
