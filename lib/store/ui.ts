@@ -118,7 +118,8 @@ export const useUI = create<UIStore>((set, get) => ({
   calAnchor: null,
   calView: null,
   setCalAnchor: (k) => set({ calAnchor: k }),
-  setCalView: (v) => set({ calView: v }),
+  // Day / Week / Month is one choice for both tabs. Schedule exists only on the Calendar.
+  setCalView: (v) => set(v === "schedule" ? { calView: v } : { calView: v, tasksView: v }),
   calSearch: "",
   setCalSearch: (q) => set({ calSearch: q }),
 
@@ -144,7 +145,7 @@ export const useUI = create<UIStore>((set, get) => ({
   setTasksWeekAnchor: (k) => set({ tasksWeekAnchor: k }),
   setTasksSelected: (k) => set({ tasksSelected: k }),
   tasksView: "week",
-  setTasksView: (v) => set({ tasksView: v }),
+  setTasksView: (v) => set({ tasksView: v, calView: v }),
   taskQuery: "",
   setTaskQuery: (q) => set({ taskQuery: q }),
   taskFilters: NO_FILTERS,

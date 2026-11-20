@@ -9,6 +9,27 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-20 — View switch in the top header, no Synced pill, Settings in the user menu
+
+**Asked for:** in the day view, no gap between the cards and the vertical line, and each hour line centred on its square; move the Day / Week / Month switch up to the top header, and make Tasks follow the Calendar's view; remove "Synced"; move the settings icon into the user menu.
+
+**What changed**
+- Day view: event cards now touch the vertical rail (no gap), the hour lines start at the rail, and each hour's square is centred on its line instead of sitting above it.
+- The Day / Week / Month switch is in the top header, on the right, on both Calendar and Tasks. It is gone from the second header row.
+- The two tabs share the choice: pick Day on the Calendar and Tasks opens in Day; change it on Tasks and the Calendar follows. Schedule exists only on the Calendar, so it does not change Tasks.
+- The "Synced … ago" pill is removed from the header. Last sync time and Sync now are in Settings → Account & sync. A failed sync still shows a message.
+- The settings gear is removed. **Settings** is now an item in the user (round letter) menu.
+
+**Files:** `components/shell/ViewSwitch.tsx` (new), `components/shell/Header.tsx`, `components/shell/DateHeader.tsx`, `components/calendar/Toolbar.tsx`, `components/calendar/DayTimeline.tsx`, `components/tasks/TasksScreen.tsx`, `lib/store/ui.ts`; `components/shell/SyncPill.tsx` deleted
+
+**Screenshots** (`screenshots/2026-11-20-header-view-switch/`)
+![Calendar header](screenshots/2026-11-20-header-view-switch/header-calendar.png)
+![Tasks follows Day](screenshots/2026-11-20-header-view-switch/tasks-follows-day.png)
+![User menu](screenshots/2026-11-20-header-view-switch/user-menu.png)
+![Day spacing](screenshots/2026-11-20-header-view-switch/day-spacing.png)
+
+---
+
 ## 2026-11-19 — Timeline day and week views, blue today in the month view
 
 **Asked for:** the day view in the style of the reference image (a timeline with a rail, big times and outlined cards), with every hour still shown. Kept on its own branch so it can be dropped. Follow-ups: no "Done" label or check mark, the UI font for the times, equal hour spacing, no Open button, a blue Now tag with the time under it, before the rail.

@@ -100,7 +100,7 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
               <div className="tnum text-[1.25rem] font-normal leading-none text-text">All day</div>
             </div>
             <div className="w-px shrink-0 bg-border" />
-            <div className="min-w-0 flex-1 space-y-2 pl-6">
+            <div className="min-w-0 flex-1 space-y-2">
               {banners.map((i) => (
                 <Card key={i.key} i={i} mins={30} />
               ))}
@@ -139,13 +139,13 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
           {/* rail */}
           <div className="relative w-px shrink-0 bg-border" aria-hidden>
             {hours.map((h) => (
-              <span key={h} className="absolute left-1/2 size-2 -translate-x-1/2 bg-border" style={{ top: at(h * 60) }} />
+              <span key={h} className="absolute left-1/2 size-2 -translate-x-1/2 -translate-y-1/2 bg-border" style={{ top: `calc(${at(h * 60)} + 0.5px)` }} />
             ))}
           </div>
 
           {/* events */}
           <div
-            className="relative min-w-0 flex-1 cursor-pointer pl-6"
+            className="relative min-w-0 flex-1 cursor-pointer"
             onClick={(e) => {
               if ((e.target as HTMLElement).closest("[data-event]")) return;
               const r = e.currentTarget.getBoundingClientRect();
@@ -155,7 +155,7 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
           >
             <div className="relative h-full">
               {hours.map((h) => (
-                <div key={h} aria-hidden className="pointer-events-none absolute -left-6 right-0 h-px bg-border" style={{ top: at(h * 60) }} />
+                <div key={h} aria-hidden className="pointer-events-none absolute left-0 right-0 h-px bg-border" style={{ top: at(h * 60) }} />
               ))}
               {placed.map(cardAt)}
 

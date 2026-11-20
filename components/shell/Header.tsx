@@ -4,11 +4,10 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CalendarDays, CheckCircle2, Cloud, Keyboard, LogIn, LogOut, Palette, Settings, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { IconButton } from "@/components/ui/Button";
 import { Menu } from "@/components/ui/Menu";
 import { Badge } from "@/components/ui/Controls";
 import { LogoMark } from "./Logo";
-import { SyncPill } from "./SyncPill";
+import { ViewSwitch } from "./ViewSwitch";
 import { useUI } from "@/lib/store/ui";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -66,11 +65,8 @@ export function Header() {
         </ul>
       </nav>
 
-      <div className="ml-auto flex items-center gap-1">
-        <SyncPill />
-        <IconButton label="Settings" onClick={() => openSettings()}>
-          <Settings className="size-[1.15rem]" />
-        </IconButton>
+      <div className="ml-auto flex items-center gap-2">
+        <ViewSwitch />
         <Menu
           placement="bottom-end"
           className="w-64"
@@ -86,6 +82,7 @@ export function Header() {
               : { label: "Anjali", hint: "Demo mode", icon: <Cloud className="size-4" />, onSelect: () => openSettings("account") },
             { type: "sep" },
             { label: "Connect Google account", icon: <LogIn className="size-4" />, onSelect: () => toast("Google connection arrives in the next phase.") },
+            { label: "Settings", icon: <Settings className="size-4" />, onSelect: () => openSettings() },
             { label: "Account & sync settings", icon: <SlidersHorizontal className="size-4" />, onSelect: () => openSettings("account") },
             { label: "Keyboard shortcuts", icon: <Keyboard className="size-4" />, onSelect: () => openSettings("shortcuts") },
             ...(isSupabaseConfigured ? [{ type: "sep" as const }, { label: "Log out", icon: <LogOut className="size-4" />, onSelect: () => void signOut() }] : []),
