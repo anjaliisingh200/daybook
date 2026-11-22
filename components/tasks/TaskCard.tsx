@@ -26,7 +26,7 @@ export function PriorityMark({ priority, showLabel = true }: { priority?: Priori
   );
 }
 
-export function TaskCard({ task, compact }: { task: Task; list?: TaskList; selectedDay?: string | null; compact?: boolean }) {
+export function TaskCard({ task, compact, hideDue }: { task: Task; list?: TaskList; selectedDay?: string | null; compact?: boolean; hideDue?: boolean }) {
   const fmt = useFmt();
   const today = useToday();
   const toggle = useData((s) => s.toggleTask);
@@ -35,6 +35,9 @@ export function TaskCard({ task, compact }: { task: Task; list?: TaskList; selec
   const done = task.status === "completed";
 
   const dueLabel = task.due ? fmt.relative(task.due, today) : null;
+  /** The date chip, unless the screen already shows the date (a single day on a phone). */
+  const showDue = !!dueLabel && !compact && !hideDue;
+  const showMeta = showDue || !!task.meta.priority;
 
   return (
     <article
@@ -69,8 +72,8 @@ export function TaskCard({ task, compact }: { task: Task; list?: TaskList; selec
         </div>
       </div>
 
-      <div className={cn("mt-auto flex items-center gap-2 text-xs", compact ? "pt-2" : "pt-3")}>
-        {dueLabel && !compact && (
+      {showMeta && <div className={cn("mt-auto flex items-center gap-2 text-xs", compact ? "pt-2" : "pt-3")}>
+        {showDue && (
           <span
             className={cn(
               "flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 font-normal text-text-2"
@@ -84,7 +87,7 @@ export function TaskCard({ task, compact }: { task: Task; list?: TaskList; selec
         <span className="ml-auto flex items-center gap-2">
           <PriorityMark priority={task.meta.priority} showLabel={!compact} />
         </span>
-      </div>
+      </div>}
     </article>
   );
 }

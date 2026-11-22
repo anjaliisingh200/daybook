@@ -9,6 +9,21 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-22 — No "Today" tag on tasks in the phone Day view
+
+**Asked for:** remove the "Today" tag from the tasks in the phone Day view.
+
+**What changed**
+- In the phone Day view the date chip ("Today", "Tomorrow", a date) is no longer shown on each task, since the date is already in the header. A task with nothing else to show (no priority) is now a single slim line; a task with a priority keeps the priority mark at the right.
+- Other views are unchanged: the chip still shows in phone Month and on the laptop (Day, Week, Completed list).
+
+**Files:** `components/tasks/TaskCard.tsx`, `components/tasks/TasksScreen.tsx`
+
+**Screenshots** (`screenshots/2026-11-22-day-no-today-tag/`)
+![Phone Day, no Today tag](screenshots/2026-11-22-day-no-today-tag/phone-day.png)
+
+---
+
 ## 2026-11-22 — Done tasks look like open tasks, no borders
 
 **Asked for:** a completed task should have the same background colour as a task that is not done, and neither card should have a border.
