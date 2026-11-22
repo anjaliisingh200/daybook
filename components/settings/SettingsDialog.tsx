@@ -346,7 +346,7 @@ function TaskSettings() {
           ]}
         />
       </Row>
-      <Row label="Manual order in day columns" desc="Off: each day lists tasks by priority, then newest. On: a task stays where you drop it.">
+      <Row label="Manual order in day columns" desc="Off: each day lists tasks by priority, then newest. On: a task stays where you drop it. Dragging a task up or down inside a day turns this on.">
         <Switch label="Manual order in day columns" checked={p.manualOrder} onChange={(v) => p.set({ manualOrder: v })} />
       </Row>
       <Row label="Show completed tasks" desc="Shows the collapsible Completed section at the bottom.">

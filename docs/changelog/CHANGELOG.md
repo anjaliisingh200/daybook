@@ -9,6 +9,27 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-22 — Phone Tasks → Day: drag to reorder, and ticked tasks stay
+
+**Asked for:** on a phone, be able to drag tasks to change their order in the Day view; and a task that is ticked must stay in the Day view, checked and struck through, instead of disappearing.
+
+**What changed**
+- On a phone, **Day** is now one full-width day column, the same as the laptop Day and the Week columns, instead of a separate list. That is what makes both of these work:
+- **Reorder by dragging:** press and hold a task for a moment (it lifts, and a dashed slot shows where it will land), drag up or down, and let go. When the day is longer than the screen, holding the task near the top or bottom edge scrolls the list. A short tap still opens the task, and swiping still scrolls.
+- **Ticking keeps the task:** a ticked task stays in its place, checked and struck through. (The old phone list was built from open tasks only, so ticked ones vanished.) Laptop Day and Week already worked this way.
+- **Manual order turns on by itself** the first time a task is dragged up or down inside a day: every task of that day keeps the place it had on screen, and a toast says so. It can be switched off in Settings → Tasks ("Manual order in day columns"). This also applies on a laptop, where dragging inside a day used to do nothing unless the setting was already on.
+- A drop is now also picked up when the finger lets go over the drop slot or the empty space under the last card (it was lost there).
+- Dragging a task onto another day (laptop Week) and the phone Week and Month views are unchanged.
+
+**Files:** `components/tasks/TasksScreen.tsx`, `components/settings/SettingsDialog.tsx`
+
+**Screenshots** (`screenshots/2026-11-22-phone-day-reorder/`)
+![A ticked task stays, struck through](screenshots/2026-11-22-phone-day-reorder/ticked-stays.png)
+![Dragging a task](screenshots/2026-11-22-phone-day-reorder/dragging.png)
+![After the drop](screenshots/2026-11-22-phone-day-reorder/reordered.png)
+
+---
+
 ## 2026-11-22 — Task cards: a light blue tint instead of a border
 
 **Asked for:** instead of a border, give each task card a background colour (a very light tint of blue); no border; 4px padding on all sides.
