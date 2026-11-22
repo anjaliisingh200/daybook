@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { LogoMark } from "@/components/shell/Logo";
 import { Button } from "@/components/ui/Button";
-import { RoundCheck } from "@/components/ui/Controls";
+import { TaskCheck } from "@/components/ui/Controls";
 import { cn } from "@/lib/cn";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { AuthDialog } from "./AuthDialog";
@@ -145,7 +145,7 @@ function Preview() {
           {TASKS.map((k) => (
             <div key={k.t} className="flex items-center gap-3 rounded-md px-1 py-1.5">
               <span className="pointer-events-none">
-                <RoundCheck checked={k.done} onChange={() => {}} label={k.t} size={20} />
+                <TaskCheck checked={k.done} onChange={() => {}} label={k.t} size={20} />
               </span>
               <span className={cn("text-[0.9375rem] font-medium", k.done && "line-through decoration-text")}>{k.t}</span>
             </div>

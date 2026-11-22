@@ -9,25 +9,25 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
-## 2026-11-22 — Week view of Tasks on a phone
+## 2026-11-22 — Phone Tasks: Week as day columns, square checkboxes, bordered cards
 
-**Asked for:** show the weekly view of tasks in mobile view.
+**Asked for:** the weekly view of tasks on a phone (it first came out as a stacked list, and was asked to look like the week view, not a list); no repeated date heading in the phone Day view; square checkboxes instead of circles; a border and 2px padding on each task card; no Completed section at the bottom of the phone Week view.
 
 **What changed**
-- On a phone, Tasks → Week now shows the seven days of the week across the top (all seven fit, no sideways scrolling, each with its task count). Before, only two day cells were visible and the list below held every task from September onward.
-- Below the day cells, one section per day of that week, in order, with that day's tasks. A day with nothing says "Nothing due" with an **Add task** link. Completed tasks of the week stay in their day, struck through. Today's heading is in the accent colour.
-- Tapping a day cell scrolls to that day's section. The list opens on today when today is in the week. The arrows move a week at a time, and Today comes back.
-- The day headings scroll with the page in this view (the day cells above stay put), so the two never overlap.
-- Desktop Week (columns), and phone Month, are unchanged.
-- Follow-up: on a phone, Tasks → Day no longer repeats the date as a heading ("Sunday, 22 November 6") above the tasks. The date is already in the header, so the list starts straight away.
+- **Phone Week** is now the same side-by-side day columns as on a laptop: one column per day, with that day's tasks, an Add task button under each, and the week scrolling sideways (about two days fit on screen). Today's column is brought into view, the arrows move a week, and tapping a day's date opens that day. Moving a task to another day by long-press and drag works as before.
+- The **Completed** list is not shown at the bottom of the phone Week view. Laptop Week still has it.
+- **Phone Day** stays a single list, and no longer repeats the date as a heading ("Sunday, 22 November 6") above the tasks; the date is already in the header.
+- **Square checkbox** everywhere a task is ticked: on cards, in the task editor, for subtasks, on the home page preview and in the design system. It is the same shape as the calendar-visibility checkbox (renamed `TaskCheck`; it was `RoundCheck`).
+- **Task cards** have a 1px border with rounded corners and keep their 2px padding. Cards now have a small gap (6px) between them in the day columns, and the columns have a little side padding, so the borders don't touch.
+- Phone Month is unchanged.
 
-**Files:** `components/tasks/TasksScreen.tsx`, `components/tasks/taskModel.ts`
+**Files:** `components/tasks/TasksScreen.tsx`, `components/tasks/TaskCard.tsx`, `components/tasks/taskModel.ts`, `components/ui/Controls.tsx` (+ `Controls.ds.md`), `components/tasks/TaskLayers.tsx`, `components/home/Hero.tsx`, `components/design/DesignSystem.tsx`
 
 **Screenshots** (`screenshots/2026-11-22-phone-week/`)
-![Week on a phone](screenshots/2026-11-22-phone-week/week.png)
-![After tapping Thursday](screenshots/2026-11-22-phone-week/week-tap-a-day.png)
-![Next week](screenshots/2026-11-22-phone-week/week-next.png)
-![Day, no repeated date heading](screenshots/2026-11-22-phone-week/day-no-heading.png)
+![Phone Week, day columns](screenshots/2026-11-22-phone-week/week-columns.png)
+![Phone Day](screenshots/2026-11-22-phone-week/day-no-heading.png)
+![Laptop Week](screenshots/2026-11-22-phone-week/desktop-week.png)
+![Task editor, square checkbox](screenshots/2026-11-22-phone-week/editor-checkbox.png)
 
 ---
 

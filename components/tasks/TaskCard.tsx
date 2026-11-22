@@ -1,6 +1,6 @@
 "use client";
 import { CalendarDays, ChevronDown, ChevronUp, ChevronsUp, Equal } from "lucide-react";
-import { RoundCheck } from "@/components/ui/Controls";
+import { TaskCheck } from "@/components/ui/Controls";
 import { cn } from "@/lib/cn";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { useFmt, useToday } from "@/lib/hooks";
@@ -54,7 +54,7 @@ export function TaskCard({ task, selectedDay, compact }: { task: Task; list?: Ta
       }}
       className={cn(
         compact ? "group relative flex scroll-mt-24 cursor-pointer flex-col" : "group relative flex scroll-mt-24 cursor-pointer flex-col transition-[background,transform] duration-150",
-        "hover:bg-surface-2 focus-visible:outline-2",
+        "rounded-md border border-border hover:bg-surface-2 focus-visible:outline-2",
         isSelectedDay ? "ring-2 ring-accent/25" : "",
         done && "bg-surface/60"
       )}
@@ -63,7 +63,7 @@ export function TaskCard({ task, selectedDay, compact }: { task: Task; list?: Ta
       <div className="flex items-start gap-3">
         <Tooltip label={done ? "Reopen task" : "Mark as complete"} delay={0}>
           <div className="pt-px" onClick={(e) => e.stopPropagation()}>
-            <RoundCheck checked={done} onChange={() => void toggle(task.id)} label={done ? `Reopen ${task.title}` : `Complete ${task.title}`} />
+            <TaskCheck checked={done} onChange={() => void toggle(task.id)} label={done ? `Reopen ${task.title}` : `Complete ${task.title}`} />
           </div>
         </Tooltip>
         <div className="min-w-0 flex-1">

@@ -65,17 +65,6 @@ export function sorter(sort: TaskSort): (a: Task, b: Task) => number {
  * One unified collection, organised by date. Sorting and filtering change
  * which tasks are shown and their order inside a group, never the grouping.
  */
-/** A week as a list: one group for every day of it, empty days included, in order. */
-export function buildWeekGroups(tasks: Task[], days: DateKey[], today: DateKey, fmt: Fmt, sort: TaskSort): TaskGroup[] {
-  const cmp = sorter(sort);
-  return days.map((d) => ({
-    id: d,
-    label: fmt.dayLong(d),
-    tone: d === today ? "accent" : "neutral",
-    tasks: tasks.filter((t) => t.due === d).sort(cmp),
-  }));
-}
-
 export function buildGroups(open: Task[], today: DateKey, fmt: Fmt, sort: TaskSort, showUndated: boolean): TaskGroup[] {
   const cmp = sorter(sort);
   const byDate = new Map<DateKey, Task[]>();

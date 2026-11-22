@@ -18,7 +18,7 @@ import type { DateKey, Task } from "@/lib/types";
 import { MonthNav } from "./MonthNav";
 import { FilterMenu, TaskSearch, activeFilterCount } from "./TaskControls";
 import { TaskCard } from "./TaskCard";
-import { buildGroups, buildWeekGroups, columnOrderFor, dayKey, matches, passesFilters } from "./taskModel";
+import { buildGroups, columnOrderFor, dayKey, matches, passesFilters } from "./taskModel";
 
 export function TasksScreen() {
   const status = useData((s) => s.status);
@@ -109,7 +109,7 @@ export function TasksScreen() {
 
   const anchor = weekAnchor ?? selected ?? today;
   /** Desktop week/day: one column per day, exactly like the calendar. Phones keep the single list. */
-  const columnsMode = !mobile && view !== "month";
+  const columnsMode = view !== "month" && (!mobile || view === "week");
   const listMap = useMemo(() => new Map(lists.map((l) => [l.id, l])), [lists]);
   const nFilters = activeFilterCount(filters);
   const filtering = nFilters > 0 || query.trim().length > 0;
@@ -146,12 +146,8 @@ export function TasksScreen() {
       counts.set(t.due, (counts.get(t.due) ?? 0) + 1);
     }
     return {
-      // the list (month view, phones): by date. A single day lists only that day; a week lists its own days, empty ones too.
-      groups: columnsMode
-        ? []
-        : view === "week"
-          ? buildWeekGroups([...outside, ...done.filter((t) => t.due && daySet.has(t.due))], days, today, fmt, sort)
-          : buildGroups(view === "day" ? outside.filter((t) => t.due === days[0]) : outside, today, fmt, sort, showUndated),
+      // the list (month view, and a day on a phone): by date. A single day lists only that day.
+      groups: columnsMode ? [] : buildGroups(view === "day" ? outside.filter((t) => t.due === days[0]) : outside, today, fmt, sort, showUndated),
       byDay,
       completed: done,
       counts,
@@ -168,19 +164,8 @@ export function TasksScreen() {
     if (col) revealColumn(sc, col);
   }, [status, columnsMode, days, today]);
 
-  // phone week list: open on today's day when it is in this week, otherwise at the top
-  useEffect(() => {
-    const sc = scrollRef.current;
-    if (status !== "ready" || columnsMode || view !== "week" || !sc) return;
-    sc.scrollTop = 0;
-    sc.querySelector<HTMLElement>(`[data-day-section="${today}"]`)?.scrollIntoView({ block: "start" });
-  }, [status, columnsMode, view, days, today]);
-
   const scrollToDay = useCallback((d: DateKey) => {
     requestAnimationFrame(() => {
-      // a week list has a section per day (even an empty one); otherwise find the day's first card
-      const section = scrollRef.current?.querySelector<HTMLElement>(`[data-day-section="${d}"]`);
-      if (section) return section.scrollIntoView({ behavior: "smooth", block: "start" });
       const el = scrollRef.current?.querySelector<HTMLElement>(`[data-due="${d}"]`);
       el?.scrollIntoView({ behavior: "smooth", block: "center" });
     });
@@ -244,7 +229,7 @@ export function TasksScreen() {
   const gridClass = layout === "grid" ? "grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4" : "mx-auto grid max-w-3xl grid-cols-1 gap-2.5";
   const single = days.length === 1;
   /** A day never gets narrower than this, so on a small window the week scrolls sideways. */
-  const DAY_MIN_WIDTH = 200;
+  const DAY_MIN_WIDTH = mobile ? 176 : 200;
   const colTemplate = { gridTemplateColumns: `repeat(${days.length}, minmax(${DAY_MIN_WIDTH}px, 1fr))` };
 
   return (
@@ -314,7 +299,7 @@ export function TasksScreen() {
         {/* the day / date row lives inside the scroller so it is exactly as wide as the columns */}
         <div className="sticky top-0 z-10 w-max min-w-full bg-bg">
       {view === "day" ? null : view !== "month" ? (
-        <DayHeaders days={days} selected={selected} onPick={pick} minColumnWidth={columnsMode ? DAY_MIN_WIDTH : undefined} badge={columnsMode ? undefined : (d) => ((counts.get(d) ?? 0) > 0 ? <span>{counts.get(d)}</span> : null)} />
+        <DayHeaders days={days} selected={selected} onPick={pick} minColumnWidth={DAY_MIN_WIDTH} badge={columnsMode ? undefined : (d) => ((counts.get(d) ?? 0) > 0 ? <span>{counts.get(d)}</span> : null)} />
       ) : (
         <div className="shrink-0 border-b border-border px-3 py-3 md:px-6">
           <div className="mx-auto max-w-[88rem]">
@@ -458,11 +443,11 @@ export function TasksScreen() {
                     if (id) moveTask(id, d, index);
                   }}
                   className={cn(
-                    "flex min-h-[19rem] min-w-0 flex-col gap-0 border-l border-border py-2 transition-colors duration-150 first:border-l-0",
+                    "flex min-h-[19rem] min-w-0 flex-col gap-0 border-l border-border px-1.5 py-2 transition-colors duration-150 first:border-l-0",
                     d === today && "bg-surface"
                   )}
                 >
-                  <div className="flex flex-col gap-0">{items}</div>
+                  <div className="flex flex-col gap-1.5">{items}</div>
                   <button
                     onClick={() => openQuickAdd({ due: d })}
                     className="mt-auto flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-text-3 transition-colors hover:bg-surface-2 hover:text-text"
@@ -530,33 +515,23 @@ export function TasksScreen() {
                   <EmptyState icon={<CheckCheck className="size-5" />} title="Nothing left to do" body="Every task in view is complete." />
                 ))}
               {groups.map((g) => (
-                <section key={g.id} aria-label={g.label} data-day-section={view === "week" ? g.id : undefined} className={cn("scroll-mt-24", view === "day" && "pt-4")}>
-                  {/* in the week list the day cells above already stick, so these headings scroll with the page */}
+                <section key={g.id} aria-label={g.label} className={cn(view === "day" && "pt-4")}>
                   {/* a single day already has its date in the header, so it gets no heading of its own */}
-                  <div className={cn("-mx-3 flex items-center gap-2.5 bg-bg/90 px-3 pb-2 pt-4 md:-mx-6 md:px-6", view !== "week" && "sticky top-0 z-10 backdrop-blur", view === "day" && "hidden")}>
+                  <div className={cn("sticky top-0 z-10 -mx-3 flex items-center gap-2.5 bg-bg/90 px-3 pb-2 pt-4 backdrop-blur md:-mx-6 md:px-6", view === "day" && "hidden")}>
                     <h2 className={cn("text-xs font-semibold uppercase tracking-[0.12em]", g.tone === "accent" ? "text-accent" : "text-text-2")}>{g.label}</h2>
-                    <span className="tnum rounded-full bg-surface-2 px-1.5 text-[0.6875rem] font-medium leading-5 text-text-2">{g.tasks.filter((t) => t.status === "needsAction").length}</span>
+                    <span className="tnum rounded-full bg-surface-2 px-1.5 text-[0.6875rem] font-medium leading-5 text-text-2">{g.tasks.length}</span>
                     {g.hint && <span className="hidden text-xs text-text-3 sm:inline">{g.hint}</span>}
                     <span className="h-px flex-1 bg-border" />
                   </div>
-                  {g.tasks.length === 0 ? (
-                    <div className="flex items-center justify-between py-1 text-sm text-text-3">
-                      <span>Nothing due</span>
-                      <button onClick={() => openQuickAdd({ due: g.id })} className="font-medium text-accent hover:underline">
-                        Add task
-                      </button>
-                    </div>
-                  ) : (
-                    <div className={gridClass}>
-                      {g.tasks.map((t) => (
-                        <TaskCard key={t.id} task={t} list={listMap.get(t.listId)} selectedDay={selected} />
-                      ))}
-                    </div>
-                  )}
+                  <div className={gridClass}>
+                    {g.tasks.map((t) => (
+                      <TaskCard key={t.id} task={t} list={listMap.get(t.listId)} selectedDay={selected} />
+                    ))}
+                  </div>
                 </section>
               ))}
 
-              {showCompleted && view !== "day" && (columnsMode || view !== "week") && (
+              {showCompleted && view !== "day" && !(mobile && view === "week") && (
                 <section className="mt-8" aria-label="Completed">
                   <button onClick={() => setCompletedOpen(!completedOpen)} aria-expanded={completedOpen} className="flex w-full items-center gap-2.5 rounded-lg py-2 text-left">
                     <ChevronDown className={cn("size-4 text-text-3 transition-transform", !completedOpen && "-rotate-90")} />
