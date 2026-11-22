@@ -530,9 +530,10 @@ export function TasksScreen() {
                   <EmptyState icon={<CheckCheck className="size-5" />} title="Nothing left to do" body="Every task in view is complete." />
                 ))}
               {groups.map((g) => (
-                <section key={g.id} aria-label={g.label} data-day-section={view === "week" ? g.id : undefined} className="scroll-mt-24">
+                <section key={g.id} aria-label={g.label} data-day-section={view === "week" ? g.id : undefined} className={cn("scroll-mt-24", view === "day" && "pt-4")}>
                   {/* in the week list the day cells above already stick, so these headings scroll with the page */}
-                  <div className={cn("-mx-3 flex items-center gap-2.5 bg-bg/90 px-3 pb-2 pt-4 md:-mx-6 md:px-6", view !== "week" && "sticky top-0 z-10 backdrop-blur")}>
+                  {/* a single day already has its date in the header, so it gets no heading of its own */}
+                  <div className={cn("-mx-3 flex items-center gap-2.5 bg-bg/90 px-3 pb-2 pt-4 md:-mx-6 md:px-6", view !== "week" && "sticky top-0 z-10 backdrop-blur", view === "day" && "hidden")}>
                     <h2 className={cn("text-xs font-semibold uppercase tracking-[0.12em]", g.tone === "accent" ? "text-accent" : "text-text-2")}>{g.label}</h2>
                     <span className="tnum rounded-full bg-surface-2 px-1.5 text-[0.6875rem] font-medium leading-5 text-text-2">{g.tasks.filter((t) => t.status === "needsAction").length}</span>
                     {g.hint && <span className="hidden text-xs text-text-3 sm:inline">{g.hint}</span>}

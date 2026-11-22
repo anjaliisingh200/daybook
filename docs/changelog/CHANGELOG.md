@@ -18,7 +18,8 @@ A running record of every change requested, newest first, with screenshots. It l
 - Below the day cells, one section per day of that week, in order, with that day's tasks. A day with nothing says "Nothing due" with an **Add task** link. Completed tasks of the week stay in their day, struck through. Today's heading is in the accent colour.
 - Tapping a day cell scrolls to that day's section. The list opens on today when today is in the week. The arrows move a week at a time, and Today comes back.
 - The day headings scroll with the page in this view (the day cells above stay put), so the two never overlap.
-- Desktop Week (columns), and phone Day and Month, are unchanged.
+- Desktop Week (columns), and phone Month, are unchanged.
+- Follow-up: on a phone, Tasks → Day no longer repeats the date as a heading ("Sunday, 22 November 6") above the tasks. The date is already in the header, so the list starts straight away.
 
 **Files:** `components/tasks/TasksScreen.tsx`, `components/tasks/taskModel.ts`
 
@@ -26,6 +27,7 @@ A running record of every change requested, newest first, with screenshots. It l
 ![Week on a phone](screenshots/2026-11-22-phone-week/week.png)
 ![After tapping Thursday](screenshots/2026-11-22-phone-week/week-tap-a-day.png)
 ![Next week](screenshots/2026-11-22-phone-week/week-next.png)
+![Day, no repeated date heading](screenshots/2026-11-22-phone-week/day-no-heading.png)
 
 ---
 
