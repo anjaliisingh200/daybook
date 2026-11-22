@@ -9,6 +9,23 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-22 — Soft "Add task" button at the bottom of each Tasks column (branch `next-changes`)
+
+**Asked for:** use the Soft button in each column.
+
+**What changed**
+- The "Add task" at the bottom of every day column in the Tasks week is now the design system's **Soft** button: a full-width button with a soft olive tint and a soft border, with a "+" icon. It used to be plain grey text. Clicking it still opens the new task form for that day.
+- Spacing, as measured on the page: the panels are **11.25px** apart (`gap-3`; the app's base text size is 15px, so 0.75rem is 11.25px), the same 11.25px around the whole grid, and inside each panel 7.5px at the sides and 11.25px at the top, with a small space above the button.
+- This work stays on the local branch `next-changes`; it is not pushed to `main`.
+
+**Files:** `components/tasks/TasksScreen.tsx`
+
+**Screenshots** (`screenshots/2026-11-22-soft-add-task/`)
+![Tasks week](screenshots/2026-11-22-soft-add-task/tasks-week.png)
+![Tasks week on a phone](screenshots/2026-11-22-soft-add-task/tasks-week-phone.png)
+
+---
+
 ## 2026-11-22 — Light grey canvas under the headers, Tasks columns as rounded panels (branch `next-changes`)
 
 **Asked for:** below the two headers, a light grey background on the content area; in Tasks, each column with a 16px corner radius (first 24px, then 16px), with the day heading ("SUN 22") inside the column itself; no Completed list in the Tasks week view; and "Add task" as the secondary button.

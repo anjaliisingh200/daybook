@@ -520,13 +520,11 @@ export function TasksScreen() {
                     </div>
                   )}
                   <div className="flex flex-col gap-1.5">{items}</div>
-                  <button
-                    onClick={() => openQuickAdd({ due: d })}
-                    className="mt-auto flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-text-3 transition-colors hover:bg-surface-2 hover:text-text"
-                    aria-label={`Add task on ${fmt.dayLong(d)}`}
-                  >
-                    <Plus className="size-3.5" /> Add task
-                  </button>
+                  <div className="mt-auto pt-3">
+                    <Button variant="soft" size="sm" icon={<Plus className="size-4" />} className="w-full" onClick={() => openQuickAdd({ due: d })} aria-label={`Add task on ${fmt.dayLong(d)}`}>
+                      Add task
+                    </Button>
+                  </div>
                 </div>
               );
             })}
