@@ -41,7 +41,7 @@ Buttons and icon buttons · tooltips · popovers and dropdowns (auto flip/shift)
 ## Layout
 - **Header** (desktop): brand, **exactly two tabs** (Calendar, Tasks), sync pill, settings, account menu. **Phones**: the same two tabs move to a bottom bar.
 - **Shared date header (both tabs, identical)**: Today, previous/next, the date or range being shown, and the Day / Week / Month switch (Calendar also offers Schedule). Nothing else lives in it.
-- **Calendar**: below the header, a slim action row (Calendars, search, Create). The calendar list and mini month live in a **side sheet** that slides over the page from the left, not a fixed sidebar. Phones: week becomes 3 days, month shows dots with an agenda beneath, a floating Create button.
+- **Calendar**: below the header, a slim action row (Calendars, search, Create). The calendar list and mini month live in a **side sheet** that slides over the page from the left, not a fixed sidebar. Phones: the week keeps all seven days and scrolls sideways, month shows dots with an agenda beneath, a floating Create button.
 - **Tasks**: below the header, the date navigation follows the chosen view (7-day strip, single-day card, or month grid with task counts), then a search/filter/sort/layout/Add task row, then one scrolling list of cards grouped by date with sticky group labels. The date navigation never filters. Detail drawer (desktop) or bottom sheet (phone). Phones: single column, floating Add button.
 
 ## Honesty rules in the UI

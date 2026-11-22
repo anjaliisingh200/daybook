@@ -9,6 +9,28 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-22 — Calendar: one Week view that scrolls sideways, no "Now" tag
+
+**Asked for:** remove the "Now" tag and its time in the week and 3-day views; instead of a 3-day view, keep only the week view, and let the user scroll to the right to see the other dates.
+
+**What changed**
+- **No more "3 days".** On a phone the Calendar's view menu is now Day, Week, Month, Schedule. Week is always the whole week (seven days, or five if weekends are hidden). The arrows move a week at a time.
+- **Scrolls sideways.** Each day keeps a readable width (150px on a phone, 200px on a laptop), so a phone shows about two days and a peek of the third. Swipe left and right to see the rest of the week. The hour labels stay put on the left while you swipe. Today's column is brought into view when the week opens.
+- **No "Now" tag in the week.** The blue label with "Now" and the time in the hour column is gone. The thin blue line across today's column, with its dot, is still there, so you can see the current time. The Day view keeps its own "Now" tag, since only the week and 3-day views were mentioned.
+- Swiping sideways used to be blocked inside the grid (it only allowed vertical scrolling); it now allows both.
+- README and DESIGN.md no longer say "3 days on phones".
+
+**Checked on a phone with real touch events:** seven columns of 150px, a swipe moved the week sideways, the arrows move a whole week, the view menu has no "3 days", and no "Now" tag is in the week. The laptop week is unchanged, and the Day view still has its Now tag.
+
+**Files:** `components/calendar/useCalendar.ts`, `components/calendar/TimeGrid.tsx`, `components/calendar/Toolbar.tsx`, `README.md`, `DESIGN.md`
+
+**Screenshots** (`screenshots/2026-11-22-week-scrolls/`)
+![Phone week](screenshots/2026-11-22-week-scrolls/phone-week.png)
+![Phone week, scrolled sideways](screenshots/2026-11-22-week-scrolls/phone-week-scrolled.png)
+![Laptop week](screenshots/2026-11-22-week-scrolls/laptop-week.png)
+
+---
+
 ## 2026-11-22 — Subtasks are always shown under their task
 
 **Asked for:** option C from the subtask mock-ups: show the subtasks on each task, always visible, and all of them (no "+2 more").

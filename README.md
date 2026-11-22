@@ -32,7 +32,7 @@ Without any setup the app runs on local sample data with no login. To turn on si
 
 ## What works today
 
-**Calendar**: Day, Week (3 days on phones), Month and Schedule views · mini month · multiple calendars with show/hide and colour (this app only) · click or drag a time slot to create · drag an event to move it · event popover · full editor (all-day, repeat, location, description, colour) · recurring events (edit/delete *this event* or *all events*) · search · time zone aware · keyboard shortcuts.
+**Calendar**: Day, Week (scrolls sideways on phones), Month and Schedule views · mini month · multiple calendars with show/hide and colour (this app only) · click or drag a time slot to create · drag an event to move it · event popover · full editor (all-day, repeat, location, description, colour) · recurring events (edit/delete *this event* or *all events*) · search · time zone aware · keyboard shortcuts.
 
 **Tasks**: month/week navigation and a 7-day date strip that scrolls to and highlights a day without hiding anything · one unified list grouped Overdue / Today / Tomorrow / Next 7 days / months / No date · compact cards · details drawer with autosave · quick add · complete, reopen, delete with undo · search, filter (list, priority, due), sort · card grid or single column · collapsible Completed.
 

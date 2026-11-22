@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { useData } from "@/lib/store/data";
 import { usePrefs } from "@/lib/store/prefs";
 import { useUI } from "@/lib/store/ui";
-import { useCalendarViews, useIsMobile, useTz, useToday, type CalendarView } from "@/lib/hooks";
+import { useCalendarViews, useTz, useToday, type CalendarView } from "@/lib/hooks";
 import { addDays, dowOf, monthGrid, startOfWeek } from "@/lib/dates";
 import { compareInstances } from "@/lib/layout";
 import { expandEvent } from "@/lib/recurrence";
@@ -32,14 +32,10 @@ export const SCHEDULE_DAYS = 60;
 export function useVisible(view: CalView, anchor: DateKey): Visible {
   const weekStart = usePrefs((p) => p.weekStart);
   const hideWeekends = usePrefs((p) => p.hideWeekends);
-  const mobile = useIsMobile();
   return useMemo(() => {
     if (view === "day") return { days: [anchor], from: anchor, to: anchor, step: 1 };
     if (view === "week") {
-      if (mobile) {
-        const days = [anchor, addDays(anchor, 1), addDays(anchor, 2)];
-        return { days, from: days[0], to: days[2], step: 3 };
-      }
+      // Always the whole week. On a phone the columns keep a readable width and the week scrolls sideways.
       const start = startOfWeek(anchor, weekStart);
       let days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
       if (hideWeekends) days = days.filter((d) => dowOf(d) !== 0 && dowOf(d) !== 6);
@@ -50,7 +46,7 @@ export function useVisible(view: CalView, anchor: DateKey): Visible {
       return { days: grid.flat(), from: grid[0][0], to: grid[grid.length - 1][6], step: 0 };
     }
     return { days: [], from: anchor, to: addDays(anchor, SCHEDULE_DAYS - 1), step: 7 };
-  }, [view, anchor, weekStart, hideWeekends, mobile]);
+  }, [view, anchor, weekStart, hideWeekends]);
 }
 
 /** Instances in [from, to] from visible calendars, sorted. */

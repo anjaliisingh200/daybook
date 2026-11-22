@@ -41,12 +41,12 @@ export function CalendarToolbar({ view, anchor, visible, go }: { view: CalView; 
 
   const viewOptions = [
     { value: "day" as const, label: "Day", hint: "D" },
-    { value: "week" as const, label: mobile ? "3 days" : "Week", hint: "W" },
+    { value: "week" as const, label: "Week", hint: "W" },
     { value: "month" as const, label: "Month", hint: "M" },
     { value: "schedule" as const, label: "Schedule", hint: "A" },
   ];
 
-  const stepLabel = view === "month" ? "month" : view === "day" ? "day" : view === "schedule" ? "week" : mobile ? "3 days" : "week";
+  const stepLabel = view === "month" ? "month" : view === "day" ? "day" : "week";
 
   return (
     <DateHeader

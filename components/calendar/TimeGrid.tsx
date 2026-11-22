@@ -59,9 +59,10 @@ export function TimeGrid({ view, anchor, visible }: { view: CalView; anchor: Dat
   };
 
   const n = days.length;
-  // Desktop days never get narrower than 200px; the week scrolls sideways instead. Phones keep the full width.
+  // A day never gets narrower than this, so the whole week is always there and scrolls sideways when it does not fit.
+  // A phone shows two days and a peek of the third.
   const isPhone = useIsMobile();
-  const dayMin = isPhone ? 0 : 200;
+  const dayMin = isPhone ? 150 : 200;
   const grid = { gridTemplateColumns: `repeat(${n}, minmax(${dayMin}px, 1fr))` };
   const readOnlyIds = useMemo(() => new Set(calendars.filter((c) => c.readOnly).map((c) => c.id)), [calendars]);
 
@@ -80,7 +81,7 @@ export function TimeGrid({ view, anchor, visible }: { view: CalView; anchor: Dat
     // when today is in this week, make sure its column is on screen too
     el.scrollLeft = 0;
     const col = el.querySelector<HTMLElement>(`[data-day="${today}"]`);
-    if (col) revealColumn(el, col, 64);
+    if (col) revealColumn(el, col, isPhone ? 48 : 64);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days[0], days.length, tz]);
 
@@ -267,18 +268,11 @@ export function TimeGrid({ view, anchor, visible }: { view: CalView; anchor: Dat
             {Array.from({ length: 23 }, (_, i) => i + 1).map((h) => (
               <span key={`m${h}`} className="absolute -right-[3px] size-[7px] -translate-y-1/2 bg-border" style={{ top: `calc(var(--hour-h) * ${h})` }} />
             ))}
-            {todayIdx >= 0 && (
-              <div className="absolute right-1.5 z-[2] -translate-y-1/2 rounded-sm bg-semantic-primary px-1.5 py-1 leading-tight text-semantic-on-primary" style={{ top: `calc(var(--hour-h) * ${nowMin / 60})` }}>
-                <div className="text-[0.625rem] opacity-90">Now</div>
-                <div className="tnum text-xs font-medium">{fmt.time(now)}</div>
-                <span className="absolute -right-1.5 top-1/2 -translate-y-1/2 border-y-[5px] border-l-[5px] border-y-transparent border-l-semantic-primary" />
-              </div>
-            )}
           </div>
 
           <div
             ref={colsRef}
-            className="relative grid flex-1 touch-pan-y"
+            className="relative grid flex-1 touch-pan-x touch-pan-y"
             style={grid}
             onPointerDown={onBgPointerDown}
             onPointerMove={onBgPointerMove}
