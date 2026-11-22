@@ -9,6 +9,23 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-22 — Done tasks look like open tasks, no borders
+
+**Asked for:** a completed task should have the same background colour as a task that is not done, and neither card should have a border.
+
+**What changed**
+- A completed card now has the same light blue tint as an open card (it used to turn grey). It is still told apart by its ticked checkbox and the strike-through on its title. This applies in the day columns, in the Completed list and on the phone.
+- Neither kind of card has a border. I also removed the faint ring that outlined every task on the selected day (it showed in Month view after tapping a day), so no task card has any outline now. The keyboard focus outline stays, for keyboard users.
+- Checked with the page's real styles: in Week, in Month with a day selected, and in the phone Day view after ticking a task, every card has the same background, a 0px border and no ring.
+
+**Files:** `components/tasks/TaskCard.tsx`
+
+**Screenshots** (`screenshots/2026-11-22-same-card/`)
+![Phone Day, one task ticked](screenshots/2026-11-22-same-card/phone-day-ticked.png)
+![Week with the Completed list](screenshots/2026-11-22-same-card/week-with-completed.png)
+
+---
+
 ## 2026-11-22 — Phone Tasks → Day: drag to reorder, and ticked tasks stay
 
 **Asked for:** on a phone, be able to drag tasks to change their order in the Day view; and a task that is ticked must stay in the Day view, checked and struck through, instead of disappearing.

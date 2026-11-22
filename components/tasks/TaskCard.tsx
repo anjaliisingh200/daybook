@@ -26,14 +26,13 @@ export function PriorityMark({ priority, showLabel = true }: { priority?: Priori
   );
 }
 
-export function TaskCard({ task, selectedDay, compact }: { task: Task; list?: TaskList; selectedDay: string | null; compact?: boolean }) {
+export function TaskCard({ task, compact }: { task: Task; list?: TaskList; selectedDay?: string | null; compact?: boolean }) {
   const fmt = useFmt();
   const today = useToday();
   const toggle = useData((s) => s.toggleTask);
   const open = useUI((s) => s.openTask);
 
   const done = task.status === "completed";
-  const isSelectedDay = !!selectedDay && task.due === selectedDay;
 
   const dueLabel = task.due ? fmt.relative(task.due, today) : null;
 
@@ -54,9 +53,8 @@ export function TaskCard({ task, selectedDay, compact }: { task: Task; list?: Ta
       }}
       className={cn(
         compact ? "group relative flex scroll-mt-24 cursor-pointer flex-col" : "group relative flex scroll-mt-24 cursor-pointer flex-col transition-[background,transform] duration-150",
-        "rounded-md focus-visible:outline-2",
-        done ? "bg-surface-2 hover:bg-surface-3" : "bg-task-card hover:bg-task-card-hover",
-        isSelectedDay ? "ring-2 ring-accent/25" : ""
+        // done and not done share one look (no border, no highlight ring): a done task is told apart by its tick and strike-through
+        "rounded-md bg-task-card hover:bg-task-card-hover focus-visible:outline-2"
       )}
       style={{ padding: 4 }}
     >
