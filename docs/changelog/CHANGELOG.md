@@ -9,6 +9,26 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-22 — Fix: subtasks were not being saved, and repeating tasks now carry them
+
+**Reported:** added subtasks to a task, then set it to repeat every day; opening the task showed no subtasks (on a phone).
+
+**Cause:** adding a subtask never worked. A subtask has no date of its own, but the store refuses to save any task without a date ("A task needs a date before it can be saved", which only flashed past in a toast), so every subtask, in the Add task form and in the task editor, was dropped silently. Repeat was not the cause.
+
+**What changed**
+- A subtask can now be saved without a date. Only a top-level task still needs one.
+- Each day of a repeating task gets its **own copy of the subtasks**, all unticked, so ticking "Sub one" on Monday does not tick it on Tuesday. New days made later get the copies too, and days made earlier that have none get them the next time the app loads.
+- Subtasks that you tried to add before this fix were never saved, so they have to be added again.
+
+**Checked on a phone:** add a task with two subtasks (both saved) → set Repeat: Daily → today's task still has both, and tomorrow's and the following days' each have their own two; ticking one on tomorrow's left the others unticked.
+
+**Files:** `lib/store/data.ts`
+
+**Screenshots** (`screenshots/2026-11-22-subtasks-fix/`)
+![Tomorrow's repeated task with its subtasks](screenshots/2026-11-22-subtasks-fix/repeat-occurrence-subtasks.png)
+
+---
+
 ## 2026-11-22 — No "Today" tag on tasks in the phone Day view
 
 **Asked for:** remove the "Today" tag from the tasks in the phone Day view.

@@ -265,6 +265,18 @@ export const useData = create<DataStore>((set, get) => {
     }
   };
 
+  /**
+   * Gives a repeating task's occurrence its own copy of the original's subtasks, all unticked, so each day can be
+   * ticked off separately. Does nothing if the occurrence already has subtasks.
+   */
+  const copySubtasks = async (rootId: string, occurrenceId: string) => {
+    if (get().tasks.some((t) => t.parentId === occurrenceId)) return;
+    const subs = get().tasks.filter((t) => t.parentId === rootId).sort((a, b) => a.position - b.position);
+    for (const sub of subs) {
+      await get().addTask({ title: sub.title, notes: sub.notes, listId: sub.listId, parentId: occurrenceId, due: null, calendarId: sub.meta.calendarId });
+    }
+  };
+
   /** Repeating tasks: keep the next month's occurrences created. Completing one only marks that one done. */
   const HORIZON_DAYS = 30;
   const ensureOccurrences = async () => {
@@ -279,9 +291,16 @@ export const useData = create<DataStore>((set, get) => {
         if (cur >= today && !have.has(cur)) {
           have.add(cur);
           const made = await get().addTask({ title: root.title, listId: root.listId, due: cur, calendarId: root.meta.calendarId, priority: root.meta.priority });
-          if (made) await applyTaskPatch(made.id, { repeat: preset, seriesId: root.id, startMin: root.meta.startMin ?? null, endMin: root.meta.endMin ?? null });
+          if (made) {
+            await applyTaskPatch(made.id, { repeat: preset, seriesId: root.id, startMin: root.meta.startMin ?? null, endMin: root.meta.endMin ?? null });
+            await copySubtasks(root.id, made.id);
+          }
         }
         cur = stepDate(preset, cur);
+      }
+      // Occurrences made before the original had subtasks (or before this existed) get them too.
+      for (const occ of get().tasks.filter((t) => t.meta.seriesId === root.id && t.status === "needsAction" && t.due && t.due >= today)) {
+        await copySubtasks(root.id, occ.id);
       }
     }
   };
@@ -366,7 +385,8 @@ const once = (fn: () => Promise<void>) => {
 
     // ───────────── tasks ─────────────
     async addTask(input) {
-      if (!input.due) {
+      // A task needs a date. A subtask does not: it belongs to its parent task and shows up with it.
+      if (!input.due && !input.parentId) {
         toast("A task needs a date before it can be saved.", { tone: "error" });
         return null;
       }
