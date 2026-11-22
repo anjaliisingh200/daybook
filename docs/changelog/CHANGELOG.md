@@ -9,6 +9,23 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-22 — Tasks are listed by date, no Overdue / Tomorrow / Next 7 days groups
+
+**Asked for:** no "Overdue", "Tomorrow", "Next 7 days", "Later this month" groups in the task lists, in any view. Just show tasks date by date. (Also asked: why Google Calendar isn't connecting. Answer: it was never built; the sign-in button is a placeholder.)
+
+**What changed**
+- The task list (Month view, and the single list on phones) now has one heading per date, oldest first, for example "Friday, 20 November". Overdue tasks sit under their own date. Dates in another year show the year. Today's date is picked out in the accent colour. "No date" stays at the end when it is switched on.
+- Day view on a phone lists only that day's tasks, not every open task. A day with nothing shows "Nothing due this day" with an Add task button.
+- The Overdue / Next 7 days choices inside the Filter menu are unchanged.
+
+**Files:** `components/tasks/taskModel.ts`, `components/tasks/TasksScreen.tsx`
+
+**Screenshots** (`screenshots/2026-11-22-task-dates/`)
+![Month view, by date](screenshots/2026-11-22-task-dates/month-by-date.png)
+![Phone, Day view](screenshots/2026-11-22-task-dates/phone-day.png)
+
+---
+
 ## 2026-11-20 — Tasks follows the Calendar view, no Synced pill, Settings in the user menu
 
 **Asked for:** in the day view, no gap between the cards and the vertical line, and each hour line centred on its square; make Tasks follow the Calendar's view (the Day / Week / Month switch was tried in the top header and put back in its original place); remove "Synced"; move the settings icon into the user menu.

@@ -146,13 +146,14 @@ export function TasksScreen() {
       counts.set(t.due, (counts.get(t.due) ?? 0) + 1);
     }
     return {
-      groups: columnsMode ? [] : buildGroups(outside, today, fmt, sort, showUndated),
+      // the list (month view, phones): by date. A single day lists only that day.
+      groups: columnsMode ? [] : buildGroups(view === "day" ? outside.filter((t) => t.due === days[0]) : outside, today, fmt, sort, showUndated),
       byDay,
       completed: done,
       counts,
       selectedHasTasks: selected ? topTasks.some((t) => t.due === selected) : true,
     };
-  }, [tasks, query, filters, today, sort, showUndated, fmt, listMap, selected, days, columnsMode, manualOrder]);
+  }, [tasks, query, filters, today, sort, showUndated, fmt, listMap, selected, days, columnsMode, manualOrder, view]);
 
   // keep today's column on screen: on load, and whenever the week changes
   useEffect(() => {
@@ -467,7 +468,7 @@ export function TasksScreen() {
                 <Skeleton key={i} className="h-[8.25rem] rounded-xl" />
               ))}
             </div>
-          ) : !columnsMode && groups.length === 0 && completed.length === 0 ? (
+          ) : !columnsMode && view !== "day" && groups.length === 0 && completed.length === 0 ? (
             filtering ? (
               <EmptyState
                 icon={<ListFilter className="size-5" />}
@@ -498,17 +499,25 @@ export function TasksScreen() {
             )
           ) : (
             <>
-              {columnsMode && groups.length > 0 && (
-                <div className="pt-8">
-                  <h2 className="font-display text-2xl">Everything else</h2>
-                  <p className="mt-0.5 text-sm text-text-2">Overdue, later and undated tasks. Nothing is hidden just because it falls outside the days above.</p>
-                </div>
-              )}
-              {!columnsMode && groups.length === 0 && <EmptyState icon={<CheckCheck className="size-5" />} title="Nothing left to do" body="Every task in view is complete." />}
+              {!columnsMode && groups.length === 0 &&
+                (view === "day" ? (
+                  <EmptyState
+                    icon={<CheckCheck className="size-5" />}
+                    title="Nothing due this day"
+                    body="Tasks with this date show up here."
+                    action={
+                      <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => openQuickAdd({ due: days[0] })}>
+                        Add task
+                      </Button>
+                    }
+                  />
+                ) : (
+                  <EmptyState icon={<CheckCheck className="size-5" />} title="Nothing left to do" body="Every task in view is complete." />
+                ))}
               {groups.map((g) => (
                 <section key={g.id} aria-label={g.label}>
                   <div className="sticky top-0 z-10 -mx-3 flex items-center gap-2.5 bg-bg/90 px-3 pb-2 pt-4 backdrop-blur md:-mx-6 md:px-6">
-                    <h2 className={cn("text-xs font-semibold uppercase tracking-[0.12em]", g.tone === "danger" ? "text-danger" : g.tone === "accent" ? "text-accent" : "text-text-2")}>{g.label}</h2>
+                    <h2 className={cn("text-xs font-semibold uppercase tracking-[0.12em]", g.tone === "accent" ? "text-accent" : "text-text-2")}>{g.label}</h2>
                     <span className="tnum rounded-full bg-surface-2 px-1.5 text-[0.6875rem] font-medium leading-5 text-text-2">{g.tasks.length}</span>
                     {g.hint && <span className="hidden text-xs text-text-3 sm:inline">{g.hint}</span>}
                     <span className="h-px flex-1 bg-border" />

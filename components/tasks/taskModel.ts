@@ -1,13 +1,13 @@
 import type { DateKey, Priority, Task, TaskList, TaskSort } from "@/lib/types";
 import type { Fmt } from "@/lib/format";
-import { addDays, diffDays, parseKey, startOfMonth } from "@/lib/dates";
+import { diffDays } from "@/lib/dates";
 import type { TaskFilters } from "@/lib/store/ui";
 
 export interface TaskGroup {
   id: string;
   label: string;
   hint?: string;
-  tone: "danger" | "accent" | "neutral";
+  tone: "accent" | "neutral";
   tasks: Task[];
 }
 
@@ -67,33 +67,20 @@ export function sorter(sort: TaskSort): (a: Task, b: Task) => number {
  */
 export function buildGroups(open: Task[], today: DateKey, fmt: Fmt, sort: TaskSort, showUndated: boolean): TaskGroup[] {
   const cmp = sorter(sort);
-  const groups: TaskGroup[] = [];
-  const push = (id: string, label: string, tone: TaskGroup["tone"], tasks: Task[], hint?: string) => {
-    if (tasks.length) groups.push({ id, label, tone, hint, tasks: [...tasks].sort(cmp) });
-  };
-
-  const overdue = open.filter((t) => t.due && t.due < today);
-  const todays = open.filter((t) => t.due === today);
-  const tomorrow = open.filter((t) => t.due === addDays(today, 1));
-  const week = open.filter((t) => t.due && diffDays(today, t.due) >= 2 && diffDays(today, t.due) <= 7);
-  const later = open.filter((t) => t.due && diffDays(today, t.due) > 7);
-  const undated = open.filter((t) => !t.due);
-
-  push("overdue", "Overdue", "danger", overdue);
-  push("today", "Today", "accent", todays, fmt.dayShort(today));
-  push("tomorrow", "Tomorrow", "neutral", tomorrow, fmt.dayShort(addDays(today, 1)));
-  push("week", "Next 7 days", "neutral", week, `${fmt.dayShort(addDays(today, 2))} – ${fmt.dayShort(addDays(today, 7))}`);
-
-  const byMonth = new Map<string, Task[]>();
-  for (const t of later) {
-    const m = startOfMonth(t.due!);
-    byMonth.set(m, [...(byMonth.get(m) ?? []), t]);
+  const byDate = new Map<DateKey, Task[]>();
+  const undated: Task[] = [];
+  for (const t of open) {
+    if (t.due) byDate.set(t.due, [...(byDate.get(t.due) ?? []), t]);
+    else undated.push(t);
   }
-  const sameMonthAsToday = startOfMonth(today);
-  for (const m of [...byMonth.keys()].sort()) {
-    const label = m === sameMonthAsToday ? "Later this month" : parseKey(m).y === parseKey(today).y ? fmt.month(m, "long") : fmt.monthYear(m);
-    push(`m-${m}`, label, "neutral", byMonth.get(m)!);
-  }
-  if (showUndated) push("undated", "No date", "neutral", undated);
+
+  // One group per date, oldest first. No "Overdue", "Tomorrow" or "Next 7 days" buckets: a date is a date.
+  const groups: TaskGroup[] = [...byDate.keys()].sort().map((d) => ({
+    id: d,
+    label: d.slice(0, 4) === today.slice(0, 4) ? fmt.dayLong(d) : `${fmt.dayLong(d)}, ${d.slice(0, 4)}`,
+    tone: d === today ? "accent" : "neutral",
+    tasks: [...byDate.get(d)!].sort(cmp),
+  }));
+  if (showUndated && undated.length) groups.push({ id: "undated", label: "No date", tone: "neutral", tasks: [...undated].sort(cmp) });
   return groups;
 }
