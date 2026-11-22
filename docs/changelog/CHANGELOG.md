@@ -9,6 +9,26 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-22 — Week view of Tasks on a phone
+
+**Asked for:** show the weekly view of tasks in mobile view.
+
+**What changed**
+- On a phone, Tasks → Week now shows the seven days of the week across the top (all seven fit, no sideways scrolling, each with its task count). Before, only two day cells were visible and the list below held every task from September onward.
+- Below the day cells, one section per day of that week, in order, with that day's tasks. A day with nothing says "Nothing due" with an **Add task** link. Completed tasks of the week stay in their day, struck through. Today's heading is in the accent colour.
+- Tapping a day cell scrolls to that day's section. The list opens on today when today is in the week. The arrows move a week at a time, and Today comes back.
+- The day headings scroll with the page in this view (the day cells above stay put), so the two never overlap.
+- Desktop Week (columns), and phone Day and Month, are unchanged.
+
+**Files:** `components/tasks/TasksScreen.tsx`, `components/tasks/taskModel.ts`
+
+**Screenshots** (`screenshots/2026-11-22-phone-week/`)
+![Week on a phone](screenshots/2026-11-22-phone-week/week.png)
+![After tapping Thursday](screenshots/2026-11-22-phone-week/week-tap-a-day.png)
+![Next week](screenshots/2026-11-22-phone-week/week-next.png)
+
+---
+
 ## 2026-11-22 — Tasks are listed by date, no Overdue / Tomorrow / Next 7 days groups
 
 **Asked for:** no "Overdue", "Tomorrow", "Next 7 days", "Later this month" groups in the task lists, in any view. Just show tasks date by date. (Also asked: why Google Calendar isn't connecting. Answer: it was never built; the sign-in button is a placeholder.)
