@@ -1,5 +1,6 @@
 "use client";
 import { CalendarDays, ChevronDown, ChevronUp, ChevronsUp, Equal } from "lucide-react";
+import { useShallow } from "zustand/react/shallow";
 import { TaskCheck } from "@/components/ui/Controls";
 import { cn } from "@/lib/cn";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -31,6 +32,8 @@ export function TaskCard({ task, compact, hideDue }: { task: Task; list?: TaskLi
   const today = useToday();
   const toggle = useData((s) => s.toggleTask);
   const open = useUI((s) => s.openTask);
+  // Every subtask of this task, always shown under it (in the order they were added).
+  const subtasks = useData(useShallow((s) => s.tasks.filter((t) => t.parentId === task.id).sort((a, b) => a.position - b.position)));
 
   const done = task.status === "completed";
 
@@ -71,6 +74,22 @@ export function TaskCard({ task, compact, hideDue }: { task: Task; list?: TaskLi
           <h3 className={cn("text-[0.9375rem] font-medium leading-snug", done && "text-text line-through decoration-text")}>{task.title}</h3>
         </div>
       </div>
+
+      {subtasks.length > 0 && (
+        <ul aria-label={`Subtasks of ${task.title}`} className="ml-[9px] mt-1 flex flex-col gap-px border-l-2 border-[color-mix(in_srgb,var(--semantic-primary)_22%,white)] pl-[21px]">
+          {subtasks.map((sub) => {
+            const subDone = sub.status === "completed";
+            return (
+              <li key={sub.id} className="flex items-start gap-2.5 py-1 pr-1">
+                <div className="pt-px" onClick={(e) => e.stopPropagation()}>
+                  <TaskCheck size={18} checked={subDone} onChange={() => void toggle(sub.id)} label={subDone ? `Reopen subtask ${sub.title}` : `Complete subtask ${sub.title}`} />
+                </div>
+                <span className={cn("min-w-0 flex-1 text-sm leading-snug", subDone && "text-text-3 line-through")}>{sub.title}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       {showMeta && <div className={cn("mt-auto flex items-center gap-2 text-xs", compact ? "pt-2" : "pt-3")}>
         {showDue && (

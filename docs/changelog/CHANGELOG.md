@@ -9,6 +9,26 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-22 — Subtasks are always shown under their task
+
+**Asked for:** option C from the subtask mock-ups: show the subtasks on each task, always visible, and all of them (no "+2 more").
+
+**What changed**
+- Every task card now lists **all of its subtasks** right under the title, indented, with a thin blue line on the left. Each has its own square checkbox; a ticked subtask is struck through and greyed. This is in every view: phone Day, phone and laptop Week, Month, and the Completed list.
+- **Ticking a subtask** ticks only that subtask; it does not open the task or tick the parent. **Tapping a subtask's title** opens the parent task, as tapping anywhere else on the card does. Adding, renaming and deleting subtasks is still done in the task editor.
+- A repeating task's days each show their own copy of the subtasks.
+- A task with no subtasks looks exactly as before.
+
+**Checked on a phone:** tasks with 3, 5 and 2 subtasks (some already ticked) all show every subtask in Day and in Week; ticking one struck it through without opening anything; tapping one's title opened the parent.
+
+**Files:** `components/tasks/TaskCard.tsx`
+
+**Screenshots** (`screenshots/2026-11-22-subtasks-on-cards/`)
+![Phone Day with subtasks](screenshots/2026-11-22-subtasks-on-cards/phone-day.png)
+![Phone Week with subtasks](screenshots/2026-11-22-subtasks-on-cards/phone-week.png)
+
+---
+
 ## 2026-11-22 — Custom repeat (like Google Tasks): every Sun, Wed, Fri, or any days
 
 **Asked for:** a custom repeat option like Google Tasks, for example "laundry every Sun, Wed, Fri", and in general any days.
