@@ -54,11 +54,11 @@ export function TaskCard({ task, selectedDay, compact }: { task: Task; list?: Ta
       }}
       className={cn(
         compact ? "group relative flex scroll-mt-24 cursor-pointer flex-col" : "group relative flex scroll-mt-24 cursor-pointer flex-col transition-[background,transform] duration-150",
-        "rounded-md border border-border hover:bg-surface-2 focus-visible:outline-2",
-        isSelectedDay ? "ring-2 ring-accent/25" : "",
-        done && "bg-surface/60"
+        "rounded-md focus-visible:outline-2",
+        done ? "bg-surface-2 hover:bg-surface-3" : "bg-task-card hover:bg-task-card-hover",
+        isSelectedDay ? "ring-2 ring-accent/25" : ""
       )}
-      style={{ padding: 2 }}
+      style={{ padding: 4 }}
     >
       <div className="flex items-start gap-3">
         <Tooltip label={done ? "Reopen task" : "Mark as complete"} delay={0}>

@@ -9,6 +9,23 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-22 — Task cards: a light blue tint instead of a border
+
+**Asked for:** instead of a border, give each task card a background colour (a very light tint of blue); no border; 4px padding on all sides.
+
+**What changed**
+- Task cards have no border. They are filled with a very light tint of the primary blue (6% of it over white, 10% on hover), with 4px padding on all sides. The tint is a design token (`--task-card` and `--task-card-hover` in `app/globals.css`), so it can be retuned in one place.
+- Completed cards stay a plain warm grey, so a done task still looks different from an open one.
+- The gap between cards and the side padding in the day columns from the previous change are unchanged.
+
+**Files:** `components/tasks/TaskCard.tsx`, `app/globals.css`
+
+**Screenshots** (`screenshots/2026-11-22-task-card-tint/`)
+![Phone Week](screenshots/2026-11-22-task-card-tint/phone-week.png)
+![Laptop Week](screenshots/2026-11-22-task-card-tint/desktop-week.png)
+
+---
+
 ## 2026-11-22 — Phone Tasks: Week as day columns, square checkboxes, bordered cards
 
 **Asked for:** the weekly view of tasks on a phone (it first came out as a stacked list, and was asked to look like the week view, not a list); no repeated date heading in the phone Day view; square checkboxes instead of circles; a border and 2px padding on each task card; no Completed section at the bottom of the phone Week view.
