@@ -16,6 +16,7 @@
   --surface: #ffffff; /* white cards, panels */
   --surface-2: #f6f4ef; /* sunken / hover (soft warm grey) */
   --surface-3: #ece8df; /* pressed */
+  --canvas: var(--surface-2); /* the area under the two headers: a light grey behind the day columns, the grid and the lists */
   --raised: #ffffff; /* active pill on a sunken track */
   --overlay: rgb(37 34 30 / 0.38);
 
@@ -96,6 +97,7 @@
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
+  --color-canvas: var(--canvas);
   --color-surface-3: var(--surface-3);
   --color-raised: var(--raised);
   --color-border: var(--border);

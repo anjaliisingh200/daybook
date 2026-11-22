@@ -9,6 +9,28 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-22 — Light grey canvas under the headers, Tasks columns as rounded panels (branch `next-changes`)
+
+**Asked for:** below the two headers, a light grey background on the content area; in Tasks, each column with a 16px corner radius (first 24px, then 16px), with the day heading ("SUN 22") inside the column itself; no Completed list in the Tasks week view; and "Add task" as the secondary button.
+
+**What changed**
+- **Light grey canvas.** The area under the top bar and the date row (Today, arrows, title, search, view menu) is now a light warm grey in both the Calendar and Tasks, in every view. It is one design token, `--canvas` in `app/globals.css` (it follows `--surface-2`), so it can be changed in one place. The hour labels in the Calendar and the sticky month headings follow it.
+- **Tasks columns are panels.** Each day is a white panel with a **16px corner radius**, floating on the grey with a small gap between panels. The day heading ("SUN 22", with today's blue circle) is now **inside each panel** instead of a separate row above them. It stays at the top of its panel as you scroll, and clicking it opens that day, as before. The Day view has no heading of its own (the page title already names the day). Month keeps its month navigator strip.
+- **No Completed list in the week view** of Tasks (on any screen). It is still in the Month view.
+- **"Add task" is the secondary button** (white with a border), at the top right and in the empty state, instead of the blue primary one. The "+" button on phones and the small "Add task" at the bottom of each column are unchanged.
+- The Calendar's own day-names row (SUN 22 …) is unchanged and still a separate row; it only shares the same heading component now.
+
+**Files:** `app/globals.css`, `components/shell/DayHeaders.tsx` (new `DayCell`), `components/tasks/TasksScreen.tsx`, `components/calendar/CalendarScreen.tsx`, `components/calendar/TimeGrid.tsx`, `components/calendar/DayTimeline.tsx`
+
+**Screenshots** (`screenshots/2026-11-22-grey-canvas/`)
+![Tasks week](screenshots/2026-11-22-grey-canvas/tasks-week.png)
+![Tasks week on a phone](screenshots/2026-11-22-grey-canvas/tasks-week-phone.png)
+![Tasks day](screenshots/2026-11-22-grey-canvas/tasks-day.png)
+![Calendar week](screenshots/2026-11-22-grey-canvas/calendar-week.png)
+![Calendar month](screenshots/2026-11-22-grey-canvas/calendar-month.png)
+
+---
+
 ## 2026-11-22 — No "Today" label on tasks in the laptop Day view
 
 **Asked for:** remove the "Today" label from the tasks in the Day view on a laptop (only that label).
