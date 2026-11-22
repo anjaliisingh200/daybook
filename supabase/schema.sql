@@ -47,6 +47,20 @@ begin
   end loop;
 end $$;
 
+-- Google connection: one row per user. `refresh_token` is stored ENCRYPTED by the server
+-- (AES-256-GCM, key GOOGLE_TOKEN_KEY), so reading the row does not reveal the token.
+create table if not exists public.google_connections (
+  user_id uuid primary key default auth.uid() references auth.users (id) on delete cascade,
+  email text,
+  refresh_token text not null,
+  scope text not null default '',
+  updated_at timestamptz not null default now()
+);
+alter table public.google_connections enable row level security;
+drop policy if exists "own connection" on public.google_connections;
+create policy "own connection" on public.google_connections for all to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
+grant select, insert, update, delete on public.google_connections to authenticated;
+
 -- Let signed-in users reach the tables through the API. New Supabase projects do not do this
 -- automatically for tables made in the SQL editor. Row-level security above still limits
 -- every user to their own rows, and signed-out visitors get nothing.

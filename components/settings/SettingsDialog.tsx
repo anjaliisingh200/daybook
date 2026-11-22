@@ -12,6 +12,7 @@ import { cn } from "@/lib/cn";
 import { allTimeZones, systemTimeZone, tzOffsetLabel } from "@/lib/dates";
 import { useCalendarViews, useFmt } from "@/lib/hooks";
 import { useData } from "@/lib/store/data";
+import { connectGoogle, disconnectGoogle, useGoogle } from "@/lib/store/google";
 import { REGION_PRESETS, usePrefs } from "@/lib/store/prefs";
 import { useUI } from "@/lib/store/ui";
 import { hexOf } from "@/lib/colors";
@@ -482,9 +483,12 @@ function Account() {
   const kind = useData((s) => s.repoKind);
   const cals = useData((s) => s.calendars);
   const lists = useData((s) => s.lists);
+  const google = useGoogle();
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const toast = useUI((s) => s.toast);
   const fmt = useFmt();
   const when = syncedAt ? `${fmt.date(new Date(syncedAt).toISOString().slice(0, 10))}, ${fmt.time(syncedAt)}` : "Never";
+  const onGoogle = kind === "google";
 
   return (
     <>
@@ -494,15 +498,41 @@ function Account() {
         <div className="flex items-start gap-3">
           <div className="flex size-10 items-center justify-center rounded-full bg-accent text-base font-semibold text-on-accent">A</div>
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold">Anjali</div>
-            <div className="text-[0.8125rem] text-text-2">{kind === "mock" ? "Sample data. No Google account connected yet." : kind === "supabase" ? "Signed in. Your data is saved to your account." : "Connected to Google"}</div>
+            <div className="text-sm font-semibold">{onGoogle ? (google.email ?? "Google account") : "Anjali"}</div>
+            <div className="text-[0.8125rem] text-text-2">
+              {kind === "mock"
+                ? "Sample data. No Google account connected yet."
+                : onGoogle
+                  ? "Your calendars and tasks come from Google. For now they are read-only here; editing arrives next."
+                  : google.needsReconnect
+                    ? "Google stopped accepting the saved permission. Connect again to bring your Google data back."
+                    : "Signed in. Your data is saved to your account."}
+            </div>
           </div>
-          <Badge tone={kind === "mock" ? "muted" : "accent"}>{kind === "mock" ? "Demo mode" : "Connected"}</Badge>
+          <Badge tone={kind === "mock" || google.needsReconnect ? "muted" : "accent"}>{kind === "mock" ? "Demo mode" : onGoogle ? "Google connected" : google.needsReconnect ? "Needs reconnect" : "Connected"}</Badge>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button variant="primary" size="sm" onClick={() => toast("Google sign-in is the next build phase. Everything here uses sample data.")}>
-            Connect Google account
-          </Button>
+          {!onGoogle && (
+            <Button variant="primary" size="sm" onClick={connectGoogle}>
+              {google.needsReconnect ? "Reconnect Google" : "Connect Google account"}
+            </Button>
+          )}
+          {(onGoogle || google.needsReconnect) && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={async () => {
+                if (!confirmDisconnect) {
+                  setConfirmDisconnect(true);
+                  window.setTimeout(() => setConfirmDisconnect(false), 5000);
+                  return;
+                }
+                if (!(await disconnectGoogle())) toast("Couldn't disconnect Google. Try again.", { tone: "error" });
+              }}
+            >
+              {confirmDisconnect ? "Click again to disconnect" : "Disconnect Google"}
+            </Button>
+          )}
           {kind === "supabase" && (
             <Button size="sm" variant="secondary" onClick={() => void signOut()}>
               Log out
@@ -538,8 +568,8 @@ function Account() {
         <h4 className="mb-2 text-sm font-semibold">What syncs with Google</h4>
         <div className="overflow-hidden rounded-xl border border-border text-[0.8125rem]">
           {[
-            ["Tasks: title, notes, due date, list, completion", "Two-way with Google Tasks"],
-            ["Events: all fields, recurrence, time zones", "Two-way with Google Calendar"],
+            ["Tasks: title, notes, due date, list, completion", "Read from Google Tasks (saving changes arrives next)"],
+            ["Events: title, time, place, guests, repeats", "Read from Google Calendar (saving changes arrives next)"],
             ["Task priority", "Daybook only"],
             ["Calendar visibility and colours", "Daybook only"],
             ["Task times and reminders", "Not available in Google Tasks"],

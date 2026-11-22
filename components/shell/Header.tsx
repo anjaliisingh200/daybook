@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn";
 import { Menu } from "@/components/ui/Menu";
 import { Badge } from "@/components/ui/Controls";
 import { LogoMark } from "./Logo";
+import { connectGoogle, useGoogle } from "@/lib/store/google";
 import { useUI } from "@/lib/store/ui";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
@@ -25,7 +26,7 @@ export const TABS = [
 export function Header() {
   const path = usePathname();
   const openSettings = useUI((s) => s.openSettings);
-  const toast = useUI((s) => s.toast);
+  const google = useGoogle();
   const [email, setEmail] = useState<string | null>(null);
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -79,7 +80,9 @@ export function Header() {
               ? { label: email ?? "Signed in", hint: "Signed in", icon: <Cloud className="size-4" />, onSelect: () => openSettings("account") }
               : { label: "Anjali", hint: "Demo mode", icon: <Cloud className="size-4" />, onSelect: () => openSettings("account") },
             { type: "sep" },
-            { label: "Connect Google account", icon: <LogIn className="size-4" />, onSelect: () => toast("Google connection arrives in the next phase.") },
+            google.connected && !google.needsReconnect
+              ? { label: google.email ?? "Google account", hint: "Connected", icon: <LogIn className="size-4" />, onSelect: () => openSettings("account") }
+              : { label: google.needsReconnect ? "Reconnect Google" : "Connect Google account", icon: <LogIn className="size-4" />, onSelect: connectGoogle },
             { label: "Settings", icon: <Settings className="size-4" />, onSelect: () => openSettings() },
             { label: "Account & sync settings", icon: <SlidersHorizontal className="size-4" />, onSelect: () => openSettings("account") },
             { label: "Keyboard shortcuts", icon: <Keyboard className="size-4" />, onSelect: () => openSettings("shortcuts") },

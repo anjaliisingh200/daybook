@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx tests/core.test.ts",
+    "test": "tsx tests/core.test.ts && tsx tests/google.test.ts",
     "typecheck": "tsc --noEmit",
     "shots": "node scripts/capture.mjs"
   },

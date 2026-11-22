@@ -1,10 +1,8 @@
 "use client";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { SupabaseRepository } from "@/lib/data/supabase/supabaseRepository";
 import { create } from "zustand";
 import type { CalendarEvent, CalendarInfo, NewTaskInput, Snapshot, Task, TaskList, TaskPatch } from "@/lib/types";
 import type { NewEventInput, Repository } from "@/lib/data/repository";
-import { MockRepository } from "@/lib/data/mock/mockRepository";
+import { SwitchingRepository } from "@/lib/data/switching";
 import { addDays, addMonths, dowOf, systemTimeZone, todayKey, zoned, zonedToMs } from "@/lib/dates";
 import { presetOf, recurrenceFromPreset, type RepeatPreset } from "@/lib/recurrence";
 import { useUI } from "./ui";
@@ -25,8 +23,8 @@ import { usePrefs } from "./prefs";
  *   completing the task leaves the event alone.
  */
 
-// Swap this one line for `new GoogleRepository()` in the integration phase.
-export const repo: Repository = isSupabaseConfigured ? new SupabaseRepository() : new MockRepository();
+// Picks Google, Daybook's own storage, or local sample data (see lib/data/switching.ts).
+export const repo: Repository = new SwitchingRepository();
 
 export type SyncState = "idle" | "syncing" | "error" | "offline";
 
@@ -328,8 +326,9 @@ const once = (fn: () => Promise<void>) => {
     async load() {
       try {
         const snap = await settledSnapshot(() => repo.load());
-        set({ ...apply(snap), status: "ready", syncState: "idle" });
-        void ensureTasks();
+        set({ ...apply(snap), status: "ready", syncState: "idle", repoKind: repo.kind });
+        // Google events are not turned into tasks (that bookkeeping is Daybook's own data).
+        if (repo.kind !== "google") void ensureTasks();
       } catch (e) {
         console.error("Daybook load failed", e);
         set({ status: "error" });
@@ -346,8 +345,8 @@ const once = (fn: () => Promise<void>) => {
       set({ syncState: "syncing" });
       try {
         const snap = await settledSnapshot(() => repo.sync());
-        set({ ...apply(snap), syncState: "idle" });
-        void ensureTasks();
+        set({ ...apply(snap), syncState: "idle", repoKind: repo.kind });
+        if (repo.kind !== "google") void ensureTasks();
         if (!opts?.silent) toast("Everything is up to date");
       } catch (e) {
         console.error("Daybook sync failed", e);

@@ -2,7 +2,7 @@
 
 A personal productivity app that combines **Google Calendar** and **Google Tasks** in two tabs: **Calendar** (familiar, Google Calendar-like) and **Tasks** (a card-based view of everything). Google stays the source of truth.
 
-**Status: UI built and working on sample data. Google connection is the next phase.**
+**Status: UI built. Google connection phase 1 (connect and read) is on the `google-sync` branch; see docs/GOOGLE-SETUP.md. Writing back to Google is next.**
 
 ## Run it
 
@@ -47,7 +47,7 @@ The UI never talks to a data source directly.
 ```
 components  →  lib/store (optimistic updates)  →  lib/data/repository.ts  (interface)
                                                          ├─ lib/data/mock/…   ← today
-                                                         └─ GoogleRepository  ← next phase
+                                                         └─ GoogleRepository  ← phase 1: read-only
 ```
 
 Swap one line in `lib/store/data.ts` (`export const repo = new MockRepository()`) and delete `lib/data/mock/`. No component changes.

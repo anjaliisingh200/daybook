@@ -10,6 +10,7 @@ import { SettingsDialog } from "@/components/settings/SettingsDialog";
 import { EventLayers } from "@/components/calendar/EventLayers";
 import { TaskLayers } from "@/components/tasks/TaskLayers";
 import { useData } from "@/lib/store/data";
+import { connectGoogle, useGoogle } from "@/lib/store/google";
 import { useUI } from "@/lib/store/ui";
 import { usePrefs } from "@/lib/store/prefs";
 import { useToday } from "@/lib/hooks";
@@ -53,6 +54,28 @@ function ShellInner({ children }: { children: ReactNode }) {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Google's consent screen sends people back here with ?google=<what happened>. Say it once, then tidy the address.
+  useEffect(() => {
+    const result = new URLSearchParams(window.location.search).get("google");
+    if (!result) return;
+    const say: Record<string, [string, boolean]> = {
+      connected: ["Google connected. Your calendars and tasks are loading.", false],
+      denied: ["Google was not connected: the permission was declined.", true],
+      missing_permission: ["Daybook needs all three permissions (calendar events, calendar list and tasks). Connect again and leave them ticked.", true],
+      not_configured: ["Google isn't set up on this server yet. See docs/GOOGLE-SETUP.md.", true],
+      error: ["Couldn't connect Google. Try again.", true],
+    };
+    const [message, isError] = say[result] ?? say.error;
+    useUI.getState().toast(message, isError ? { tone: "error", duration: 9000 } : { duration: 6000 });
+    window.history.replaceState(null, "", window.location.pathname);
+  }, []);
+
+  // Google stopped accepting the saved permission: offer the way back once.
+  const needsReconnect = useGoogle((g) => g.needsReconnect);
+  useEffect(() => {
+    if (needsReconnect) useUI.getState().toast("Google needs to be connected again. Showing your Daybook data meanwhile.", { tone: "error", duration: 12000, action: { label: "Reconnect", onClick: connectGoogle } });
+  }, [needsReconnect]);
 
   // Sensible refresh strategy: poll while visible, refresh on focus/reconnect.
   useEffect(() => {

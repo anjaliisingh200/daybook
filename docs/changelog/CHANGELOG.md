@@ -9,6 +9,31 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-22 — Google connection, phase 1: connect and read (branch `google-sync`)
+
+**Asked for:** the Google Calendar and Google Tasks connection, planned in phases. This is phase 1: sign in with Google and show your real calendars, events, task lists and tasks. Kept on its own branch, not merged.
+
+**What changed**
+- **Connect Google account** (user menu and Settings → Account & sync) now works. It opens Google's consent screen, then returns to the app. Settings shows the connected address and a **Disconnect Google** button (two clicks, and it also cancels the permission at Google). If Google stops accepting the permission, the app shows your Daybook data meanwhile and offers **Reconnect**.
+- **Read only for now.** Calendars (names, colours), events from 90 days back to a year ahead (repeats expanded, cancelled and declined events left out, all-day end dates corrected), and every task list and task (subtasks, due dates, completed) are read from Google. Adding or editing while connected shows "Google is connected read-only for now" and nothing is saved. Writing back is phase 2.
+- **Security.** The Google permission (refresh token) is stored encrypted in a new Supabase table, and only the server can read it; the browser never sees a Google token. The sign-in carries a one-time state and a PKCE challenge. Disconnect only accepts calls from the app's own pages.
+- Events are no longer turned into tasks automatically while Google is the source (that bookkeeping is for Daybook's own data).
+- Without the Google keys set, the buttons explain that Google isn't set up yet instead of failing.
+- New guide: `docs/GOOGLE-SETUP.md` (Google Cloud steps, the three keys, the one SQL block to run again).
+- Tests: 34 new checks (encryption, mapping, paging, retry, expired permission) against a fake Google, plus a browser run of the whole flow: connect, data on screen, Settings, expired permission, disconnect, missing permission, forged sign-in.
+
+**Not in this phase:** writing to Google; the colour of Google calendars is used as Google has it (a blue calendar stays blue); tasks outside the week on screen show only in Month view; the Daybook-only fields (priority, task times) are not attached to Google tasks yet.
+
+**Files:** `app/api/google/*` (connect, callback, status, snapshot, disconnect), `lib/google/*`, `lib/data/google/googleRepository.ts`, `lib/data/switching.ts`, `lib/store/google.ts`, `lib/supabase/server.ts`, `lib/store/data.ts`, `components/shell/Header.tsx`, `components/shell/AppShell.tsx`, `components/settings/SettingsDialog.tsx`, `supabase/schema.sql`, `.env.local.example`, `next.config.ts`, `tests/google.test.ts`, `tests/fakeGoogle.ts`, `docs/GOOGLE-SETUP.md`
+
+**Screenshots** (`screenshots/2026-11-22-google-phase1/`, taken against a fake Google, not a real account)
+![Calendar from Google](screenshots/2026-11-22-google-phase1/calendar-from-google.png)
+![Tasks from Google](screenshots/2026-11-22-google-phase1/tasks-from-google.png)
+![Settings, connected](screenshots/2026-11-22-google-phase1/settings-connected.png)
+![Reconnect needed](screenshots/2026-11-22-google-phase1/reconnect-needed.png)
+
+---
+
 ## 2026-11-22 — Tasks are listed by date, no Overdue / Tomorrow / Next 7 days groups
 
 **Asked for:** no "Overdue", "Tomorrow", "Next 7 days", "Later this month" groups in the task lists, in any view. Just show tasks date by date. (Also asked: why Google Calendar isn't connecting. Answer: it was never built; the sign-in button is a placeholder.)
