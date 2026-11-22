@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AlertTriangle, ArrowDownUp, Bell, Check, CheckCircle2, CloudOff, Download, ListFilter, Plus, RefreshCw, Search, Settings, Trash2, X, CalendarX2, Pencil } from "lucide-react";
 import { Button, IconButton } from "@/components/ui/Button";
-import { Badge, ColorCheck, EmptyState, Field, Input, RoundCheck, Segmented, Skeleton, Switch, Textarea } from "@/components/ui/Controls";
+import { Badge, ColorCheck, EmptyState, Field, Input, TaskCheck, Segmented, Skeleton, Switch, Textarea } from "@/components/ui/Controls";
 import { DateField, MonthPanel, TimeSelect } from "@/components/ui/DatePicker";
 import { Drawer, LeftSheet, Modal } from "@/components/ui/Modal";
 import { Menu, Select } from "@/components/ui/Menu";
@@ -527,7 +527,7 @@ function Forms() {
         <Block label="Choices">
           <div className="space-y-5">
             <div className="flex items-center gap-4">
-              <RoundCheck checked={checked} onChange={setChecked} label="Complete task" />
+              <TaskCheck checked={checked} onChange={setChecked} label="Complete task" />
               <span className="text-sm text-text-2">Completion circle (tap me)</span>
             </div>
             <div className="flex flex-wrap items-center gap-3">

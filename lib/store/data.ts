@@ -4,7 +4,7 @@ import type { CalendarEvent, CalendarInfo, NewTaskInput, Snapshot, Task, TaskLis
 import type { NewEventInput, Repository } from "@/lib/data/repository";
 import { SwitchingRepository } from "@/lib/data/switching";
 import { addDays, addMonths, dowOf, systemTimeZone, todayKey, zoned, zonedToMs } from "@/lib/dates";
-import { presetOf, recurrenceFromPreset, type RepeatPreset } from "@/lib/recurrence";
+import { decodeRepeat, isCustomRepeat, presetOf, recurrenceOfRepeat, repeatDates } from "@/lib/recurrence";
 import { useUI } from "./ui";
 import { usePrefs } from "./prefs";
 
@@ -182,7 +182,7 @@ export const useData = create<DataStore>((set, get) => {
 
     const tz = appTimeZone();
     const calendarId = t.meta.calendarId ?? get().calendars.find((c) => c.primary)?.id ?? get().calendars[0]?.id ?? "";
-    const recurrence = recurrenceFromPreset((t.meta.repeat ?? "none") as RepeatPreset, t.due);
+    const recurrence = recurrenceOfRepeat(t.meta.repeat, t.due);
     const fields: NewEventInput = hasTime
       ? (() => {
           const startMin = t.meta.startMin!;
@@ -263,6 +263,18 @@ export const useData = create<DataStore>((set, get) => {
     }
   };
 
+  /**
+   * Gives a repeating task's occurrence its own copy of the original's subtasks, all unticked, so each day can be
+   * ticked off separately. Does nothing if the occurrence already has subtasks.
+   */
+  const copySubtasks = async (rootId: string, occurrenceId: string) => {
+    if (get().tasks.some((t) => t.parentId === occurrenceId)) return;
+    const subs = get().tasks.filter((t) => t.parentId === rootId).sort((a, b) => a.position - b.position);
+    for (const sub of subs) {
+      await get().addTask({ title: sub.title, notes: sub.notes, listId: sub.listId, parentId: occurrenceId, due: null, calendarId: sub.meta.calendarId });
+    }
+  };
+
   /** Repeating tasks: keep the next month's occurrences created. Completing one only marks that one done. */
   const HORIZON_DAYS = 30;
   const ensureOccurrences = async () => {
@@ -272,14 +284,24 @@ export const useData = create<DataStore>((set, get) => {
     for (const root of roots) {
       const preset = root.meta.repeat!;
       const have = new Set(get().tasks.filter((t) => t.id === root.id || t.meta.seriesId === root.id).map((t) => t.due));
-      let cur = root.due!;
-      for (let i = 0; i < 400 && cur <= horizon; i++) {
+      // The dates the rule lands on, from the original's date up to the horizon.
+      const rec = isCustomRepeat(preset) ? decodeRepeat(preset) : null;
+      const dates: string[] = [];
+      if (rec) dates.push(...repeatDates(rec, root.due!, horizon));
+      else for (let cur = root.due!, i = 0; i < 400 && cur <= horizon; i++, cur = stepDate(preset, cur)) dates.push(cur);
+      for (const cur of dates) {
         if (cur >= today && !have.has(cur)) {
           have.add(cur);
           const made = await get().addTask({ title: root.title, listId: root.listId, due: cur, calendarId: root.meta.calendarId, priority: root.meta.priority });
-          if (made) await applyTaskPatch(made.id, { repeat: preset, seriesId: root.id, startMin: root.meta.startMin ?? null, endMin: root.meta.endMin ?? null });
+          if (made) {
+            await applyTaskPatch(made.id, { repeat: preset, seriesId: root.id, startMin: root.meta.startMin ?? null, endMin: root.meta.endMin ?? null });
+            await copySubtasks(root.id, made.id);
+          }
         }
-        cur = stepDate(preset, cur);
+      }
+      // Occurrences made before the original had subtasks (or before this existed) get them too.
+      for (const occ of get().tasks.filter((t) => t.meta.seriesId === root.id && t.status === "needsAction" && t.due && t.due >= today)) {
+        await copySubtasks(root.id, occ.id);
       }
     }
   };
@@ -365,7 +387,8 @@ const once = (fn: () => Promise<void>) => {
 
     // ───────────── tasks ─────────────
     async addTask(input) {
-      if (!input.due) {
+      // A task needs a date. A subtask does not: it belongs to its parent task and shows up with it.
+      if (!input.due && !input.parentId) {
         toast("A task needs a date before it can be saved.", { tone: "error" });
         return null;
       }

@@ -14,7 +14,11 @@ import { useUI, type EventDraft } from "@/lib/store/ui";
 import { deleteInstance, draftFromInstance, saveDraft, type Scope } from "@/lib/store/eventActions";
 import { diffDays, dowOf, parseKey } from "@/lib/dates";
 import { describeRecurrence, recurrenceFromPreset, type RepeatPreset } from "@/lib/recurrence";
+import { CustomRepeatDialog } from "@/components/ui/CustomRepeat";
 import type { EventInstance } from "@/lib/types";
+
+/** Stands in for "Custom…" in the Repeat menu. It is never saved. */
+const NEW_CUSTOM = "__custom" as RepeatPreset;
 
 export function EventLayers() {
   const mobile = useIsMobile();
@@ -293,6 +297,7 @@ function EventEditor({ draft, onSave, onDelete }: { draft: EventDraft | null; on
 
 function EditorForm({ initial, onSave, onDelete, onCancel }: { initial: EventDraft; onSave: (d: EventDraft) => void; onDelete: (i: EventInstance) => void; onCancel: () => void }) {
   const [d, setD] = useState<EventDraft>(initial);
+  const [customRepeat, setCustomRepeat] = useState(false);
   const fmt = useFmt();
   const cals = useCalendarViews().filter((c) => !c.readOnly);
   const events = useInstancesFor(initial);
@@ -315,6 +320,8 @@ function EditorForm({ initial, onSave, onDelete, onCancel }: { initial: EventDra
     { value: "yearly", label: `Annually on ${fmt.month(d.startDate, "long")} ${parseKey(d.startDate).d}` },
   ];
   if (d.repeat === "custom") repeatOptions.push({ value: "custom", label: describeRecurrence(d.recurrence, d.startDate, fmt) });
+  // not a real preset: picking it opens the custom repeat dialog (every N days / weeks / months / years, on chosen days)
+  repeatOptions.push({ value: NEW_CUSTOM, label: "Custom…" });
 
   const canSave = d.title.trim().length > 0 || true;
 
@@ -346,7 +353,14 @@ function EditorForm({ initial, onSave, onDelete, onCancel }: { initial: EventDra
         />
 
         <Field label="Repeat">
-          <Select<RepeatPreset> aria-label="Repeat" value={d.repeat} onChange={(v) => patch({ repeat: v })} options={repeatOptions} />
+          <Select<RepeatPreset> aria-label="Repeat" value={d.repeat} onChange={(v) => (v === NEW_CUSTOM ? setCustomRepeat(true) : patch({ repeat: v }))} options={repeatOptions} />
+          <CustomRepeatDialog
+            open={customRepeat}
+            onClose={() => setCustomRepeat(false)}
+            startKey={d.startDate}
+            initial={d.repeat === "custom" ? d.recurrence : recurrenceFromPreset(d.repeat, d.startDate)}
+            onDone={(rec) => patch({ repeat: "custom", recurrence: rec })}
+          />
         </Field>
 
         <Field label="Calendar">

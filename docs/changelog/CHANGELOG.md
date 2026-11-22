@@ -9,6 +9,164 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-22 — Subtasks are always shown under their task
+
+**Asked for:** option C from the subtask mock-ups: show the subtasks on each task, always visible, and all of them (no "+2 more").
+
+**What changed**
+- Every task card now lists **all of its subtasks** right under the title, indented, with a thin blue line on the left. Each has its own square checkbox; a ticked subtask is struck through and greyed. This is in every view: phone Day, phone and laptop Week, Month, and the Completed list.
+- **Ticking a subtask** ticks only that subtask; it does not open the task or tick the parent. **Tapping a subtask's title** opens the parent task, as tapping anywhere else on the card does. Adding, renaming and deleting subtasks is still done in the task editor.
+- A repeating task's days each show their own copy of the subtasks.
+- A task with no subtasks looks exactly as before.
+
+**Checked on a phone:** tasks with 3, 5 and 2 subtasks (some already ticked) all show every subtask in Day and in Week; ticking one struck it through without opening anything; tapping one's title opened the parent.
+
+**Files:** `components/tasks/TaskCard.tsx`
+
+**Screenshots** (`screenshots/2026-11-22-subtasks-on-cards/`)
+![Phone Day with subtasks](screenshots/2026-11-22-subtasks-on-cards/phone-day.png)
+![Phone Week with subtasks](screenshots/2026-11-22-subtasks-on-cards/phone-week.png)
+
+---
+
+## 2026-11-22 — Custom repeat (like Google Tasks): every Sun, Wed, Fri, or any days
+
+**Asked for:** a custom repeat option like Google Tasks, for example "laundry every Sun, Wed, Fri", and in general any days.
+
+**What changed**
+- The **Repeat** menu now ends with **Custom…** (when you add a task, when you edit one, and in the calendar's event editor). It opens a small dialog:
+  - **Repeat every** a number of **days, weeks, months or years**.
+  - For weeks, **Repeat on**: tick any of S M T W T F S (at least one is required, otherwise Done is disabled and it says so).
+  - **Ends**: **Never**, or **On a date**.
+  - A plain-words summary underneath, such as "Weekly on Sun, Wed, Fri" or "Every 2 weeks on Mon, Thu, until 22 Feb 2027".
+- A task with a custom repeat gets an occurrence on exactly the chosen days, for the next 30 days (kept topped up, as with the other repeats), each with its own copy of the subtasks. Checked on a phone: "Laundry" every Sun, Wed, Fri created 13 tasks, all on a Sunday, Wednesday or Friday.
+- The Repeat menu shows the custom rule in words, and "Custom…" opens the dialog filled in with the current rule, so it can be edited.
+- The same dialog saves a repeating event on the calendar (Sun, Mon, Wed until a date was checked); a task with a time passes the rule on to its calendar event.
+- The existing choices (Daily, Weekly, Every weekday, Monthly, Annually) work as before.
+
+**Good to know**
+- The first task stays on the date it was created for, even if that is not one of the chosen days; the rest follow the chosen days. Start it on one of the days if you want it to line up.
+- "Ends after N times" is not offered yet (Never or a date only).
+- The new days appear over about 15 seconds after saving, one after another.
+
+**Files:** `lib/recurrence.ts`, `lib/store/data.ts`, `components/ui/CustomRepeat.tsx` (new), `components/ui/RepeatSelect.tsx`, `components/calendar/EventLayers.tsx`, `tests/core.test.ts` (13 new checks for the rules)
+
+**Screenshots** (`screenshots/2026-11-22-custom-repeat/`)
+![Custom repeat on a phone](screenshots/2026-11-22-custom-repeat/phone-dialog.png)
+![Reopened with the rule filled in](screenshots/2026-11-22-custom-repeat/phone-reopened.png)
+![In the event editor](screenshots/2026-11-22-custom-repeat/event-dialog.png)
+
+---
+
+## 2026-11-22 — Fix: subtasks were not being saved, and repeating tasks now carry them
+
+**Reported:** added subtasks to a task, then set it to repeat every day; opening the task showed no subtasks (on a phone).
+
+**Cause:** adding a subtask never worked. A subtask has no date of its own, but the store refuses to save any task without a date ("A task needs a date before it can be saved", which only flashed past in a toast), so every subtask, in the Add task form and in the task editor, was dropped silently. Repeat was not the cause.
+
+**What changed**
+- A subtask can now be saved without a date. Only a top-level task still needs one.
+- Each day of a repeating task gets its **own copy of the subtasks**, all unticked, so ticking "Sub one" on Monday does not tick it on Tuesday. New days made later get the copies too, and days made earlier that have none get them the next time the app loads.
+- Subtasks that you tried to add before this fix were never saved, so they have to be added again.
+
+**Checked on a phone:** add a task with two subtasks (both saved) → set Repeat: Daily → today's task still has both, and tomorrow's and the following days' each have their own two; ticking one on tomorrow's left the others unticked.
+
+**Files:** `lib/store/data.ts`
+
+**Screenshots** (`screenshots/2026-11-22-subtasks-fix/`)
+![Tomorrow's repeated task with its subtasks](screenshots/2026-11-22-subtasks-fix/repeat-occurrence-subtasks.png)
+
+---
+
+## 2026-11-22 — No "Today" tag on tasks in the phone Day view
+
+**Asked for:** remove the "Today" tag from the tasks in the phone Day view.
+
+**What changed**
+- In the phone Day view the date chip ("Today", "Tomorrow", a date) is no longer shown on each task, since the date is already in the header. A task with nothing else to show (no priority) is now a single slim line; a task with a priority keeps the priority mark at the right.
+- Other views are unchanged: the chip still shows in phone Month and on the laptop (Day, Week, Completed list).
+
+**Files:** `components/tasks/TaskCard.tsx`, `components/tasks/TasksScreen.tsx`
+
+**Screenshots** (`screenshots/2026-11-22-day-no-today-tag/`)
+![Phone Day, no Today tag](screenshots/2026-11-22-day-no-today-tag/phone-day.png)
+
+---
+
+## 2026-11-22 — Done tasks look like open tasks, no borders
+
+**Asked for:** a completed task should have the same background colour as a task that is not done, and neither card should have a border.
+
+**What changed**
+- A completed card now has the same light blue tint as an open card (it used to turn grey). It is still told apart by its ticked checkbox and the strike-through on its title. This applies in the day columns, in the Completed list and on the phone.
+- Neither kind of card has a border. I also removed the faint ring that outlined every task on the selected day (it showed in Month view after tapping a day), so no task card has any outline now. The keyboard focus outline stays, for keyboard users.
+- Checked with the page's real styles: in Week, in Month with a day selected, and in the phone Day view after ticking a task, every card has the same background, a 0px border and no ring.
+
+**Files:** `components/tasks/TaskCard.tsx`
+
+**Screenshots** (`screenshots/2026-11-22-same-card/`)
+![Phone Day, one task ticked](screenshots/2026-11-22-same-card/phone-day-ticked.png)
+![Week with the Completed list](screenshots/2026-11-22-same-card/week-with-completed.png)
+
+---
+
+## 2026-11-22 — Phone Tasks → Day: drag to reorder, and ticked tasks stay
+
+**Asked for:** on a phone, be able to drag tasks to change their order in the Day view; and a task that is ticked must stay in the Day view, checked and struck through, instead of disappearing.
+
+**What changed**
+- On a phone, **Day** is now one full-width day column, the same as the laptop Day and the Week columns, instead of a separate list. That is what makes both of these work:
+- **Reorder by dragging:** press and hold a task for a moment (it lifts, and a dashed slot shows where it will land), drag up or down, and let go. When the day is longer than the screen, holding the task near the top or bottom edge scrolls the list. A short tap still opens the task, and swiping still scrolls.
+- **Ticking keeps the task:** a ticked task stays in its place, checked and struck through. (The old phone list was built from open tasks only, so ticked ones vanished.) Laptop Day and Week already worked this way.
+- **Manual order turns on by itself** the first time a task is dragged up or down inside a day: every task of that day keeps the place it had on screen, and a toast says so. It can be switched off in Settings → Tasks ("Manual order in day columns"). This also applies on a laptop, where dragging inside a day used to do nothing unless the setting was already on.
+- A drop is now also picked up when the finger lets go over the drop slot or the empty space under the last card (it was lost there).
+- Dragging a task onto another day (laptop Week) and the phone Week and Month views are unchanged.
+
+**Files:** `components/tasks/TasksScreen.tsx`, `components/settings/SettingsDialog.tsx`
+
+**Screenshots** (`screenshots/2026-11-22-phone-day-reorder/`)
+![A ticked task stays, struck through](screenshots/2026-11-22-phone-day-reorder/ticked-stays.png)
+![Dragging a task](screenshots/2026-11-22-phone-day-reorder/dragging.png)
+![After the drop](screenshots/2026-11-22-phone-day-reorder/reordered.png)
+
+---
+
+## 2026-11-22 — Task cards: a light blue tint instead of a border
+
+**Asked for:** instead of a border, give each task card a background colour (a very light tint of blue); no border; 4px padding on all sides.
+
+**What changed**
+- Task cards have no border. They are filled with a very light tint of the primary blue (6% of it over white, 10% on hover), with 4px padding on all sides. The tint is a design token (`--task-card` and `--task-card-hover` in `app/globals.css`), so it can be retuned in one place.
+- Completed cards stay a plain warm grey, so a done task still looks different from an open one.
+- The gap between cards and the side padding in the day columns from the previous change are unchanged.
+
+**Files:** `components/tasks/TaskCard.tsx`, `app/globals.css`
+
+**Screenshots** (`screenshots/2026-11-22-task-card-tint/`)
+![Phone Week](screenshots/2026-11-22-task-card-tint/phone-week.png)
+![Laptop Week](screenshots/2026-11-22-task-card-tint/desktop-week.png)
+
+---
+
+## 2026-11-22 — Phone Tasks: Week as day columns, square checkboxes, bordered cards
+
+**Asked for:** the weekly view of tasks on a phone (it first came out as a stacked list, and was asked to look like the week view, not a list); no repeated date heading in the phone Day view; square checkboxes instead of circles; a border and 2px padding on each task card; no Completed section at the bottom of the phone Week view.
+
+**What changed**
+- **Phone Week** is now the same side-by-side day columns as on a laptop: one column per day, with that day's tasks, an Add task button under each, and the week scrolling sideways (about two days fit on screen). Today's column is brought into view, the arrows move a week, and tapping a day's date opens that day. Moving a task to another day by long-press and drag works as before.
+- The **Completed** list is not shown at the bottom of the phone Week view. Laptop Week still has it.
+- **Phone Day** stays a single list, and no longer repeats the date as a heading ("Sunday, 22 November 6") above the tasks; the date is already in the header.
+- **Square checkbox** everywhere a task is ticked: on cards, in the task editor, for subtasks, on the home page preview and in the design system. It is the same shape as the calendar-visibility checkbox (renamed `TaskCheck`; it was `RoundCheck`).
+- **Task cards** have a 1px border with rounded corners and keep their 2px padding. Cards now have a small gap (6px) between them in the day columns, and the columns have a little side padding, so the borders don't touch.
+- Phone Month is unchanged.
+
+**Files:** `components/tasks/TasksScreen.tsx`, `components/tasks/TaskCard.tsx`, `components/tasks/taskModel.ts`, `components/ui/Controls.tsx` (+ `Controls.ds.md`), `components/tasks/TaskLayers.tsx`, `components/home/Hero.tsx`, `components/design/DesignSystem.tsx`
+
+**Screenshots** (`screenshots/2026-11-22-phone-week/`)
+![Phone Week, day columns](screenshots/2026-11-22-phone-week/week-columns.png)
+![Phone Day](screenshots/2026-11-22-phone-week/day-no-heading.png)
+![Laptop Week](screenshots/2026-11-22-phone-week/desktop-week.png)
+![Task editor, square checkbox](screenshots/2026-11-22-phone-week/editor-checkbox.png)
 ## 2026-11-22 — Google connection, phase 1: connect and read (branch `google-sync`)
 
 **Asked for:** the Google Calendar and Google Tasks connection, planned in phases. This is phase 1: sign in with Google and show your real calendars, events, task lists and tasks. Kept on its own branch, not merged.

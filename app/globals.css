@@ -48,6 +48,10 @@
   --semantic-primary-hover: #0c52d9;
   --semantic-on-primary: #ffffff;
 
+  /* task card: a very light tint of the primary blue, a little deeper on hover */
+  --task-card: color-mix(in srgb, var(--semantic-primary) 6%, var(--bg));
+  --task-card-hover: color-mix(in srgb, var(--semantic-primary) 10%, var(--bg));
+
   /* date highlights (today, selected day) follow the primary; retune here to change them alone */
   --semantic-date-highlight: var(--semantic-primary);
   --semantic-date-highlight-text: var(--semantic-on-primary);
@@ -117,6 +121,8 @@
   --color-semantic-primary: var(--semantic-primary);
   --color-semantic-primary-hover: var(--semantic-primary-hover);
   --color-semantic-on-primary: var(--semantic-on-primary);
+  --color-task-card: var(--task-card);
+  --color-task-card-hover: var(--task-card-hover);
   --color-semantic-date-highlight: var(--semantic-date-highlight);
   --color-semantic-date-highlight-text: var(--semantic-date-highlight-text);
   --color-warn: var(--warn);

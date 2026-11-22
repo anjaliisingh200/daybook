@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AlignLeft, Tag, Trash2, X, Check, Plus } from "lucide-react";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Drawer, Modal } from "@/components/ui/Modal";
-import { Field, Input, RoundCheck, Segmented, Textarea } from "@/components/ui/Controls";
+import { Field, Input, TaskCheck, Segmented, Textarea } from "@/components/ui/Controls";
 import { Select } from "@/components/ui/Menu";
 import { hexOf } from "@/lib/colors";
 import { cn } from "@/lib/cn";
@@ -211,7 +211,7 @@ function QuickAddForm({ initialDue, initialList, onDone }: { initialDue: DateKey
         </div>
         <div className="border-t border-border pt-4">
         <div className="flex items-center gap-3">
-          <RoundCheck checked={completed} onChange={setCompleted} label="Mark the task as complete" />
+          <TaskCheck checked={completed} onChange={setCompleted} label="Mark the task as complete" />
           <span className="cursor-pointer text-sm text-text-2" onClick={() => setCompleted((v) => !v)}>
             {completed ? "Task completed" : "Mark the task as complete"}
           </span>
@@ -498,7 +498,7 @@ function SubtaskRow({ title, done, onToggle, onSave, onDelete }: { title: string
   };
   return (
     <div className="flex h-9 items-center gap-2 rounded-md border border-border bg-surface px-3 transition-colors hover:border-border-strong focus-within:border-semantic-primary">
-      <RoundCheck checked={done} onChange={() => onToggle()} label={`Complete ${title}`} size={18} />
+      <TaskCheck checked={done} onChange={() => onToggle()} label={`Complete ${title}`} size={18} />
       {editing ? (
         <input
           autoFocus

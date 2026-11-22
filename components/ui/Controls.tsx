@@ -24,8 +24,8 @@ export function Field({ label, children, hint, className }: { label: string; chi
   );
 }
 
-/** Circular completion control used on task cards. */
-export function RoundCheck({ checked, onChange, label, size = 22 }: { checked: boolean; onChange: (v: boolean) => void; label: string; size?: number }) {
+/** Square completion checkbox used on task cards, in the task editor and for subtasks. */
+export function TaskCheck({ checked, onChange, label, size = 20 }: { checked: boolean; onChange: (v: boolean) => void; label: string; size?: number }) {
   return (
     <button
       type="button"
@@ -38,7 +38,7 @@ export function RoundCheck({ checked, onChange, label, size = 22 }: { checked: b
       }}
       style={{ width: size, height: size }}
       className={cn(
-        "group/check relative flex shrink-0 items-center justify-center rounded-full border-[1.5px] transition-all duration-150",
+        "group/check relative flex shrink-0 items-center justify-center rounded-[5px] border-2 transition-all duration-150",
         checked ? "border-transparent bg-[color-mix(in_srgb,var(--semantic-primary)_16%,var(--surface))] text-semantic-primary" : "border-border-strong bg-surface hover:border-accent hover:bg-accent-soft"
       )}
     >

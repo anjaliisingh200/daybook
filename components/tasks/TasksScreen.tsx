@@ -57,6 +57,8 @@ export function TasksScreen() {
   const focusAfterMove = useRef<string | null>(null);
   const press = useRef<{ id: string; x: number; y: number; pointerId: number; timer: number | null; active: boolean; slot: { day: DateKey; index: number } | null } | null>(null);
   const suppressClick = useRef(false);
+  /** Where the finger is during a touch drag, for scrolling the list when it nears an edge. */
+  const dragPoint = useRef<{ x: number; y: number } | null>(null);
   // While a touch drag is active, stop the browser from panning, so it keeps sending pointer events.
   useEffect(() => {
     const block = (e: TouchEvent) => {
@@ -74,7 +76,17 @@ export function TasksScreen() {
 
   /** Puts a dragged task on a day at a position (index among that day's other tasks). */
   const moveTask = (id: string, day: DateKey, index: number) => {
+    const moved = tasks.find((t) => t.id === id);
     const others = (byDay.get(day) ?? []).filter((t) => t.id !== id);
+    if (moved && !manualOrder && moved.due === day) {
+      // First time a day is reordered by hand: the order becomes manual. Every task of the day is given its place
+      // from the arrangement on screen, so the others stay exactly where they were.
+      const arranged = [...others.slice(0, index), moved, ...others.slice(index)];
+      usePrefs.getState().set({ manualOrder: true });
+      arranged.forEach((t, i) => void useData.getState().updateTask(t.id, { order: (i + 1) * 1000 }));
+      useUI.getState().toast("Manual order is on: a task stays where you drop it. You can change this in Settings → Tasks.", { duration: 6000 });
+      return;
+    }
     const prev = others[index - 1];
     const next = others[index];
     // Keys sort ascending, so the new key sits between its neighbours.
@@ -86,10 +98,18 @@ export function TasksScreen() {
 
   /** Where a card dropped at (x, y) would land: a day column and a position in it. */
   const slotAt = (id: string, x: number, y: number): { day: DateKey; index: number } | null => {
-    const col = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-day]");
+    let col = document.elementFromPoint(x, y)?.closest<HTMLElement>("[data-day]") ?? null;
+    if (!col) {
+      // Below the last card there is only empty space (the list's bottom padding): the column above it is the target.
+      const sc = scrollRef.current?.getBoundingClientRect();
+      if (!sc || y < sc.top || y > sc.bottom) return null;
+      col = [...document.querySelectorAll<HTMLElement>("[data-day]")].find((c) => {
+        const r = c.getBoundingClientRect();
+        return x >= r.left && x < r.right;
+      }) ?? null;
+    }
     if (!col) return null;
     const day = col.dataset.day as DateKey;
-    if (!manualOrder && tasks.find((t) => t.id === id)?.due === day) return null;
     const cards = [...col.querySelectorAll<HTMLElement>("[data-card]:not([data-dragging])")];
     const index = cards.filter((el) => {
       const r = el.getBoundingClientRect();
@@ -109,7 +129,7 @@ export function TasksScreen() {
 
   const anchor = weekAnchor ?? selected ?? today;
   /** Desktop week/day: one column per day, exactly like the calendar. Phones keep the single list. */
-  const columnsMode = !mobile && view !== "month";
+  const columnsMode = view !== "month";
   const listMap = useMemo(() => new Map(lists.map((l) => [l.id, l])), [lists]);
   const nFilters = activeFilterCount(filters);
   const filtering = nFilters > 0 || query.trim().length > 0;
@@ -146,14 +166,67 @@ export function TasksScreen() {
       counts.set(t.due, (counts.get(t.due) ?? 0) + 1);
     }
     return {
-      // the list (month view, phones): by date. A single day lists only that day.
-      groups: columnsMode ? [] : buildGroups(view === "day" ? outside.filter((t) => t.due === days[0]) : outside, today, fmt, sort, showUndated),
+      // the list (month view): by date
+      groups: columnsMode ? [] : buildGroups(outside, today, fmt, sort, showUndated),
       byDay,
       completed: done,
       counts,
       selectedHasTasks: selected ? topTasks.some((t) => t.due === selected) : true,
     };
-  }, [tasks, query, filters, today, sort, showUndated, fmt, listMap, selected, days, columnsMode, manualOrder, view]);
+  }, [tasks, query, filters, today, sort, showUndated, fmt, listMap, selected, days, columnsMode, manualOrder]);
+
+  // The finger can end over the drop slot instead of the card, and the browser then delivers the release there.
+  // So while a touch drag is active, the release is also heard on the whole page.
+  const moveTaskRef = useRef(moveTask);
+  useEffect(() => {
+    moveTaskRef.current = moveTask;
+  });
+  useEffect(() => {
+    if (!dragId) return;
+    const finish = (e: PointerEvent, cancelled: boolean) => {
+      const p = press.current;
+      if (!p?.active || e.pointerId !== p.pointerId) return;
+      press.current = null;
+      setDragId(null);
+      setOver(null);
+      if (cancelled) return;
+      suppressClick.current = true;
+      if (p.slot) moveTaskRef.current(p.id, p.slot.day, p.slot.index);
+    };
+    const up = (e: PointerEvent) => finish(e, false);
+    const cancel = (e: PointerEvent) => finish(e, true);
+    document.addEventListener("pointerup", up);
+    document.addEventListener("pointercancel", cancel);
+    return () => {
+      document.removeEventListener("pointerup", up);
+      document.removeEventListener("pointercancel", cancel);
+    };
+  }, [dragId]);
+
+  // While a card is held near the top or bottom of the list, keep scrolling so a long day can be reordered.
+  useEffect(() => {
+    const sc = scrollRef.current;
+    if (!dragId || !sc) return;
+    let raf = 0;
+    const tick = () => {
+      const p = press.current;
+      const pt = dragPoint.current;
+      if (p?.active && pt) {
+        const r = sc.getBoundingClientRect();
+        const EDGE = 72;
+        const dy = pt.y < r.top + EDGE ? -Math.ceil((r.top + EDGE - pt.y) / 5) : pt.y > r.bottom - EDGE ? Math.ceil((pt.y - (r.bottom - EDGE)) / 5) : 0;
+        if (dy) {
+          sc.scrollTop += dy;
+          const slot = slotAt(p.id, pt.x, pt.y);
+          p.slot = slot;
+          setOver((prev) => (prev?.day === slot?.day && prev?.index === slot?.index ? prev : slot));
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [dragId]);
 
   // keep today's column on screen: on load, and whenever the week changes
   useEffect(() => {
@@ -229,7 +302,7 @@ export function TasksScreen() {
   const gridClass = layout === "grid" ? "grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4" : "mx-auto grid max-w-3xl grid-cols-1 gap-2.5";
   const single = days.length === 1;
   /** A day never gets narrower than this, so on a small window the week scrolls sideways. */
-  const DAY_MIN_WIDTH = 200;
+  const DAY_MIN_WIDTH = mobile ? 176 : 200;
   const colTemplate = { gridTemplateColumns: `repeat(${days.length}, minmax(${DAY_MIN_WIDTH}px, 1fr))` };
 
   return (
@@ -343,6 +416,7 @@ export function TasksScreen() {
                         p.active = true;
                         p.timer = null;
                         el.setPointerCapture?.(p.pointerId);
+                        dragPoint.current = { x: p.x, y: p.y };
                         setDragId(p.id);
                         navigator.vibrate?.(10);
                       }, 350);
@@ -359,6 +433,7 @@ export function TasksScreen() {
                         return;
                       }
                       e.preventDefault();
+                      dragPoint.current = { x: e.clientX, y: e.clientY };
                       const slot = slotAt(p.id, e.clientX, e.clientY);
                       p.slot = slot;
                       if (slot?.day !== over?.day || slot?.index !== over?.index) setOver(slot);
@@ -406,7 +481,7 @@ export function TasksScreen() {
                     }}
                     className={cn("transition-opacity duration-150", t.id === dragId && "touch-none opacity-40")}
                   >
-                    <TaskCard task={t} list={listMap.get(t.listId)} selectedDay={selected} compact={!single} />
+                    <TaskCard task={t} list={listMap.get(t.listId)} selectedDay={selected} compact={!single} hideDue={single && mobile} />
                   </div>
                 );
               }
@@ -419,11 +494,6 @@ export function TasksScreen() {
                     e.preventDefault();
                     e.dataTransfer.dropEffect = "move";
                     // Where the card would land: after every card whose middle is above the pointer.
-                    const dragged = tasks.find((t) => t.id === dragId);
-                    if (!manualOrder && dragged?.due === d) {
-                      if (over) setOver(null);
-                      return;
-                    }
                     const cards = [...e.currentTarget.querySelectorAll<HTMLElement>("[data-card]:not([data-dragging])")];
                     const index = cards.filter((el) => {
                       const r = el.getBoundingClientRect();
@@ -443,11 +513,11 @@ export function TasksScreen() {
                     if (id) moveTask(id, d, index);
                   }}
                   className={cn(
-                    "flex min-h-[19rem] min-w-0 flex-col gap-0 border-l border-border py-2 transition-colors duration-150 first:border-l-0",
+                    "flex min-h-[19rem] min-w-0 flex-col gap-0 border-l border-border px-1.5 py-2 transition-colors duration-150 first:border-l-0",
                     d === today && "bg-surface"
                   )}
                 >
-                  <div className="flex flex-col gap-0">{items}</div>
+                  <div className="flex flex-col gap-1.5">{items}</div>
                   <button
                     onClick={() => openQuickAdd({ due: d })}
                     className="mt-auto flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-text-3 transition-colors hover:bg-surface-2 hover:text-text"
@@ -468,7 +538,7 @@ export function TasksScreen() {
                 <Skeleton key={i} className="h-[8.25rem] rounded-xl" />
               ))}
             </div>
-          ) : !columnsMode && view !== "day" && groups.length === 0 && completed.length === 0 ? (
+          ) : !columnsMode && groups.length === 0 && completed.length === 0 ? (
             filtering ? (
               <EmptyState
                 icon={<ListFilter className="size-5" />}
@@ -499,21 +569,7 @@ export function TasksScreen() {
             )
           ) : (
             <>
-              {!columnsMode && groups.length === 0 &&
-                (view === "day" ? (
-                  <EmptyState
-                    icon={<CheckCheck className="size-5" />}
-                    title="Nothing due this day"
-                    body="Tasks with this date show up here."
-                    action={
-                      <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => openQuickAdd({ due: days[0] })}>
-                        Add task
-                      </Button>
-                    }
-                  />
-                ) : (
-                  <EmptyState icon={<CheckCheck className="size-5" />} title="Nothing left to do" body="Every task in view is complete." />
-                ))}
+              {!columnsMode && groups.length === 0 && <EmptyState icon={<CheckCheck className="size-5" />} title="Nothing left to do" body="Every task in view is complete." />}
               {groups.map((g) => (
                 <section key={g.id} aria-label={g.label}>
                   <div className="sticky top-0 z-10 -mx-3 flex items-center gap-2.5 bg-bg/90 px-3 pb-2 pt-4 backdrop-blur md:-mx-6 md:px-6">
@@ -530,7 +586,7 @@ export function TasksScreen() {
                 </section>
               ))}
 
-              {showCompleted && view !== "day" && (
+              {showCompleted && view !== "day" && !(mobile && view === "week") && (
                 <section className="mt-8" aria-label="Completed">
                   <button onClick={() => setCompletedOpen(!completedOpen)} aria-expanded={completedOpen} className="flex w-full items-center gap-2.5 rounded-lg py-2 text-left">
                     <ChevronDown className={cn("size-4 text-text-3 transition-transform", !completedOpen && "-rotate-90")} />

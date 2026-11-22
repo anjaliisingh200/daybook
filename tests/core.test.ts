@@ -1,5 +1,5 @@
 import { zoned, zonedToMs, addDays, monthGrid, startOfWeek, diffDays, tzOffsetLabel } from "../lib/dates";
-import { expandEvent } from "../lib/recurrence";
+import { decodeRepeat, encodeRepeat, expandEvent, isCustomRepeat, recurrenceOfRepeat, repeatDates } from "../lib/recurrence";
 import { layoutDay } from "../lib/layout";
 let fail = 0;
 const eq = (name: string, a: unknown, b: unknown) => { const ok = JSON.stringify(a) === JSON.stringify(b); if (!ok) { fail++; console.log("FAIL", name, JSON.stringify(a), "!=", JSON.stringify(b)); } else console.log("ok  ", name); };
@@ -53,5 +53,21 @@ eq("overnight dates", [ni.startDate, ni.endDate], ["2026-11-18", "2026-11-19"]);
 const mk = (id: string, s: number, e: number) => ({ ...expandEvent({ ...base, id, start: zonedToMs("2026-11-18", s, ist), end: zonedToMs("2026-11-18", e, ist) }, "2026-11-18", "2026-11-18", ist)[0] });
 const placed = layoutDay([mk("a", 600, 660), mk("b", 630, 690), mk("c", 720, 780)], "2026-11-18", ist);
 eq("overlap cols", placed.map((p) => [p.col, p.cols]), [[0, 2], [1, 2], [0, 1]]);
+// custom repeats (a task kept as one string): "laundry every Sunday, Wednesday and Friday"
+const laundry = { freq: "weekly" as const, interval: 1, byDay: [0, 3, 5] };
+eq("custom repeat round trip", decodeRepeat(encodeRepeat(laundry)), laundry);
+eq("custom repeat is recognised", [isCustomRepeat(encodeRepeat(laundry)), isCustomRepeat("daily"), isCustomRepeat(undefined)], [true, false, false]);
+eq("custom repeat keeps its end date", decodeRepeat(encodeRepeat({ ...laundry, until: "2026-12-31" }))?.until, "2026-12-31");
+eq("bad custom string is refused", decodeRepeat("custom:fortnightly:1::"), null);
+// 22 Nov 2026 is a Sunday
+eq("every Sun, Wed, Fri for two weeks", repeatDates(laundry, "2026-11-22", "2026-12-05"), ["2026-11-22", "2026-11-25", "2026-11-27", "2026-11-29", "2026-12-02", "2026-12-04"]);
+eq("starting on a Monday: first date is the next chosen day", repeatDates(laundry, "2026-11-23", "2026-11-29"), ["2026-11-25", "2026-11-27", "2026-11-29"]);
+eq("every 2 weeks on Mon and Thu", repeatDates({ freq: "weekly", interval: 2, byDay: [1, 4] }, "2026-11-23", "2026-12-14"), ["2026-11-23", "2026-11-26", "2026-12-07", "2026-12-10"]);
+eq("every 3 days", repeatDates({ freq: "daily", interval: 3 }, "2026-11-22", "2026-12-02"), ["2026-11-22", "2026-11-25", "2026-11-28", "2026-12-01"]);
+eq("ends on a date", repeatDates({ ...laundry, until: "2026-11-27" }, "2026-11-22", "2026-12-31"), ["2026-11-22", "2026-11-25", "2026-11-27"]);
+eq("every month on the 15th", repeatDates({ freq: "monthly", interval: 1 }, "2026-11-15", "2027-01-31"), ["2026-11-15", "2026-12-15", "2027-01-15"]);
+eq("presets still become rules", recurrenceOfRepeat("weekdays", "2026-11-22"), { freq: "weekly", interval: 1, byDay: [1, 2, 3, 4, 5] });
+eq("custom string becomes a rule for events too", recurrenceOfRepeat(encodeRepeat(laundry), "2026-11-22"), laundry);
+eq("no repeat gives no rule", recurrenceOfRepeat("none", "2026-11-22"), undefined);
 console.log(fail ? `\n${fail} FAILED` : "\nall passed");
 process.exit(fail ? 1 : 0);

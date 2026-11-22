@@ -1,11 +1,11 @@
 # Controls
-Source: `Controls.tsx` (Input, Textarea, Field, RoundCheck, ColorCheck, Switch, Segmented, Badge, Skeleton, EmptyState)
+Source: `Controls.tsx` (Input, Textarea, Field, TaskCheck, ColorCheck, Switch, Segmented, Badge, Skeleton, EmptyState)
 
 **Input / Textarea** — 36px / multi-line, border turns to the accent on focus with a soft ring. Always wrap in `Field` so the label sits above.
 
 **Field** — a label above any control, with optional hint text below.
 
-**RoundCheck** — the circular completion check.
+**TaskCheck** — the square completion checkbox (same shape as ColorCheck).
 - Unchecked: grey ring.
 - Checked: light blue fill (`--semantic-primary` at 16%), blue ring, blue check.
 

@@ -1,4 +1,4 @@
-import type { CalendarEvent, DateKey, EventInstance, Recurrence } from "./types";
+import type { CalendarEvent, DateKey, EventInstance, Freq, Recurrence } from "./types";
 import { addDays, diffDays, dowOf, parseKey, startOfWeek, zoned, zonedToMs } from "./dates";
 import type { Fmt } from "./format";
 
@@ -153,4 +153,59 @@ export function describeRecurrence(rec: Recurrence | undefined, startKey: DateKe
     case "yearly":
       return `Annually on ${fmt.month(startKey, "long")} ${parseKey(startKey).d}${until}`;
   }
+}
+
+// ─────────────────────────── custom repeats ───────────────────────────
+
+/**
+ * A task keeps its repeat in one string. The presets are plain words ("daily", "weekly"...). A custom repeat,
+ * such as "every Sunday, Wednesday and Friday", is kept as "custom:weekly:1:0,3,5:2026-12-31"
+ * (how often, every how many, which weekdays, last day or empty).
+ */
+export const isCustomRepeat = (value: string | undefined): boolean => !!value && value.startsWith("custom:");
+
+export function encodeRepeat(rec: Recurrence): string {
+  return ["custom", rec.freq, Math.max(1, rec.interval || 1), (rec.byDay ?? []).join(","), rec.until ?? ""].join(":");
+}
+
+export function decodeRepeat(value: string): Recurrence | null {
+  const [tag, freq, every, days, until] = value.split(":");
+  if (tag !== "custom" || !["daily", "weekly", "monthly", "yearly"].includes(freq)) return null;
+  const byDay = days ? days.split(",").map(Number).filter((n) => Number.isInteger(n) && n >= 0 && n <= 6) : [];
+  return {
+    freq: freq as Freq,
+    interval: Math.max(1, Number(every) || 1),
+    ...(freq === "weekly" && byDay.length ? { byDay } : {}),
+    ...(until ? { until } : {}),
+  };
+}
+
+/** Any repeat string (preset or custom) as a recurrence rule. */
+export function recurrenceOfRepeat(value: string | undefined, startKey: DateKey): Recurrence | undefined {
+  if (!value || value === "none") return undefined;
+  if (isCustomRepeat(value)) return decodeRepeat(value) ?? undefined;
+  return recurrenceFromPreset(value as RepeatPreset, startKey);
+}
+
+/** Every date from `start` up to `to` (inclusive) that a rule lands on. */
+export function repeatDates(rec: Recurrence, start: DateKey, to: DateKey): DateKey[] {
+  return [...occurrences(rec, start, start, to, 0)].filter((k) => k <= to);
+}
+
+const DOW_FULL = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/** A repeat string in words, for the Repeat menu. */
+export function describeRepeat(value: string, startKey: DateKey, fmt: Fmt): string {
+  const rec = recurrenceOfRepeat(value, startKey);
+  if (!rec) return "Does not repeat";
+  const n = rec.interval || 1;
+  const until = rec.until ? `, until ${fmt.date(rec.until)}` : "";
+  if (rec.freq === "weekly") {
+    const days = (rec.byDay?.length ? rec.byDay : [dowOf(startKey)]).slice().sort((a, b) => a - b);
+    const isWeekdays = days.length === 5 && [1, 2, 3, 4, 5].every((x) => days.includes(x));
+    if (isWeekdays && n === 1) return "Every weekday" + until;
+    const names = days.length === 7 ? "every day" : days.length === 1 ? DOW_FULL[days[0]] : days.map((x) => DOW_FULL[x].slice(0, 3)).join(", ");
+    return `${n === 1 ? "Weekly" : `Every ${n} weeks`} on ${names}${until}`;
+  }
+  return describeRecurrence(rec, startKey, fmt);
 }
