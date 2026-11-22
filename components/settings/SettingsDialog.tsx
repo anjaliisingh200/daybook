@@ -503,7 +503,7 @@ function Account() {
               {kind === "mock"
                 ? "Sample data. No Google account connected yet."
                 : onGoogle
-                  ? "Your calendars and tasks come from Google. For now they are read-only here; editing arrives next."
+                  ? "The events from your primary Google calendar show here, read-only for now. Your tasks stay in your Daybook account."
                   : google.needsReconnect
                     ? "Google stopped accepting the saved permission. Connect again to bring your Google data back."
                     : "Signed in. Your data is saved to your account."}
@@ -553,7 +553,7 @@ function Account() {
       <Row label="Connected calendars" desc={cals.map((c) => c.name).join(", ")}>
         <span className="text-sm text-text-2">{cals.length}</span>
       </Row>
-      <Row label="Connected task lists" desc={lists.map((l) => l.title).join(", ")}>
+      <Row label={onGoogle ? "Task lists (in Daybook)" : "Connected task lists"} desc={lists.map((l) => l.title).join(", ")}>
         <span className="text-sm text-text-2">{lists.length}</span>
       </Row>
       {kind === "mock" && (
@@ -568,8 +568,8 @@ function Account() {
         <h4 className="mb-2 text-sm font-semibold">What syncs with Google</h4>
         <div className="overflow-hidden rounded-xl border border-border text-[0.8125rem]">
           {[
-            ["Tasks: title, notes, due date, list, completion", "Read from Google Tasks (saving changes arrives next)"],
-            ["Events: title, time, place, guests, repeats", "Read from Google Calendar (saving changes arrives next)"],
+            ["Events: title, time, place, guests, repeats", "Read from your primary Google calendar (saving changes arrives next)"],
+            ["Tasks: title, notes, due date, list, completion", "Stay in Daybook (Google Tasks comes later)"],
             ["Task priority", "Daybook only"],
             ["Calendar visibility and colours", "Daybook only"],
             ["Task times and reminders", "Not available in Google Tasks"],

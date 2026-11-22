@@ -8,7 +8,7 @@ export interface FakeGoogle {
   origin: string;
   close: () => Promise<void>;
   /** Make the next calls behave badly. */
-  fail: { tokenInvalidGrant: boolean; apiUnauthorized: boolean; rateLimitOnce: boolean };
+  fail: { tokenInvalidGrant: boolean; apiUnauthorized: boolean; rateLimitOnce: boolean; calendarApiOff: boolean };
   calls: string[];
   /** The scope Google reports as granted. Remove one to test "permission unticked". */
   grantedScopes: string[];
@@ -74,16 +74,10 @@ export async function startFakeGoogle(port = 0): Promise<FakeGoogle> {
   const fake: FakeGoogle = {
     origin: "",
     close: async () => {},
-    fail: { tokenInvalidGrant: false, apiUnauthorized: false, rateLimitOnce: false },
+    fail: { tokenInvalidGrant: false, apiUnauthorized: false, rateLimitOnce: false, calendarApiOff: false },
     calls: [],
-    grantedScopes: [
-      "openid",
-      "https://www.googleapis.com/auth/userinfo.email",
-      "https://www.googleapis.com/auth/calendar.events",
-      "https://www.googleapis.com/auth/calendar.calendarlist.readonly",
-      "https://www.googleapis.com/auth/calendar.settings.readonly",
-      "https://www.googleapis.com/auth/tasks",
-    ],
+    // Phase 1 asks for the events permission only
+    grantedScopes: ["https://www.googleapis.com/auth/calendar.events"],
   };
 
   const server = createServer(async (req, res) => {
@@ -104,7 +98,8 @@ export async function startFakeGoogle(port = 0): Promise<FakeGoogle> {
       if (fake.fail.tokenInvalidGrant) return send(res, 400, { error: "invalid_grant", error_description: "Token has been expired or revoked." });
       if (form.get("grant_type") === "authorization_code") {
         if (form.get("code") !== "fake-code" || !form.get("code_verifier")) return send(res, 400, { error: "invalid_grant" });
-        return send(res, 200, { access_token: "fake-access", refresh_token: "fake-refresh", expires_in: 3600, scope: fake.grantedScopes.join(" "), id_token: jwt({ email: FAKE_EMAIL }) });
+        // Like Google: an ID token (with the address) comes only when the identity permission was granted
+        return send(res, 200, { access_token: "fake-access", refresh_token: "fake-refresh", expires_in: 3600, scope: fake.grantedScopes.join(" "), ...(fake.grantedScopes.includes("openid") ? { id_token: jwt({ email: FAKE_EMAIL }) } : {}) });
       }
       if (form.get("grant_type") === "refresh_token" && form.get("refresh_token") === "fake-refresh") return send(res, 200, { access_token: "fake-access", expires_in: 3600 });
       return send(res, 400, { error: "invalid_grant" });
@@ -120,10 +115,15 @@ export async function startFakeGoogle(port = 0): Promise<FakeGoogle> {
 
     if (path === "/calendar/v3/users/me/calendarList") return send(res, 200, { items: CALENDARS });
     const ev = path.match(/^\/calendar\/v3\/calendars\/([^/]+)\/events$/);
+    if (ev && fake.fail.calendarApiOff) return send(res, 403, { error: { message: "Google Calendar API has not been used in this project", errors: [{ reason: "accessNotConfigured" }] } });
     if (ev) {
-      const pages = EVENTS[decodeURIComponent(ev[1])] ?? [[]];
+      // "primary" is Google's name for the signed-in user's own calendar, and its title is the user's address
+      const asked = decodeURIComponent(ev[1]);
+      const key = asked === "primary" ? "me@example.com" : asked;
+      const cal = CALENDARS.find((c) => c.id === key);
+      const pages = EVENTS[key] ?? [[]];
       const i = Number(url.searchParams.get("pageToken") ?? 0);
-      return send(res, 200, { items: pages[i], ...(i + 1 < pages.length ? { nextPageToken: String(i + 1) } : {}) });
+      return send(res, 200, { items: pages[i], summary: asked === "primary" ? FAKE_EMAIL : cal?.summary, timeZone: cal?.timeZone, accessRole: cal?.accessRole, ...(i + 1 < pages.length ? { nextPageToken: String(i + 1) } : {}) });
     }
     if (path === "/tasks/v1/users/@me/lists") return send(res, 200, { items: LISTS });
     const tk = path.match(/^\/tasks\/v1\/lists\/([^/]+)\/tasks$/);

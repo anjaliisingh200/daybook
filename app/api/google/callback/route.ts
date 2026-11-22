@@ -1,9 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { emailFromIdToken, exchangeCode } from "@/lib/google/api";
+import { GoogleHttpError, emailFromIdToken, exchangeCode, gget } from "@/lib/google/api";
 import { OAUTH_COOKIE, REQUIRED_SCOPES, googleConfigured } from "@/lib/google/config";
 import { saveConnection } from "@/lib/google/connection";
 import { unsign } from "@/lib/google/crypto";
 import { currentUser } from "@/lib/google/session";
+import { PRIMARY } from "@/lib/google/snapshot";
 
 /** Google sends the browser back here after the consent screen. */
 export async function GET(req: NextRequest) {
@@ -33,11 +34,22 @@ export async function GET(req: NextRequest) {
 
   try {
     const token = await exchangeCode(code, pending.verifier, `${req.nextUrl.origin}/api/google/callback`);
-    // People can untick permissions on Google's screen; the app needs all three to work.
+    // People can untick the permission on Google's screen; the app needs the events permission to work.
     const granted = (token.scope ?? "").split(" ");
     if (!REQUIRED_SCOPES.every((s) => granted.includes(s))) return done("missing_permission");
     if (!token.refresh_token) return done("error");
-    await saveConnection(session.sb, session.user.id, emailFromIdToken(token.id_token), token.refresh_token, token.scope ?? "");
+
+    // The first request to the primary calendar proves the permission works (and that the Calendar API is switched on
+    // in the Google Cloud project). The calendar's title is the user's address, which is what Settings shows.
+    let email = emailFromIdToken(token.id_token);
+    try {
+      const primary = await gget<{ summary?: string }>(token.access_token, `/calendar/v3/calendars/${PRIMARY}/events`, { maxResults: 1 });
+      if (!email && primary.summary?.includes("@")) email = primary.summary;
+    } catch (e) {
+      if (e instanceof GoogleHttpError) return done("calendar_api");
+      throw e;
+    }
+    await saveConnection(session.sb, session.user.id, email, token.refresh_token, token.scope ?? "");
     return done("connected");
   } catch (e) {
     console.error("Google connect failed:", e instanceof Error ? e.message : e);

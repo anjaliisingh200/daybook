@@ -62,7 +62,8 @@ function ShellInner({ children }: { children: ReactNode }) {
     const say: Record<string, [string, boolean]> = {
       connected: ["Google connected. Your calendars and tasks are loading.", false],
       denied: ["Google was not connected: the permission was declined.", true],
-      missing_permission: ["Daybook needs all three permissions (calendar events, calendar list and tasks). Connect again and leave them ticked.", true],
+      missing_permission: ["Daybook needs permission to see and edit your calendar events. Connect again and leave it ticked.", true],
+      calendar_api: ["Google wouldn't share your calendar. Check that the Google Calendar API is switched on in your Google Cloud project, then connect again.", true],
       not_configured: ["Google isn't set up on this server yet. See docs/GOOGLE-SETUP.md.", true],
       error: ["Couldn't connect Google. Try again.", true],
     };

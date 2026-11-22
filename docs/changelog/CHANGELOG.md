@@ -167,6 +167,30 @@ A running record of every change requested, newest first, with screenshots. It l
 ![Phone Day](screenshots/2026-11-22-phone-week/day-no-heading.png)
 ![Laptop Week](screenshots/2026-11-22-phone-week/desktop-week.png)
 ![Task editor, square checkbox](screenshots/2026-11-22-phone-week/editor-checkbox.png)
+## 2026-11-22 — Google phase 1 narrowed to calendar events only (branch `google-sync`)
+
+**Asked for:** for Phase 1, use only Google Calendar events. Defer the Calendar List API and the Google Tasks API. Ask only for the `calendar.events` permission, use the user's `primary` calendar instead of fetching the calendar list, and keep the token storage, OAuth flow, refresh and disconnect as they are, without closing the door on Tasks and the calendar list later.
+
+**What changed**
+- **One permission.** The consent request now asks for `https://www.googleapis.com/auth/calendar.events` and nothing else (the identity, calendar list, calendar settings and Tasks permissions are gone from the request). The callback checks only that one.
+- **Primary calendar.** Events are read from `calendars/primary/events`. The app never asks Google for the calendar list, and never calls the Tasks API. Checked in the tests: no request to either is made.
+- **Your address** used to come from the identity permission. Now the first request to the primary calendar supplies it (the calendar's title is the address). That same request proves the permission works, and if the Calendar API is not switched on in the Google Cloud project, the app says so in plain words instead of failing quietly.
+- **Tasks keep working.** Google no longer supplies tasks, so while Google is connected your tasks still come from, and save to, your Daybook account (repeating tasks keep being topped up too). Only calendar events come from Google. Event changes are still read-only for now.
+- **Settings** says: events come from your primary Google calendar, tasks stay in Daybook (Google Tasks later).
+- **Kept as it was:** encrypted token storage, the OAuth flow (state and PKCE), refresh, Reconnect, Disconnect, the buttons and screens.
+- **Not closed off.** The calendar-list and Google Tasks code is still there behind two switches, `calendarList` and `tasks` in `lib/google/config.ts`; turning one on also adds its permission to the request. Tests cover that they still work when switched on.
+- `docs/GOOGLE-SETUP.md` is updated: enable only the Calendar API, add only the one scope.
+
+**Checked:** 40+ checks against a fake Google (phase 1 and the switched-on case), and a browser run of the whole flow: connect (permission asked for = events only), address read, encrypted token saved, 4 events from the primary calendar, your own tasks still shown and a new task saved to Daybook, disconnect, "Calendar API off" message, unticked permission, reconnect after an expired permission. Not tried against a real Google account yet.
+
+**Files:** `lib/google/config.ts`, `lib/google/features.ts` (new), `lib/google/snapshot.ts`, `app/api/google/callback/route.ts`, `lib/data/google/googleRepository.ts`, `lib/data/switching.ts`, `lib/store/data.ts`, `components/shell/AppShell.tsx`, `components/settings/SettingsDialog.tsx`, `docs/GOOGLE-SETUP.md`, `tests/google.test.ts`, `tests/fakeGoogle.ts`
+
+**Screenshots** (`screenshots/2026-11-22-google-events-only/`)
+![Settings, connected](screenshots/2026-11-22-google-events-only/settings-connected.png)
+![Tasks still work while connected](screenshots/2026-11-22-google-events-only/tasks-still-work.png)
+
+---
+
 ## 2026-11-22 — Google connection, phase 1: connect and read (branch `google-sync`)
 
 **Asked for:** the Google Calendar and Google Tasks connection, planned in phases. This is phase 1: sign in with Google and show your real calendars, events, task lists and tasks. Kept on its own branch, not merged.

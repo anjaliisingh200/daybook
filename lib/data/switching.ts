@@ -43,9 +43,25 @@ export class SwitchingRepository implements Repository {
     }
   }
 
+  /**
+   * What the app shows while Google is connected. Events (and the calendar) come from Google. Tasks come from
+   * Google only if that part is switched on; until then they stay in the Daybook account, so the Tasks tab keeps working.
+   */
+  private async googleView(read: (r: Repository) => Promise<Snapshot>): Promise<Snapshot> {
+    const g = await read(this.google);
+    if (this.google.features.tasks) return g;
+    const own = await read(this.base);
+    return { ...own, calendars: g.calendars, events: g.events, syncedAt: g.syncedAt };
+  }
+
+  /** Where task changes go: Google's tasks when that is switched on, otherwise the Daybook account. */
+  private get taskRepo(): Repository {
+    return this.active === this.google && !this.google.features.tasks ? this.base : this.active;
+  }
+
   private async fromActive(read: (r: Repository) => Promise<Snapshot>): Promise<Snapshot> {
     try {
-      const snap = await read(this.active);
+      const snap = this.active === this.google ? await this.googleView(read) : await read(this.active);
       if (this.active === this.google) useGoogle.getState().set({ needsReconnect: false });
       return snap;
     } catch (e) {
@@ -67,16 +83,16 @@ export class SwitchingRepository implements Repository {
   }
 
   createTask(input: NewTaskInput): Promise<Task> {
-    return this.active.createTask(input);
+    return this.taskRepo.createTask(input);
   }
   updateTask(id: string, patch: TaskPatch): Promise<Task> {
-    return this.active.updateTask(id, patch);
+    return this.taskRepo.updateTask(id, patch);
   }
   deleteTask(id: string): Promise<void> {
-    return this.active.deleteTask(id);
+    return this.taskRepo.deleteTask(id);
   }
   restoreTask(task: Task): Promise<Task> {
-    return this.active.restoreTask(task);
+    return this.taskRepo.restoreTask(task);
   }
   createEvent(input: NewEventInput): Promise<CalendarEvent> {
     return this.active.createEvent(input);

@@ -20,7 +20,7 @@ async function main() {
   const { decrypt, encrypt, sign, unsign, challengeOf } = await import("../lib/google/crypto");
   const { GoogleAuthError, accessTokenFor, emailFromIdToken, exchangeCode, gget } = await import("../lib/google/api");
   const { googleSnapshot } = await import("../lib/google/snapshot");
-  const { googleConfigured } = await import("../lib/google/config");
+  const { FEATURES, REQUIRED_SCOPES, SCOPES, googleConfigured, scopesFor } = await import("../lib/google/config");
   const { eventId, mapCalendar, mapEvent, mapTask, splitEventId } = await import("../lib/google/map");
 
   // ── crypto ──
@@ -55,13 +55,33 @@ async function main() {
   // ── talking to Google ──
   eq("id token email", emailFromIdToken(`x.${Buffer.from(JSON.stringify({ email: FAKE_EMAIL })).toString("base64url")}.y`), FAKE_EMAIL);
   const granted = await exchangeCode("fake-code", "verifier", "http://localhost/cb");
-  eq("code exchange gives a refresh token", [granted.refresh_token, emailFromIdToken(granted.id_token)], ["fake-refresh", FAKE_EMAIL]);
+  eq("code exchange gives a refresh token and no identity token (events permission only)", [granted.refresh_token, granted.id_token ?? null, emailFromIdToken(granted.id_token)], ["fake-refresh", null, null]);
+  const first = await gget<{ summary?: string }>("fake-access", "/calendar/v3/calendars/primary/events", { maxResults: 1 });
+  eq("the primary calendar's title gives the address", first.summary, FAKE_EMAIL);
   const access = await accessTokenFor("fake-refresh");
   eq("refresh token gives an access token", access, "fake-access");
 
-  const snap = await googleSnapshot(access, Date.parse("2026-11-22T00:00:00Z"));
-  eq("calendars: hidden and deleted left out", snap.calendars.map((c) => [c.id, c.name, c.readOnly, !!c.primary]), [["me@example.com", "Anjali", false, true], ["holidays@group.v.calendar.google.com", "India holidays", true, false]]);
-  eq("events: paged, cancelled and declined dropped", snap.events.map((e) => e.title).sort(), ["(No title)", "Christmas", "Design review", "Offsite", "Weekly sync"]);
+  // ── Phase 1: only the events of the primary calendar ──
+  const EVENTS_SCOPE = "https://www.googleapis.com/auth/calendar.events";
+  eq("phase 1 asks for the events permission only", SCOPES, [EVENTS_SCOPE]);
+  eq("and requires only that one", REQUIRED_SCOPES, [EVENTS_SCOPE]);
+  eq("both later parts are switched off", FEATURES, { calendarList: false, tasks: false });
+  eq("switching them on asks for their permissions too", scopesFor({ calendarList: true, tasks: true }), [EVENTS_SCOPE, "https://www.googleapis.com/auth/calendar.calendarlist.readonly", "https://www.googleapis.com/auth/tasks"]);
+  google.calls.length = 0;
+  const p1 = await googleSnapshot(access, Date.parse("2026-11-22T00:00:00Z"));
+  eq("phase 1: one calendar, the primary one", p1.calendars.map((c) => [c.id, c.name, c.readOnly, !!c.primary, c.color]), [["primary", FAKE_EMAIL, false, true, "#8c7b6b"]]);
+  eq("phase 1: its events only (paged, cancelled and declined dropped)", p1.events.map((e) => e.title).sort(), ["(No title)", "Design review", "Offsite", "Weekly sync"]);
+  eq("phase 1: event ids belong to the primary calendar", p1.events.map((e) => e.calendarId + "|" + e.id.split("|")[0]).filter((v, i, a) => a.indexOf(v) === i), ["primary|primary"]);
+  eq("phase 1: no tasks and no task lists", [p1.tasks.length, p1.lists.length], [0, 0]);
+  eq("phase 1: never asks Google for the calendar list or for tasks", google.calls.filter((c) => /calendarList|\/tasks\//.test(c)), []);
+  eq("phase 1: says what it read", p1.features, { calendarList: false, tasks: false });
+  const tz = p1.events.find((e) => e.title === "Design review")!;
+  eq("phase 1: the calendar's time zone is used", tz.tz, "Asia/Kolkata");
+
+  // ── Later: the calendar list and Google Tasks still work when switched on ──
+  const snap = await googleSnapshot(access, Date.parse("2026-11-22T00:00:00Z"), { calendarList: true, tasks: true });
+  eq("later: calendars, hidden and deleted left out", snap.calendars.map((c) => [c.id, c.name, c.readOnly, !!c.primary]), [["me@example.com", "Anjali", false, true], ["holidays@group.v.calendar.google.com", "India holidays", true, false]]);
+  eq("later: events from every calendar, paged, cancelled and declined dropped", snap.events.map((e) => e.title).sort(), ["(No title)", "Christmas", "Design review", "Offsite", "Weekly sync"]);
   const sync = snap.events.find((e) => e.title === "Weekly sync")!;
   eq("repeating occurrence keeps its series id", sync.recurringEventId, "e5");
   const review = snap.events.find((e) => e.title === "Design review")!;

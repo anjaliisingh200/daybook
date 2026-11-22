@@ -349,8 +349,9 @@ const once = (fn: () => Promise<void>) => {
       try {
         const snap = await settledSnapshot(() => repo.load());
         set({ ...apply(snap), status: "ready", syncState: "idle", repoKind: repo.kind });
-        // Google events are not turned into tasks (that bookkeeping is Daybook's own data).
-        if (repo.kind !== "google") void ensureTasks();
+        // Google events are not turned into tasks, but repeating tasks (kept in Daybook) are still topped up.
+        if (repo.kind === "google") void ensureOccurrencesOnce();
+        else void ensureTasks();
       } catch (e) {
         console.error("Daybook load failed", e);
         set({ status: "error" });
@@ -368,7 +369,8 @@ const once = (fn: () => Promise<void>) => {
       try {
         const snap = await settledSnapshot(() => repo.sync());
         set({ ...apply(snap), syncState: "idle", repoKind: repo.kind });
-        if (repo.kind !== "google") void ensureTasks();
+        if (repo.kind === "google") void ensureOccurrencesOnce();
+        else void ensureTasks();
         if (!opts?.silent) toast("Everything is up to date");
       } catch (e) {
         console.error("Daybook sync failed", e);

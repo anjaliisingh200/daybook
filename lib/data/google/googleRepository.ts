@@ -1,4 +1,5 @@
 import type { CalendarEvent, NewTaskInput, Snapshot, Task, TaskPatch } from "@/lib/types";
+import type { GoogleFeatures } from "@/lib/google/features";
 import type { NewEventInput, Repository } from "../repository";
 
 /** Google rejected the saved permission. The person has to connect again. */
@@ -21,6 +22,8 @@ const refuse = (): never => {
  */
 export class GoogleRepository implements Repository {
   readonly kind = "google" as const;
+  /** Which parts of Google the server reads (from the last answer). Phase 1: events only. */
+  features: GoogleFeatures = { calendarList: false, tasks: false };
 
   private async read(): Promise<Snapshot> {
     const res = await fetch("/api/google/snapshot", { cache: "no-store" });
@@ -33,7 +36,9 @@ export class GoogleRepository implements Repository {
       const body = (await res.json().catch(() => ({}))) as { message?: string };
       throw new Error(body.message ?? `Google answered ${res.status}`);
     }
-    return (await res.json()) as Snapshot;
+    const body = (await res.json()) as Snapshot & { features?: GoogleFeatures };
+    if (body.features) this.features = body.features;
+    return body;
   }
 
   load() {
