@@ -9,6 +9,35 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-22 — Custom repeat (like Google Tasks): every Sun, Wed, Fri, or any days
+
+**Asked for:** a custom repeat option like Google Tasks, for example "laundry every Sun, Wed, Fri", and in general any days.
+
+**What changed**
+- The **Repeat** menu now ends with **Custom…** (when you add a task, when you edit one, and in the calendar's event editor). It opens a small dialog:
+  - **Repeat every** a number of **days, weeks, months or years**.
+  - For weeks, **Repeat on**: tick any of S M T W T F S (at least one is required, otherwise Done is disabled and it says so).
+  - **Ends**: **Never**, or **On a date**.
+  - A plain-words summary underneath, such as "Weekly on Sun, Wed, Fri" or "Every 2 weeks on Mon, Thu, until 22 Feb 2027".
+- A task with a custom repeat gets an occurrence on exactly the chosen days, for the next 30 days (kept topped up, as with the other repeats), each with its own copy of the subtasks. Checked on a phone: "Laundry" every Sun, Wed, Fri created 13 tasks, all on a Sunday, Wednesday or Friday.
+- The Repeat menu shows the custom rule in words, and "Custom…" opens the dialog filled in with the current rule, so it can be edited.
+- The same dialog saves a repeating event on the calendar (Sun, Mon, Wed until a date was checked); a task with a time passes the rule on to its calendar event.
+- The existing choices (Daily, Weekly, Every weekday, Monthly, Annually) work as before.
+
+**Good to know**
+- The first task stays on the date it was created for, even if that is not one of the chosen days; the rest follow the chosen days. Start it on one of the days if you want it to line up.
+- "Ends after N times" is not offered yet (Never or a date only).
+- The new days appear over about 15 seconds after saving, one after another.
+
+**Files:** `lib/recurrence.ts`, `lib/store/data.ts`, `components/ui/CustomRepeat.tsx` (new), `components/ui/RepeatSelect.tsx`, `components/calendar/EventLayers.tsx`, `tests/core.test.ts` (13 new checks for the rules)
+
+**Screenshots** (`screenshots/2026-11-22-custom-repeat/`)
+![Custom repeat on a phone](screenshots/2026-11-22-custom-repeat/phone-dialog.png)
+![Reopened with the rule filled in](screenshots/2026-11-22-custom-repeat/phone-reopened.png)
+![In the event editor](screenshots/2026-11-22-custom-repeat/event-dialog.png)
+
+---
+
 ## 2026-11-22 — Fix: subtasks were not being saved, and repeating tasks now carry them
 
 **Reported:** added subtasks to a task, then set it to repeat every day; opening the task showed no subtasks (on a phone).
