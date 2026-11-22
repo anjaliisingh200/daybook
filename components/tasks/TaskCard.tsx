@@ -27,7 +27,7 @@ export function PriorityMark({ priority, showLabel = true }: { priority?: Priori
   );
 }
 
-export function TaskCard({ task, compact, hideDue }: { task: Task; list?: TaskList; selectedDay?: string | null; compact?: boolean; hideDue?: boolean }) {
+export function TaskCard({ task, compact, hideDue, hideToday }: { task: Task; list?: TaskList; selectedDay?: string | null; compact?: boolean; hideDue?: boolean; hideToday?: boolean }) {
   const fmt = useFmt();
   const today = useToday();
   const toggle = useData((s) => s.toggleTask);
@@ -38,8 +38,8 @@ export function TaskCard({ task, compact, hideDue }: { task: Task; list?: TaskLi
   const done = task.status === "completed";
 
   const dueLabel = task.due ? fmt.relative(task.due, today) : null;
-  /** The date chip, unless the screen already shows the date (a single day on a phone). */
-  const showDue = !!dueLabel && !compact && !hideDue;
+  /** The date chip. Left out when the screen already shows the date (a day on a phone), or just the "Today" label when asked. */
+  const showDue = !!dueLabel && !compact && !hideDue && !(hideToday && task.due === today);
   const showMeta = showDue || !!task.meta.priority;
 
   return (

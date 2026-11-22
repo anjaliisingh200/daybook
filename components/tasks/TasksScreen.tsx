@@ -481,7 +481,7 @@ export function TasksScreen() {
                     }}
                     className={cn("transition-opacity duration-150", t.id === dragId && "touch-none opacity-40")}
                   >
-                    <TaskCard task={t} list={listMap.get(t.listId)} selectedDay={selected} compact={!single} hideDue={single && mobile} />
+                    <TaskCard task={t} list={listMap.get(t.listId)} selectedDay={selected} compact={!single} hideDue={single && mobile} hideToday={single} />
                   </div>
                 );
               }

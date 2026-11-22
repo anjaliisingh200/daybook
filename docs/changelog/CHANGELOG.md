@@ -9,6 +9,24 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-22 — No "Today" label on tasks in the laptop Day view
+
+**Asked for:** remove the "Today" label from the tasks in the Day view on a laptop (only that label).
+
+**What changed**
+- In the laptop Day view, a task due today no longer shows the "Today" chip with the calendar icon. A task with a priority keeps its priority mark at the right; a task with nothing else is a single slim line.
+- Only the "Today" label is gone. Looking at another day still shows its own label ("Tomorrow", a date), and the labels in the Month list and the Completed list are unchanged.
+- The phone Day view already had no date chips (changed earlier).
+
+**Checked:** laptop Day on today: six cards, no chips. The next day: its four cards still show "Tomorrow". Month still shows its dates, and the phone Day still has none.
+
+**Files:** `components/tasks/TaskCard.tsx`, `components/tasks/TasksScreen.tsx`
+
+**Screenshots** (`screenshots/2026-11-22-no-today-label-desktop/`)
+![Laptop Day, no Today label](screenshots/2026-11-22-no-today-label-desktop/laptop-day.png)
+
+---
+
 ## 2026-11-22 — Calendar: one Week view that scrolls sideways, no "Now" tag
 
 **Asked for:** remove the "Now" tag and its time in the week and 3-day views; instead of a 3-day view, keep only the week view, and let the user scroll to the right to see the other dates.
