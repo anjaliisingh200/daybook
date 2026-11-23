@@ -9,6 +9,33 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-23 — Chrome extension: today's Tasks and Calendar in a side panel (branch `next-changes`)
+
+**Asked for:** an actual Chrome extension (to go on the Chrome Web Store later) that shows only today, as two tabs at the top, Tasks and Calendar, with the same Supabase login as the website, no week or month view, and the design of the current app rather than anything new.
+
+**What changed**
+- **New extension in `extension/`.** Clicking the toolbar icon opens a panel on the right side of the browser. It has the website's header (logo, "Daybook", account circle with Log out), the website's tab switch with **Tasks** and **Calendar**, and a date row ("Monday, November 23") in the website's heading font. It always shows today and rolls over at midnight.
+- **Tasks tab** is the website's Tasks day view in miniature: one white 16px panel on the grey canvas, the website's task cards (square tick, strike-through when done, subtasks with their blue line, priority marks), and the soft "Add task" button at the bottom. Ticking saves at once; "Add task" opens a name field and creates the task for today. Order is the website's rule (newest first, or your hand-placed order).
+- **Calendar tab** is the website's Day timeline: big hour labels, the dotted rail, calendar-coloured event cards that show more as they get taller, the all-day strip on top, and the blue "Now" tag. It opens a little before the current time.
+- **Same login as the website** (Supabase email and password). The login is kept in the extension's own storage, so you stay logged in. New accounts are still made on the website.
+- **Google events:** the panel asks the website's server for them. For that, the server now also accepts the login token the extension sends (`lib/google/session.ts`); the website's own cookie login works exactly as before, and a missing or wrong token counts as signed out. **This server change only takes effect once it is deployed.** Until then the Calendar tab shows Daybook's own events.
+- It stays quiet about everything else: no week or month, no moving between days, no settings.
+- Built with esbuild: `npm run extension` makes `extension/dist` to load in Chrome ("Load unpacked"). `npm run extension -- --demo` builds a sample-data copy used for these screenshots. How-to is in `extension/README.md`, including the Web Store steps.
+- Checked: all tests pass (13 new ones for the token header, today's tasks and today's events), lint and types are clean, and the real build loads in Edge: the background worker runs, the icon opens the side panel, and the login screen shows with no errors. **Not yet checked:** a real login with your account, and Google events through the extension (needs your password and the deployed server change).
+- Colours and sizes are copied from the website, so the primary button and the task-card tint are the website's blue; that is one token each in `extension/src/panel.css` if you want it changed.
+
+**Files:** `extension/` (new: `build.mjs`, `manifest.template.json`, `src/*`, `icons/`, `fonts/`, `README.md`, `serve.mjs`), `lib/google/session.ts`, `tests/extension.test.ts`, `scripts/extension-load.mjs`, `scripts/extension-shots.mjs`, `package.json`, `package-lock.json`, `eslint.config.mjs`, `.gitignore`
+
+**Screenshots** (`screenshots/2026-11-23-chrome-extension/`, sample data)
+![Tasks](screenshots/2026-11-23-chrome-extension/panel-tasks.png)
+![Add task](screenshots/2026-11-23-chrome-extension/panel-tasks-add.png)
+![A task ticked](screenshots/2026-11-23-chrome-extension/panel-tasks-done.png)
+![Calendar](screenshots/2026-11-23-chrome-extension/panel-calendar.png)
+![Account menu](screenshots/2026-11-23-chrome-extension/panel-account-menu.png)
+![Log in](screenshots/2026-11-23-chrome-extension/panel-login.png)
+
+---
+
 ## 2026-11-22 — Soft "Add task" button at the bottom of each Tasks column (branch `next-changes`)
 
 **Asked for:** use the Soft button in each column.

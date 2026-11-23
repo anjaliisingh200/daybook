@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx tests/core.test.ts && tsx tests/google.test.ts",
+    "test": "tsx tests/core.test.ts && tsx tests/google.test.ts && tsx tests/extension.test.ts",
+    "extension": "node extension/build.mjs",
     "typecheck": "tsc --noEmit",
     "shots": "node scripts/capture.mjs"
   },
@@ -24,9 +25,11 @@
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "4.3.3",
+    "@types/chrome": "^0.3.7",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "playwright-core": "^1.65.1",
