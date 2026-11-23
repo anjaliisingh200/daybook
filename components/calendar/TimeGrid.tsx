@@ -257,10 +257,10 @@ export function TimeGrid({ view, anchor, visible }: { view: CalView; anchor: Dat
 
         </div>
         <div className="relative flex select-none" style={{ height: "calc(var(--hour-h) * 24)" }}>
-          <div className="sticky left-0 z-10 w-12 shrink-0 bg-canvas md:w-16" aria-hidden>
+          <div className="sticky left-0 z-10 w-12 shrink-0 bg-bg md:w-16" aria-hidden>
             <div className="absolute inset-y-0 right-0 w-px bg-border" />
             {Array.from({ length: 23 }, (_, i) => i + 1).map((h) => (
-              <span key={h} className="absolute right-2 -translate-y-1 bg-canvas pl-0.5 text-right text-text-2 md:right-3" style={{ top: `calc(var(--hour-h) * ${h})` }}>
+              <span key={h} className="absolute right-2 -translate-y-1 bg-bg pl-0.5 text-right text-text-2 md:right-3" style={{ top: `calc(var(--hour-h) * ${h})` }}>
                 <span className="tnum block text-[0.8125rem] font-normal leading-none md:text-base">{hourLabel(h).big}</span>
                 {hourLabel(h).small && <span className="mt-0.5 block text-[0.6875rem] leading-none md:text-xs">{hourLabel(h).small}</span>}
               </span>

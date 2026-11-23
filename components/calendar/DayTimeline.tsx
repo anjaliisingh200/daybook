@@ -115,7 +115,7 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
               {hours.map((h) => (
                 <div
                   key={h}
-                  className="absolute right-6 z-[1] -translate-y-1 bg-canvas pl-1 text-right text-text-2"
+                  className="absolute right-6 z-[1] -translate-y-1 bg-bg pl-1 text-right text-text-2"
                   style={{ top: at(h * 60) }}
                 >
                   <div className="tnum text-[1.25rem] font-normal leading-none">{label(h).big}</div>

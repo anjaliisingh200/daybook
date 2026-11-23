@@ -22,8 +22,7 @@ function TaskCheck({ checked, label, onChange, small }: { checked: boolean; labe
 }
 
 /**
- * Today's tasks, the way the website's Tasks day view shows them: one white panel of task cards on the grey canvas,
- * with the soft "Add task" button at the bottom. The button opens a field for the new task's name.
+ * Today's tasks, the way the website's Tasks day view shows them: a column of task cards with the quiet "Add task" at the bottom. The button opens a field for the new task's name.
  */
 export function TasksTab({ rows, onToggle, onAdd }: { rows: TaskRow[]; onToggle: (id: string, done: boolean) => void; onAdd: (title: string) => Promise<boolean> }) {
   const [adding, setAdding] = useState(false);
@@ -102,7 +101,7 @@ export function TasksTab({ rows, onToggle, onAdd }: { rows: TaskRow[]; onToggle:
               </button>
             </form>
           ) : (
-            <button type="button" className="btn soft wide" onClick={() => setAdding(true)} aria-label="Add task for today">
+            <button type="button" className="addlink" onClick={() => setAdding(true)} aria-label="Add task for today">
               <Plus />
               Add task
             </button>

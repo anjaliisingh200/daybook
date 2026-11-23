@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState, Skeleton } from "@/components/ui/Controls";
 import { DateHeader } from "@/components/shell/DateHeader";
 import { weekRangeTitle } from "@/lib/weekTitle";
-import { DayCell } from "@/components/shell/DayHeaders";
+import { DayHeaders } from "@/components/shell/DayHeaders";
 import { revealColumn } from "@/lib/scroll";
 import { cn } from "@/lib/cn";
 import { addDays, addMonths, dowOf, parseKey, startOfWeek } from "@/lib/dates";
@@ -324,7 +324,7 @@ export function TasksScreen() {
             <>
               <TaskSearch className="w-48 lg:w-60" />
               <FilterMenu />
-              <Button variant="secondary" size="sm" icon={<Plus className="size-4" />} onClick={() => openQuickAdd({ due: selected })}>
+              <Button variant="primary" size="sm" icon={<Plus className="size-4" />} onClick={() => openQuickAdd({ due: selected })}>
                 Add task
               </Button>
             </>
@@ -366,21 +366,24 @@ export function TasksScreen() {
       )}
 
       {/* tasks */}
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto bg-canvas">
+      <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto">
         {/* Day view is a single readable column, not stretched across the screen. */}
         <div className={view === "day" ? "mx-auto max-w-3xl" : "contents"}>
-        {/* Month keeps its navigator strip. Day and week have no row of their own: each column carries its day heading. */}
-        {view === "month" && (
-          <div className="sticky top-0 z-10 w-max min-w-full bg-bg">
-            <div className="shrink-0 border-b border-border px-3 py-3 md:px-6">
-              <div className="mx-auto max-w-[88rem]">
-                <MonthNav month={anchor} selected={selected} counts={counts} onPick={pick} />
-              </div>
-            </div>
+        {/* the day / date row lives inside the scroller so it is exactly as wide as the columns */}
+        <div className="sticky top-0 z-10 w-max min-w-full bg-bg">
+      {view === "day" ? null : view !== "month" ? (
+        <DayHeaders days={days} selected={selected} onPick={pick} minColumnWidth={DAY_MIN_WIDTH} badge={columnsMode ? undefined : (d) => ((counts.get(d) ?? 0) > 0 ? <span>{counts.get(d)}</span> : null)} />
+      ) : (
+        <div className="shrink-0 border-b border-border px-3 py-3 md:px-6">
+          <div className="mx-auto max-w-[88rem]">
+            <MonthNav month={anchor} selected={selected} counts={counts} onPick={pick} />
           </div>
-        )}
+        </div>
+      )}
+
+        </div>
         {status === "ready" && columnsMode && (
-          <div className="grid gap-3 p-3" style={colTemplate}>
+          <div className="grid" style={colTemplate}>
             {days.map((d) => {
               const list = byDay.get(d) ?? [];
               const visibleCount = list.filter((t) => t.id !== dragId).length;
@@ -510,21 +513,18 @@ export function TasksScreen() {
                     if (id) moveTask(id, d, index);
                   }}
                   className={cn(
-                    // each day is a white panel with a 16px corner radius, floating on the grey canvas
-                    "flex min-h-[19rem] min-w-0 flex-col gap-0 rounded-[16px] bg-bg px-2 py-3 transition-colors duration-150"
+                    "flex min-h-[19rem] min-w-0 flex-col gap-0 border-l border-border px-1.5 py-2 transition-colors duration-150 first:border-l-0",
+                    d === today && "bg-surface"
                   )}
                 >
-                  {!single && (
-                    <div className="sticky top-0 z-10 -mx-2 -mt-3 mb-1 rounded-t-[16px] bg-bg px-2 pt-3">
-                      <DayCell day={d} selected={selected} onPick={pick} className="w-full rounded-xl" />
-                    </div>
-                  )}
                   <div className="flex flex-col gap-1.5">{items}</div>
-                  <div className="mt-auto pt-3">
-                    <Button variant="soft" size="sm" icon={<Plus className="size-4" />} className="w-full" onClick={() => openQuickAdd({ due: d })} aria-label={`Add task on ${fmt.dayLong(d)}`}>
-                      Add task
-                    </Button>
-                  </div>
+                  <button
+                    onClick={() => openQuickAdd({ due: d })}
+                    className="mt-auto flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-text-3 transition-colors hover:bg-surface-2 hover:text-text"
+                    aria-label={`Add task on ${fmt.dayLong(d)}`}
+                  >
+                    <Plus className="size-3.5" /> Add task
+                  </button>
                 </div>
               );
             })}
@@ -561,7 +561,7 @@ export function TasksScreen() {
                 title="All clear"
                 body="You have no tasks. Add one and it will appear in Google Tasks too."
                 action={
-                  <Button variant="secondary" icon={<Plus className="size-4" />} onClick={() => openQuickAdd({ due: selected })}>
+                  <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => openQuickAdd({ due: selected })}>
                     Add task
                   </Button>
                 }
@@ -572,7 +572,7 @@ export function TasksScreen() {
               {!columnsMode && groups.length === 0 && <EmptyState icon={<CheckCheck className="size-5" />} title="Nothing left to do" body="Every task in view is complete." />}
               {groups.map((g) => (
                 <section key={g.id} aria-label={g.label}>
-                  <div className="sticky top-0 z-10 -mx-3 flex items-center gap-2.5 bg-canvas/90 px-3 pb-2 pt-4 backdrop-blur md:-mx-6 md:px-6">
+                  <div className="sticky top-0 z-10 -mx-3 flex items-center gap-2.5 bg-bg/90 px-3 pb-2 pt-4 backdrop-blur md:-mx-6 md:px-6">
                     <h2 className={cn("text-xs font-semibold uppercase tracking-[0.12em]", g.tone === "accent" ? "text-accent" : "text-text-2")}>{g.label}</h2>
                     <span className="tnum rounded-full bg-surface-2 px-1.5 text-[0.6875rem] font-medium leading-5 text-text-2">{g.tasks.length}</span>
                     {g.hint && <span className="hidden text-xs text-text-3 sm:inline">{g.hint}</span>}
@@ -586,7 +586,7 @@ export function TasksScreen() {
                 </section>
               ))}
 
-              {showCompleted && view === "month" && (
+              {showCompleted && view !== "day" && !(mobile && view === "week") && (
                 <section className="mt-8" aria-label="Completed">
                   <button onClick={() => setCompletedOpen(!completedOpen)} aria-expanded={completedOpen} className="flex w-full items-center gap-2.5 rounded-lg py-2 text-left">
                     <ChevronDown className={cn("size-4 text-text-3 transition-transform", !completedOpen && "-rotate-90")} />

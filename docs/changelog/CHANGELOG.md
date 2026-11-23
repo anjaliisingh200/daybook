@@ -9,13 +9,36 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-23 — Removed the grey canvas and the Tasks column panels (branch `next-changes`)
+
+**Asked for:** remove the grey canvas with the Tasks columns; they are not needed.
+
+**What changed**
+- The Calendar and Tasks pages are **white again**, with the day columns separated by thin lines as before. The grey area under the headers is gone, and so are the rounded white day panels in Tasks.
+- The day heading ("MON 23") is back in its own row above the columns, in both Tasks and Calendar.
+- **"Add task"** at the foot of each Tasks column is back to the quiet grey text button, and the top-right "Add task" is the blue primary button again.
+- The **Completed list shows under the Tasks week view again** (it had been hidden there).
+- These went away together because they were two earlier changes made together on 2026-11-22: "Light grey canvas under the headers…" and "Soft Add task button…". Their change log entries below are kept as history.
+- The Chrome extension was changed to match: white, with a plain column of task cards and the quiet "Add task".
+- Nothing is pushed. Checked: tests, lint and types pass, and the website and the extension were looked at after the change.
+
+**Files:** `app/globals.css`, `components/calendar/CalendarScreen.tsx`, `components/calendar/DayTimeline.tsx`, `components/calendar/TimeGrid.tsx`, `components/shell/DayHeaders.tsx`, `components/tasks/TasksScreen.tsx`, `extension/src/panel.css`, `extension/src/TasksTab.tsx`
+
+**Screenshots** (`screenshots/2026-11-23-grey-canvas-removed/`, sample data)
+![Tasks week](screenshots/2026-11-23-grey-canvas-removed/tasks-week.png)
+![Tasks day](screenshots/2026-11-23-grey-canvas-removed/tasks-day.png)
+![Calendar week](screenshots/2026-11-23-grey-canvas-removed/calendar-week.png)
+![Tasks week on a phone](screenshots/2026-11-23-grey-canvas-removed/tasks-phone.png)
+
+---
+
 ## 2026-11-23 — Chrome extension: today's Tasks and Calendar in a side panel (branch `next-changes`)
 
 **Asked for:** an actual Chrome extension (to go on the Chrome Web Store later) that shows only today, as two tabs at the top, Tasks and Calendar, with the same Supabase login as the website, no week or month view, and the design of the current app rather than anything new.
 
 **What changed**
 - **New extension in `extension/`.** Clicking the toolbar icon opens a panel on the right side of the browser. It has the website's header (logo, "Daybook", account circle with Log out), the website's tab switch with **Tasks** and **Calendar**, and a date row ("Monday, November 23") in the website's heading font. It always shows today and rolls over at midnight.
-- **Tasks tab** is the website's Tasks day view in miniature: one white 16px panel on the grey canvas, the website's task cards (square tick, strike-through when done, subtasks with their blue line, priority marks), and the soft "Add task" button at the bottom. Ticking saves at once; "Add task" opens a name field and creates the task for today. Order is the website's rule (newest first, or your hand-placed order).
+- **Tasks tab** is the website's Tasks day view in miniature: a column of the website's task cards (square tick, strike-through when done, subtasks with their blue line, priority marks) on white, and the website's quiet grey "Add task" at the bottom. Ticking saves at once; "Add task" opens a name field and creates the task for today. Order is the website's rule (newest first, or your hand-placed order).
 - **Calendar tab** is the website's Day timeline: big hour labels, the dotted rail, calendar-coloured event cards that show more as they get taller, the all-day strip on top, and the blue "Now" tag. It opens a little before the current time.
 - **Same login as the website** (Supabase email and password). The login is kept in the extension's own storage, so you stay logged in. New accounts are still made on the website.
 - **Google events:** the panel asks the website's server for them. For that, the server now also accepts the login token the extension sends (`lib/google/session.ts`); the website's own cookie login works exactly as before, and a missing or wrong token counts as signed out. **This server change only takes effect once it is deployed.** Until then the Calendar tab shows Daybook's own events.
