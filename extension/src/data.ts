@@ -1,4 +1,5 @@
-import type { CalendarEvent, CalendarInfo, DateKey, Snapshot, Task, TaskList } from "@/lib/types";
+import type { CalendarEvent, CalendarInfo, DateKey, Priority, Snapshot, Task, TaskList } from "@/lib/types";
+import { zoned } from "@/lib/dates";
 import { SignedOutError } from "./errors";
 import { supabase } from "./supabase";
 
@@ -105,7 +106,7 @@ async function userId(): Promise<string> {
   return account.id;
 }
 
-async function put(table: "task_lists" | "tasks", obj: { id: string }): Promise<void> {
+async function put(table: "task_lists" | "tasks" | "events", obj: { id: string }): Promise<void> {
   const user_id = await userId();
   const { error } = await supabase().from(table).upsert({ user_id, id: obj.id, data: obj }, { onConflict: "user_id,id" });
   if (error) throw new Error(error.message);
@@ -149,4 +150,95 @@ export async function addTask(title: string, due: DateKey, lists: TaskList[], ta
   };
   await put("tasks", task);
   return { task, list: created };
+}
+
+/** What the task sheet can change. Date, time and repeat are changed on the website, where the linked calendar event is kept in step. */
+export interface TaskEdit {
+  title?: string;
+  notes?: string;
+  priority?: Priority | null;
+}
+
+async function readTask(id: string): Promise<Task> {
+  const { data, error } = await supabase().from("tasks").select("data").eq("id", id).single();
+  if (error || !data) throw new Error("That task no longer exists.");
+  return data.data as Task;
+}
+
+export async function updateTask(id: string, patch: TaskEdit): Promise<Task> {
+  const task = await readTask(id);
+  if (patch.title !== undefined) task.title = patch.title;
+  if (patch.notes !== undefined) task.notes = patch.notes;
+  if (patch.priority !== undefined) {
+    if (patch.priority === null) delete task.meta.priority;
+    else task.meta.priority = patch.priority;
+  }
+  task.updated = Date.now();
+  await put("tasks", task);
+  // A task with a time shares its title with its calendar event.
+  if (patch.title !== undefined && task.meta.eventId) {
+    const { data } = await supabase().from("events").select("data").eq("id", task.meta.eventId).maybeSingle();
+    if (data) {
+      const linked: CalendarEvent = { ...(data.data as CalendarEvent), title: patch.title, updated: Date.now() };
+      await put("events", linked);
+    }
+  }
+  return task;
+}
+
+/** Deletes a task, its subtasks, and the calendar event it is linked to (as the website does). */
+export async function deleteTask(task: Task, subtasks: Task[]): Promise<void> {
+  const ids = [task.id, ...subtasks.map((s) => s.id)];
+  const { error } = await supabase().from("tasks").delete().in("id", ids);
+  if (error) throw new Error(error.message);
+  if (task.meta.eventId) await supabase().from("events").delete().eq("id", task.meta.eventId);
+}
+
+/** Adds a subtask under a task. It has no date of its own; it shows with its parent. */
+export async function addSubtask(parent: Task, title: string, tasks: Task[]): Promise<Task> {
+  const now = Date.now();
+  const maxPos = Math.max(0, ...tasks.filter((t) => t.listId === parent.listId).map((t) => t.position));
+  const sub: Task = { id: `t_${rid()}`, listId: parent.listId, parentId: parent.id, title, notes: "", status: "needsAction", due: null, completedAt: null, created: now, updated: now, position: maxPos + 1, meta: parent.meta.calendarId ? { calendarId: parent.meta.calendarId } : {} };
+  await put("tasks", sub);
+  return sub;
+}
+
+/** What the event form fills in. */
+export type NewEvent = Omit<CalendarEvent, "id" | "created" | "updated" | "taskId">;
+
+/**
+ * Creates an event in Daybook's own calendar, with the task that goes with it (every Daybook event has one,
+ * linked both ways, as on the website).
+ */
+export async function addEvent(input: NewEvent, lists: TaskList[], tasks: Task[]): Promise<{ event: CalendarEvent; task: Task; list: TaskList | null }> {
+  let list = lists[0] ?? null;
+  let created: TaskList | null = null;
+  if (!list) {
+    await put("task_lists", STARTER_LIST);
+    list = created = STARTER_LIST;
+  }
+  const now = Date.now();
+  const eventId = `e_${rid()}`;
+  const taskId = `t_${rid()}`;
+  const timed = !input.allDay;
+  const due = input.startDate ?? zoned(input.start, input.tz).key;
+  const event: CalendarEvent = { ...input, id: eventId, taskId, created: now, updated: now };
+  const maxPos = Math.max(0, ...tasks.filter((t) => t.listId === list.id).map((t) => t.position));
+  const task: Task = {
+    id: taskId,
+    listId: list.id,
+    parentId: null,
+    title: input.title,
+    notes: "",
+    status: "needsAction",
+    due,
+    completedAt: null,
+    created: now,
+    updated: now,
+    position: maxPos + 1,
+    meta: { calendarId: input.calendarId, eventId, ...(timed ? { startMin: zoned(input.start, input.tz).minutes, endMin: zoned(input.end, input.tz).minutes } : {}) },
+  };
+  await put("events", event);
+  await put("tasks", task);
+  return { event, task, list: created };
 }

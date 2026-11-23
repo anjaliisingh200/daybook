@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import { Clock, MapPin, Repeat } from "lucide-react";
+import { Clock, MapPin, Plus, Repeat } from "lucide-react";
 import type { CalendarInfo, DateKey, EventInstance } from "@/lib/types";
 import { hexOf } from "@/lib/colors";
 import { zoned } from "@/lib/dates";
@@ -14,6 +14,9 @@ const at = (minutes: number) => `calc(${HOUR} * ${minutes / 60})`;
 type Tier = "line" | "title" | "full";
 /** What a card shows depends on how tall it is, exactly as on the website. */
 const tierOf = (heightPx: number): Tier => (heightPx < 64 ? "line" : heightPx < 104 ? "title" : "full");
+
+/** The next half hour after `min`, for an event started from the button. */
+const nextSlot = (min: number) => Math.min(Math.ceil((min + 1) / 30) * 30, 1410);
 
 const hourLabel = (h: number) => (HOUR12 ? { big: `${String(h % 12 || 12).padStart(2, "0")}:00`, small: h < 12 ? "AM" : "PM" } : { big: `${String(h).padStart(2, "0")}:00`, small: "" });
 
@@ -76,7 +79,7 @@ function Card({ inst, mins, color, calName, style, absolute }: { inst: EventInst
 }
 
 /** Today as a timeline: a rail with a big label for every hour, and cards placed at the time they start. The website's Day view. */
-export function CalendarTab({ day, instances, calendars, now }: { day: DateKey; instances: EventInstance[]; calendars: CalendarInfo[]; now: number }) {
+export function CalendarTab({ day, instances, calendars, now, onCreate }: { day: DateKey; instances: EventInstance[]; calendars: CalendarInfo[]; now: number; onCreate: (startMin: number) => void }) {
   const scroller = useRef<HTMLDivElement>(null);
   const body = useRef<HTMLDivElement>(null);
   const cal = useMemo(() => new Map(calendars.map((c) => [c.id, c])), [calendars]);
@@ -101,6 +104,12 @@ export function CalendarTab({ day, instances, calendars, now }: { day: DateKey; 
   return (
     <div ref={scroller} className="scroll">
       <div className="dayview">
+        <div className="addbar">
+          <button type="button" className="btn soft wide" onClick={() => onCreate(nextSlot(nowMin))} aria-label="Add event today">
+            <Plus />
+            Add event
+          </button>
+        </div>
         {banners.length > 0 && (
           <div className="allday">
             <div className="gutter">
@@ -141,7 +150,15 @@ export function CalendarTab({ day, instances, calendars, now }: { day: DateKey; 
             ))}
           </div>
 
-          <div className="lane">
+          <div
+            className="lane"
+            onClick={(e) => {
+              if ((e.target as HTMLElement).closest(".ev")) return;
+              const r = e.currentTarget.getBoundingClientRect();
+              const minutes = Math.floor((((e.clientY - r.top) / r.height) * 1440) / 30) * 30;
+              onCreate(Math.max(0, Math.min(1410, minutes)));
+            }}
+          >
             {hours.map((h) => (
               <div key={h} aria-hidden className="hline" style={{ top: at(h * 60) }} />
             ))}

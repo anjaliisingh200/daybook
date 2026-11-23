@@ -5,13 +5,19 @@ import { todayKey } from "@/lib/dates";
 import { backend } from "./backend";
 import { CalendarTab } from "./CalendarTab";
 import { Brand, SITE, TZ, fmt, useNow } from "./common";
-import type { Account, DayData } from "./data";
+import { EventSheet } from "./EventSheet";
+import type { Account, DayData, NewEvent, TaskEdit } from "./data";
 import { SignedOutError } from "./errors";
 import { Login } from "./Login";
+import { TaskSheet } from "./TaskSheet";
 import { TasksTab } from "./TasksTab";
 import { todaysEvents, todaysTasks } from "./today";
 
 type Tab = "tasks" | "calendar";
+type Sheet = { kind: "task"; id: string } | { kind: "event"; startMin: number } | null;
+
+/** The website refuses to change Google events for now, so the panel says the same. */
+const GOOGLE_READ_ONLY = "Google is connected read-only for now. Editing arrives in the next update.";
 
 const savedTab = (): Tab => {
   try {
@@ -70,6 +76,7 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>(savedTab);
+  const [sheet, setSheet] = useState<Sheet>(null);
   const now = useNow(30_000);
   const today = todayKey(TZ, now);
 
@@ -152,6 +159,82 @@ export function App() {
     }
   };
 
+  /** Optimistic edit of a task's title, description or priority: shown at once, undone with a message if saving fails. */
+  const edit = async (id: string, patch: TaskEdit) => {
+    const before = data?.tasks.find((t) => t.id === id);
+    if (!before) return;
+    setProblem(null);
+    const apply = (fn: (t: Task) => Task) => setData((d) => (d ? { ...d, tasks: d.tasks.map((t) => (t.id === id ? fn(t) : t)) } : d));
+    apply((t) => {
+      const meta = { ...t.meta };
+      if (patch.priority !== undefined) {
+        if (patch.priority === null) delete meta.priority;
+        else meta.priority = patch.priority;
+      }
+      return { ...t, ...(patch.title !== undefined ? { title: patch.title } : {}), ...(patch.notes !== undefined ? { notes: patch.notes } : {}), meta };
+    });
+    try {
+      const saved = await backend.updateTask(id, patch);
+      apply(() => saved);
+    } catch (e) {
+      if (e instanceof SignedOutError) return signedOut();
+      apply(() => before);
+      setProblem("Couldn't save that change. It was undone.");
+    }
+  };
+
+  const addSub = async (parentId: string, title: string): Promise<boolean> => {
+    const parent = data?.tasks.find((t) => t.id === parentId);
+    if (!data || !parent) return false;
+    setProblem(null);
+    try {
+      const sub = await backend.addSubtask(parent, title, data.tasks);
+      setData((d) => (d ? { ...d, tasks: [...d.tasks, sub] } : d));
+      return true;
+    } catch (e) {
+      if (e instanceof SignedOutError) {
+        signedOut();
+        return false;
+      }
+      setProblem("Couldn't add the subtask. Nothing was saved.");
+      return false;
+    }
+  };
+
+  const remove = async (id: string): Promise<void> => {
+    const task = data?.tasks.find((t) => t.id === id);
+    if (!data || !task) return;
+    const subs = data.tasks.filter((t) => t.parentId === id);
+    setProblem(null);
+    try {
+      await backend.deleteTask(task, subs);
+      const gone = new Set([id, ...subs.map((s) => s.id)]);
+      setData((d) => (d ? { ...d, tasks: d.tasks.filter((t) => !gone.has(t.id)), events: task.meta.eventId ? d.events.filter((e) => e.id !== task.meta.eventId) : d.events } : d));
+      setSheet(null);
+    } catch (e) {
+      if (e instanceof SignedOutError) return signedOut();
+      setProblem("Couldn't delete the task.");
+    }
+  };
+
+  const createEvent = async (input: NewEvent): Promise<boolean> => {
+    if (!data) return false;
+    setProblem(null);
+    try {
+      const { event, task, list } = await backend.addEvent(input, data.lists, data.tasks);
+      setData((d) => (d ? { ...d, events: [...d.events, event], tasks: [...d.tasks, task], lists: list ? [...d.lists, list] : d.lists } : d));
+      setSheet(null);
+      return true;
+    } catch (e) {
+      if (e instanceof SignedOutError) {
+        signedOut();
+        return false;
+      }
+      setProblem("Couldn't create the event. Nothing was saved.");
+      return false;
+    }
+  };
+
   const logOut = async () => {
     await backend.signOut();
     signedOut();
@@ -202,15 +285,35 @@ export function App() {
           <div className="boot">Loading…</div>
         ) : data ? (
           tab === "tasks" ? (
-            <TasksTab rows={rows} onToggle={toggle} onAdd={add} />
+            <TasksTab rows={rows} onToggle={toggle} onAdd={add} onOpen={(id) => setSheet({ kind: "task", id })} />
           ) : (
             <>
               {calendarNotice}
-              <CalendarTab day={today} instances={instances} calendars={data.calendars} now={now} />
+              <CalendarTab day={today} instances={instances} calendars={data.calendars} now={now} onCreate={(startMin) => setSheet({ kind: "event", startMin })} />
             </>
           )
         ) : null}
       </div>
+
+      {data && sheet?.kind === "task" && (() => {
+        const task = data.tasks.find((t) => t.id === sheet.id);
+        if (!task) return null;
+        return (
+          <TaskSheet
+            key={task.id}
+            task={task}
+            subtasks={data.tasks.filter((t) => t.parentId === task.id).sort((a, b) => a.position - b.position)}
+            onClose={() => setSheet(null)}
+            onEdit={(patch) => void edit(task.id, patch)}
+            onToggle={(id, done) => void toggle(id, done)}
+            onAddSub={(title) => addSub(task.id, title)}
+            onDelete={() => remove(task.id)}
+          />
+        );
+      })()}
+      {data && sheet?.kind === "event" && (
+        <EventSheet day={today} startMin={sheet.startMin} calendars={data.calendars} blocked={data.source === "google" ? GOOGLE_READ_ONLY : null} onClose={() => setSheet(null)} onSave={createEvent} />
+      )}
     </div>
   );
 }

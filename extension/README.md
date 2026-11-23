@@ -2,8 +2,8 @@
 
 A side panel with **today only**: a **Tasks** tab and a **Calendar** tab, in the website's own design. Click the toolbar icon to open it beside any page. You log in with the same email and password as the website.
 
-- **Tasks:** today's tasks. Tick one off, or add a new one for today.
-- **Calendar:** today's events as the website's Day timeline. Events come from Google when Google is connected on the website, otherwise from Daybook's own calendar. Read-only.
+- **Tasks:** today's tasks. Tick one off, add a new one for today, or click a card to open its details (title, description, priority, subtasks, delete, mark complete).
+- **Calendar:** today's events as the website's Day timeline. Events come from Google when Google is connected on the website, otherwise from Daybook's own calendar. Add an event with the **Add event** button or by clicking the timeline. While Google is connected the website treats events as read-only, so the panel does too.
 - No week or month view, and no moving between days. The panel always shows today and rolls over at midnight.
 
 ## Try it in Chrome (your own copy)
@@ -33,7 +33,7 @@ npm run extension -- --demo     # builds sample data into extension/dist-demo
 node extension/serve.mjs        # http://localhost:3300
 ```
 
-`node scripts/extension-load.mjs` loads the real build into Edge and checks that it starts. `node scripts/extension-shots.mjs <name>` takes the screenshots for the change log.
+`node scripts/extension-flows.mjs` clicks through the panel on sample data and checks the flows. `node scripts/extension-load.mjs` loads the real build into Edge and checks that it starts. `node scripts/extension-shots.mjs <name>` takes the screenshots for the change log.
 
 ## Putting it on the Chrome Web Store (later)
 

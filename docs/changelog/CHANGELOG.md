@@ -9,6 +9,28 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-23 — Extension: task details open, and events can be added (branch `next-changes`)
+
+**Asked for:** (1) users can't add events in the Calendar tab; (2) the task detail doesn't open.
+
+**What changed**
+- **Task details open.** Click a task card in the Tasks tab (the ticks still just tick). A sheet rises from the bottom, the website's own sheet: **Title** and **Description** (both save by themselves, with a small "Saved"), **Priority** (None / Low / Medium / High), the task's **Date**, **Time** and **Repeat** shown for reading, **Subtasks** (tick them, add new ones), **Delete** (asks "Delete this task?" first; it also removes its subtasks and its calendar event) and **Mark the task as complete**.
+- **Adding events.** Two ways, both open the website's "New event" form: the new **Add event** button at the top of the Calendar tab, and a click on an empty part of the timeline (it starts at the time you clicked). The form has Title, Date (today), All day, start and end time, Description, Location and Calendar. A saved event appears on the timeline at once, and, as on the website, a matching task for today appears in the Tasks tab.
+- **Google connected:** the website itself refuses to change Google events for now ("read-only for now"). The panel says the same on the form and turns off Save, instead of failing quietly. Events can be added when Google is not connected.
+- **Not in the panel yet:** changing a task's date, time or repeat or its calendar (it points you to the website, where the linked event is kept in step), event repeat, and opening or editing an existing event.
+- Checked with sample data by clicking through it: 17 checks (open, edit, priority, subtasks, tick, complete, delete, both ways of adding an event, the all-day strip, the matching task, the Google read-only message, no errors). Tests, lint and types pass and the real build loads in Edge. **Not checked:** saving to your real account.
+
+**Files:** `extension/src/TaskSheet.tsx`, `extension/src/EventSheet.tsx`, `extension/src/controls.tsx` (new); `extension/src/App.tsx`, `TasksTab.tsx`, `CalendarTab.tsx`, `data.ts`, `demo.ts`, `panel.css`; `scripts/extension-flows.mjs` (new)
+
+**Screenshots** (`screenshots/2026-11-23-extension-details-and-events/`, sample data)
+![Task details](screenshots/2026-11-23-extension-details-and-events/panel-task-details-edited.png)
+![Delete asks first](screenshots/2026-11-23-extension-details-and-events/panel-task-delete-confirm.png)
+![New event](screenshots/2026-11-23-extension-details-and-events/panel-event-new.png)
+![Google connected](screenshots/2026-11-23-extension-details-and-events/panel-event-google-readonly.png)
+![After adding events](screenshots/2026-11-23-extension-details-and-events/panel-after-events.png)
+
+---
+
 ## 2026-11-23 — Extension: removed the "Couldn't reach your Google events" message (branch `next-changes`)
 
 **Asked for:** remove the line "Couldn't reach your Google events just now. They will appear when the connection is back." (pasted from the Calendar tab).

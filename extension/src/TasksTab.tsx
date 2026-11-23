@@ -14,7 +14,17 @@ const PRIORITY = {
 function TaskCheck({ checked, label, onChange, small }: { checked: boolean; label: string; onChange: (done: boolean) => void; small?: boolean }) {
   return (
     <span className="tickwrap">
-      <button type="button" role="checkbox" aria-checked={checked} aria-label={label} className={small ? "check small" : "check"} onClick={() => onChange(!checked)}>
+      <button
+        type="button"
+        role="checkbox"
+        aria-checked={checked}
+        aria-label={label}
+        className={small ? "check small" : "check"}
+        onClick={(e) => {
+          e.stopPropagation();
+          onChange(!checked);
+        }}
+      >
         <Check strokeWidth={3} />
       </button>
     </span>
@@ -24,7 +34,7 @@ function TaskCheck({ checked, label, onChange, small }: { checked: boolean; labe
 /**
  * Today's tasks, the way the website's Tasks day view shows them: a column of task cards with the quiet "Add task" at the bottom. The button opens a field for the new task's name.
  */
-export function TasksTab({ rows, onToggle, onAdd }: { rows: TaskRow[]; onToggle: (id: string, done: boolean) => void; onAdd: (title: string) => Promise<boolean> }) {
+export function TasksTab({ rows, onToggle, onAdd, onOpen }: { rows: TaskRow[]; onToggle: (id: string, done: boolean) => void; onAdd: (title: string) => Promise<boolean>; onOpen: (id: string) => void }) {
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("");
   const [busy, setBusy] = useState(false);
@@ -57,7 +67,21 @@ export function TasksTab({ rows, onToggle, onAdd }: { rows: TaskRow[]; onToggle:
               const done = task.status === "completed";
               const p = task.meta.priority ? PRIORITY[task.meta.priority] : null;
               return (
-                <li key={task.id} className={done ? "task done" : "task"}>
+                <li key={task.id}>
+                <article
+                  className={done ? "task done" : "task"}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${task.title}. Open details`}
+                  onClick={() => onOpen(task.id)}
+                  onKeyDown={(e) => {
+                    if (e.target !== e.currentTarget) return;
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onOpen(task.id);
+                    }
+                  }}
+                >
                   <div className="row">
                     <TaskCheck checked={done} label={done ? `Reopen ${task.title}` : `Complete ${task.title}`} onChange={(d) => onToggle(task.id, d)} />
                     <h2>{task.title}</h2>
@@ -83,6 +107,7 @@ export function TasksTab({ rows, onToggle, onAdd }: { rows: TaskRow[]; onToggle:
                       </span>
                     </div>
                   )}
+                </article>
                 </li>
               );
             })}
