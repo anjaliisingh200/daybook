@@ -9,6 +9,19 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-23 — Extension: removed the "Couldn't reach your Google events" message (branch `next-changes`)
+
+**Asked for:** remove the line "Couldn't reach your Google events just now. They will appear when the connection is back." (pasted from the Calendar tab).
+
+**What changed**
+- The Calendar tab no longer shows that message. When the panel can't reach the Daybook website, it quietly shows Daybook's own events instead, with nothing on top.
+- The other message, "Google needs to be connected again", is unchanged, because it tells you something you can act on.
+- No picture changes in the sample-data screenshots, since the demo never shows this message. The layout is the one in the 2026-11-23 extension screenshots.
+
+**Files:** `extension/src/App.tsx`
+
+---
+
 ## 2026-11-23 — Removed the grey canvas and the Tasks column panels (branch `next-changes`)
 
 **Asked for:** remove the grey canvas with the Tasks columns; they are not needed.

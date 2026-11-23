@@ -164,8 +164,6 @@ export function App() {
     <p className="notice">
       Google needs to be connected again. <a href={SITE} target="_blank" rel="noreferrer">Open Daybook to reconnect</a>.
     </p>
-  ) : data?.eventsUnavailable ? (
-    <p className="notice">Couldn&apos;t reach your Google events just now. They will appear when the connection is back.</p>
   ) : null;
 
   return (
