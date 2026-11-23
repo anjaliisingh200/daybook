@@ -1,7 +1,6 @@
 import { bearerOf } from "../lib/google/session";
-import { todaysEvents, todaysTasks, isBanner } from "../extension/src/today";
-import { zonedToMs } from "../lib/dates";
-import type { CalendarEvent, Task } from "../lib/types";
+import { tasksForDay } from "../extension/src/today";
+import type { Task } from "../lib/types";
 
 let fail = 0;
 const eq = (name: string, a: unknown, b: unknown) => {
@@ -47,41 +46,15 @@ const tasks = [
   task("sub-b", { parentId: "new", due: null, position: 2 }),
   task("sub-a", { parentId: "new", due: null, position: 1 }),
 ];
-const rows = todaysTasks(tasks, TODAY);
-eq("tasks: only today's, newest first, done ones stay", rows.map((r) => r.task.id), ["new", "mid", "old"]);
-eq("tasks: subtasks sit under their parent in order", rows[0].subtasks.map((s) => s.id), ["sub-a", "sub-b"]);
-eq("tasks: a subtask is not a row of its own", rows.some((r) => r.task.parentId), false);
+const rows = tasksForDay(tasks, TODAY);
+eq("tasks: only today's, newest first, done ones stay", rows.map((t) => t.id), ["new", "mid", "old"]);
+eq("tasks: a subtask is not a row of its own", rows.some((t) => t.parentId), false);
 
-const placed = todaysTasks([task("a", { created: 9 }), task("b", { created: 1, meta: { order: -5 } }), task("c", { created: 5, meta: { order: 7 } })], TODAY);
-eq("tasks: a hand-placed order is kept", placed.map((r) => r.task.id), ["b", "c", "a"]);
+const placed = tasksForDay([task("a", { created: 9 }), task("b", { created: 1, meta: { order: -5 } }), task("c", { created: 5, meta: { order: 7 } })], TODAY);
+eq("tasks: a hand-placed order is kept", placed.map((t) => t.id), ["b", "c", "a"]);
 
-const prio = todaysTasks([task("low", { meta: { priority: "low", order: 1e13 * 2 } }), task("high", { meta: { priority: "high", order: 0 } })], TODAY);
-eq("tasks: hand-placed order wins over priority", prio.map((r) => r.task.id), ["high", "low"]);
-
-// ── today's events ──
-const IST = "Asia/Kolkata";
-const ev = (id: string, over: Partial<CalendarEvent>): CalendarEvent => ({
-  id,
-  calendarId: "c",
-  title: id,
-  allDay: false,
-  start: 0,
-  end: 0,
-  tz: IST,
-  created: 0,
-  updated: 0,
-  ...over,
-});
-const events: CalendarEvent[] = [
-  ev("late", { start: zonedToMs(TODAY, 15 * 60, IST), end: zonedToMs(TODAY, 16 * 60, IST) }),
-  ev("early", { start: zonedToMs(TODAY, 9 * 60, IST), end: zonedToMs(TODAY, 10 * 60, IST) }),
-  ev("allday", { allDay: true, startDate: TODAY, endDate: TODAY }),
-  ev("yesterday", { start: zonedToMs("2026-11-22", 9 * 60, IST), end: zonedToMs("2026-11-22", 10 * 60, IST) }),
-  ev("daily", { start: zonedToMs("2026-11-01", 12 * 60, IST), end: zonedToMs("2026-11-01", 13 * 60, IST), recurrence: { freq: "daily", interval: 1 } }),
-];
-const got = todaysEvents(events, TODAY, IST);
-eq("events: today only, all-day first, then by time, repeats expanded", got.map((i) => i.title), ["allday", "early", "daily", "late"]);
-eq("events: the all-day one is a banner", got.map(isBanner), [true, false, false, false]);
+const prio = tasksForDay([task("low", { meta: { priority: "low", order: 1e13 * 2 } }), task("high", { meta: { priority: "high", order: 0 } })], TODAY);
+eq("tasks: hand-placed order wins over priority", prio.map((t) => t.id), ["high", "low"]);
 
 if (fail) {
   console.log(`\n${fail} FAILED`);

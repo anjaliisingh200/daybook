@@ -1,9 +1,9 @@
 # Daybook for Chrome
 
-A side panel with **today only**: a **Tasks** tab and a **Calendar** tab, in the website's own design. Click the toolbar icon to open it beside any page. You log in with the same email and password as the website.
+A side panel with **today only**: a **Tasks** tab and a **Calendar** tab. The screens are the website's own, not copies: its task cards, Day timeline, task details, new task and new event forms, account menu and toasts run inside the panel (the phone layout, since the panel is narrow). Click the toolbar icon to open it beside any page. You log in with the same email and password as the website.
 
-- **Tasks:** today's tasks. Tick one off, add a new one for today, or click a card to open its details (title, description, priority, subtasks, delete, mark complete).
-- **Calendar:** today's events as the website's Day timeline. Events come from Google when Google is connected on the website, otherwise from Daybook's own calendar. Add an event with the **Add event** button or by clicking the timeline. While Google is connected the website treats events as read-only, so the panel does too.
+- **Tasks:** today's tasks as the website's task cards. Click one for its details, tick it, or add one with the **+** button or "Add task".
+- **Calendar:** today's events as the website's Day timeline. Tap the timeline or the **+** button for a new event. Events come from Google when Google is connected on the website, otherwise from Daybook's own calendar. While Google is connected the website treats events as read-only, so the panel does too.
 - No week or month view, and no moving between days. The panel always shows today and rolls over at midnight.
 
 ## Try it in Chrome (your own copy)
@@ -33,7 +33,7 @@ npm run extension -- --demo     # builds sample data into extension/dist-demo
 node extension/serve.mjs        # http://localhost:3300
 ```
 
-`node scripts/extension-flows.mjs` clicks through the panel on sample data and checks the flows. `node scripts/extension-load.mjs` loads the real build into Edge and checks that it starts. `node scripts/extension-shots.mjs <name>` takes the screenshots for the change log.
+`node scripts/extension-flows.mjs` clicks through the panel on sample data and checks the flows. `node scripts/extension-signed-in.mjs` runs the real build logged in against a pretend Supabase and a pretend Daybook site (no real account). `node scripts/extension-load.mjs` loads the real build into Edge and checks that it starts. `node scripts/extension-shots.mjs <name>` takes the screenshots for the change log.
 
 ## Putting it on the Chrome Web Store (later)
 
@@ -44,4 +44,6 @@ node extension/serve.mjs        # http://localhost:3300
 
 ## How it is built
 
-`src/` is a small React app bundled by esbuild (`build.mjs`). It reuses the website's date, repeat and layout code from `lib/`, and its colours, fonts and sizes are copied from the website (`src/panel.css`). Data: tasks and (without Google) events come straight from Supabase with the logged-in person's own access; Google events come from the website's API.
+The panel runs the website's own code (`components/` and `lib/`), so a change to those on the website shows up in the extension after the next `npm run extension`. Two small adapters in `build.mjs` make that possible: the browser Supabase client is the extension's (the login lives in extension storage), and the website's calls to `/api/google/...` are sent to your Daybook site with the login as an `Authorization` header. The stylesheet is the website's `app/globals.css`, built with Tailwind.
+
+

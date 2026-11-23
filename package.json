@@ -24,6 +24,7 @@
     "zustand": "^5.1.0"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/chrome": "^0.3.7",
     "@types/node": "^20",

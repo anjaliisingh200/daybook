@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { backend } from "./backend";
-import { Brand, SITE } from "./common";
-import type { Account } from "./data";
+import { Button } from "@/components/ui/Button";
+import { Field, Input } from "@/components/ui/Controls";
+import { LogoMark } from "@/components/shell/Logo";
+import { SITE } from "./config";
+import { signIn, type Account } from "./data";
 
-/** Log in with the same email and password as the Daybook website. New accounts are made on the website. */
+/** The website's log-in form (components/home/AuthDialog.tsx), on its own page. New accounts are made on the website. */
 export function Login({ onSignedIn }: { onSignedIn: (a: Account) => void }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,7 +17,7 @@ export function Login({ onSignedIn }: { onSignedIn: (a: Account) => void }) {
     setBusy(true);
     setError(null);
     try {
-      onSignedIn(await backend.signIn(email.trim(), password));
+      onSignedIn(await signIn(email.trim(), password));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't log in. Try again.");
       setBusy(false);
@@ -23,31 +25,32 @@ export function Login({ onSignedIn }: { onSignedIn: (a: Account) => void }) {
   };
 
   return (
-    <div className="app">
-      <header className="header">
-        <Brand />
+    <div className="flex h-full flex-col bg-bg">
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-bg px-3">
+        <div className="flex items-center gap-2.5">
+          <LogoMark />
+          <span className="font-display text-[1.45rem] leading-none tracking-tight">Daybook</span>
+        </div>
       </header>
-      <form className="login" onSubmit={submit}>
-        <h1>Log in</h1>
-        <p className="hint">Use your Daybook email and password.</p>
-        <label>
-          <span>Email</span>
-          <input className="input" type="email" autoComplete="email" required autoFocus value={email} onChange={(e) => setEmail(e.target.value)} />
-        </label>
-        <label>
-          <span>Password</span>
-          <input className="input" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-        </label>
-        {error && (
-          <p className="err" role="alert">
-            {error}
-          </p>
-        )}
-        <button type="submit" className="btn primary wide" disabled={busy}>
+      <form onSubmit={submit} className="space-y-4 p-5">
+        <h1 className="font-display text-[1.5rem] leading-none">Log in</h1>
+        <p className="text-sm text-text-2">Use your Daybook email and password.</p>
+        <Field label="Email">
+          <Input data-autofocus type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+        </Field>
+        <Field label="Password">
+          <Input type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+        </Field>
+        {error && <p className="text-sm text-danger">{error}</p>}
+        <Button type="submit" variant="primary" className="w-full" disabled={busy}>
           {busy ? "Please wait…" : "Log in"}
-        </button>
-        <p className="hint">
-          New here? <a href={SITE} target="_blank" rel="noreferrer">Create your account on Daybook</a>, then log in.
+        </Button>
+        <p className="text-sm text-text-2">
+          New here?{" "}
+          <a className="underline" href={SITE} target="_blank" rel="noreferrer">
+            Create your account on Daybook
+          </a>
+          , then log in.
         </p>
       </form>
     </div>

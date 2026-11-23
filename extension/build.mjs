@@ -11,6 +11,7 @@
  */
 import { build, context } from "esbuild";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -33,8 +34,9 @@ function readEnv(file) {
 }
 
 const env = { ...readEnv(join(root, ".env.local")), ...process.env };
-const supabaseUrl = (env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/+$/, "");
-const supabaseKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+// the demo build has no account at all: empty keys make the website's own code run on its sample data
+const supabaseUrl = demo ? "" : (env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/+$/, "");
+const supabaseKey = demo ? "" : env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 const siteUrl = (env.DAYBOOK_SITE_URL ?? "http://localhost:3000").replace(/\/+$/, "");
 
 if (!demo && (!supabaseUrl || !supabaseKey)) {
@@ -56,11 +58,33 @@ writeFileSync(join(dist, "manifest.json"), JSON.stringify(manifest, null, 2));
 
 // static files
 cpSync(join(ext, "src", "panel.html"), join(dist, "panel.html"));
-cpSync(join(ext, "src", "panel.css"), join(dist, "panel.css"));
+
+// The stylesheet is the website's own (app/globals.css plus every class its components use), built with Tailwind.
+const tailwind = spawnSync(process.execPath, [join(root, "node_modules", "@tailwindcss", "cli", "dist", "index.mjs"), "-i", join(ext, "src", "styles.css"), "-o", join(dist, "panel.css"), ...(watch ? [] : ["--minify"])], { cwd: ext, stdio: "inherit" });
+if (tailwind.status !== 0) process.exit(tailwind.status ?? 1);
 cpSync(join(ext, "icons"), join(dist, "icons"), { recursive: true });
 cpSync(join(ext, "fonts"), join(dist, "fonts"), { recursive: true });
 
+/**
+ * The panel runs the website's own screens and store. Two small adapters let that code work outside the website:
+ *   the browser Supabase client is the extension's (its login lives in extension storage, not cookies);
+ *   "Reconnect Google" opens the website instead of loading a page that does not exist inside an extension.
+ */
+const adapters = {
+  name: "daybook-adapters",
+  setup(b) {
+    b.onResolve({ filter: /^@\/lib\/supabase\/browser$/ }, () => ({ path: join(ext, "src", "adapters", "supabaseBrowser.ts") }));
+    b.onLoad({ filter: /lib[\\/]store[\\/]google\.ts$/ }, (args) => {
+      const src = readFileSync(args.path, "utf8");
+      const patched = src.replace('window.location.assign("/api/google/connect")', 'window.open(__SITE_URL__ + "/api/google/connect", "_blank")');
+      if (patched === src) throw new Error("connectGoogle changed on the website: update extension/build.mjs");
+      return { contents: patched, loader: "ts", resolveDir: dirname(args.path) };
+    });
+  },
+};
+
 const options = {
+  plugins: [adapters],
   entryPoints: { panel: join(ext, "src", "panel.tsx"), background: join(ext, "src", "background.ts") },
   outdir: dist,
   bundle: true,
@@ -75,6 +99,9 @@ const options = {
     __SUPABASE_KEY__: JSON.stringify(supabaseKey),
     __SITE_URL__: JSON.stringify(siteUrl),
     __DEMO__: JSON.stringify(demo),
+    // the website's own config reads these two; empty means "no account, sample data", which is what the demo build is
+    "process.env.NEXT_PUBLIC_SUPABASE_URL": JSON.stringify(supabaseUrl),
+    "process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY": JSON.stringify(supabaseKey),
     "process.env.NODE_ENV": JSON.stringify(watch ? "development" : "production"),
   },
   logLevel: "info",

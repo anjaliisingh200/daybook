@@ -45,8 +45,8 @@ try {
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
   await page.goto(`chrome-extension://${id}/panel.html`);
-  await page.waitForSelector(".login", { timeout: 10000 });
-  check("signed out: the login form shows", (await page.textContent(".login h1")) === "Log in");
+  await page.waitForSelector('h1:has-text("Log in")', { timeout: 10000 });
+  check("signed out: the login form shows", (await page.textContent("h1")) === "Log in");
   check("no errors in the panel", errors.length === 0, errors.join(" | "));
   if (shotDir) await page.screenshot({ path: join(shotDir, "extension-login.png") });
 } catch (e) {

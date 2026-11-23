@@ -1,23 +1,24 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CalendarDays, CheckCircle2, Cloud, ExternalLink, LogOut } from "lucide-react";
-import type { Task } from "@/lib/types";
-import { todayKey } from "@/lib/dates";
-import { backend } from "./backend";
-import { CalendarTab } from "./CalendarTab";
-import { Brand, SITE, TZ, fmt, useNow } from "./common";
-import { EventSheet } from "./EventSheet";
-import type { Account, DayData, NewEvent, TaskEdit } from "./data";
-import { SignedOutError } from "./errors";
+import { useEffect, useMemo, useState } from "react";
+import { CalendarDays, CheckCircle2, Cloud, ExternalLink, LogOut, Plus } from "lucide-react";
+import { DayTimeline } from "@/components/calendar/DayTimeline";
+import { EventLayers } from "@/components/calendar/EventLayers";
+import { LogoMark } from "@/components/shell/Logo";
+import { TaskCard } from "@/components/tasks/TaskCard";
+import { TaskLayers } from "@/components/tasks/TaskLayers";
+import { Skeleton } from "@/components/ui/Controls";
+import { Menu } from "@/components/ui/Menu";
+import { Toaster } from "@/components/ui/Toaster";
+import { cn } from "@/lib/cn";
+import { useFmt, useToday, useTz } from "@/lib/hooks";
+import { useData } from "@/lib/store/data";
+import { newDraft } from "@/lib/store/eventActions";
+import { useUI } from "@/lib/store/ui";
+import { SITE } from "./config";
+import { currentAccount, signOut, type Account } from "./data";
 import { Login } from "./Login";
-import { TaskSheet } from "./TaskSheet";
-import { TasksTab } from "./TasksTab";
-import { todaysEvents, todaysTasks } from "./today";
+import { tasksForDay } from "./today";
 
 type Tab = "tasks" | "calendar";
-type Sheet = { kind: "task"; id: string } | { kind: "event"; startMin: number } | null;
-
-/** The website refuses to change Google events for now, so the panel says the same. */
-const GOOGLE_READ_ONLY = "Google is connected read-only for now. Editing arrives in the next update.";
 
 const savedTab = (): Tab => {
   try {
@@ -27,93 +28,110 @@ const savedTab = (): Tab => {
   }
 };
 
-/** The account button and its menu, like the website's. */
-function AccountMenu({ account, onSignOut }: { account: Account; onSignOut: () => void }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!open) return;
-    const away = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    document.addEventListener("mousedown", away);
-    document.addEventListener("keydown", esc);
-    return () => {
-      document.removeEventListener("mousedown", away);
-      document.removeEventListener("keydown", esc);
-    };
-  }, [open]);
+/** Minutes after midnight of the next half hour in `tz`: where a new event starts (copied from the website's Calendar). */
+function nextHalfHour(tz: string): number {
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
+  const h = Number(parts.find((p) => p.type === "hour")?.value);
+  const m = Number(parts.find((p) => p.type === "minute")?.value);
+  return Math.min(Math.ceil((h * 60 + m + 1) / 30) * 30, 23 * 60 + 30);
+}
+
+/** The website's phone add button. */
+function Fab({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      aria-label={label}
+      onClick={onClick}
+      className="fixed bottom-5 right-4 z-20 flex size-14 items-center justify-center rounded-2xl bg-semantic-primary text-semantic-on-primary shadow-lg transition-transform active:scale-95"
+    >
+      <Plus className="size-6" />
+    </button>
+  );
+}
+
+/** Today's tasks: the website's Tasks day view (its own task cards, its own "Add task"). */
+function TasksToday() {
+  const today = useToday();
+  const tasks = useData((s) => s.tasks);
+  const lists = useData((s) => s.lists);
+  const status = useData((s) => s.status);
+  const openQuickAdd = useUI((s) => s.openQuickAdd);
+  const fmt = useFmt();
+  const listMap = useMemo(() => new Map(lists.map((l) => [l.id, l])), [lists]);
+  const list = useMemo(() => tasksForDay(tasks, today), [tasks, today]);
 
   return (
-    <div className="who" ref={ref}>
-      <button className="avatar" aria-label="Account" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(!open)}>
-        {(account.email[0] ?? "A").toUpperCase()}
-      </button>
-      {open && (
-        <div className="menu" role="menu">
-          <div className="menu-label">Account</div>
-          <div className="menu-item" role="menuitem" style={{ cursor: "default" }}>
-            <Cloud />
-            <span>{account.email}</span>
+    <div className="relative h-full min-h-0">
+      <div className="h-full overflow-y-auto overscroll-contain pb-24">
+        {status !== "ready" ? (
+          <div className="space-y-1.5 px-1.5 py-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-[8.25rem] rounded-xl" />
+            ))}
           </div>
-          <div className="menu-sep" />
-          <a className="menu-item" role="menuitem" href={SITE} target="_blank" rel="noreferrer">
-            <ExternalLink />
-            <span>Open Daybook</span>
-          </a>
-          <button className="menu-item" role="menuitem" onClick={onSignOut}>
-            <LogOut />
-            <span>Log out</span>
-          </button>
-        </div>
-      )}
+        ) : (
+          <div className="flex min-h-[19rem] min-w-0 flex-col gap-0 px-1.5 py-2">
+            <div className="flex flex-col gap-1.5">
+              {list.map((t) => (
+                <TaskCard key={t.id} task={t} list={listMap.get(t.listId)} selectedDay={today} hideDue hideToday />
+              ))}
+            </div>
+            <button
+              onClick={() => openQuickAdd({ due: today })}
+              className="mt-auto flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-text-3 transition-colors hover:bg-surface-2 hover:text-text"
+              aria-label={`Add task on ${fmt.dayLong(today)}`}
+            >
+              <Plus className="size-3.5" /> Add task
+            </button>
+          </div>
+        )}
+      </div>
+      <Fab label="Add task" onClick={() => openQuickAdd({ due: today })} />
+    </div>
+  );
+}
+
+/** Today's calendar: the website's Day timeline. */
+function CalendarToday() {
+  const today = useToday();
+  const tz = useTz();
+  const status = useData((s) => s.status);
+  const openEditor = useUI((s) => s.openEventEditor);
+  return (
+    <div className="relative h-full min-h-0">
+      {status !== "ready" ? <Skeleton className="m-3 h-64" /> : <DayTimeline anchor={today} />}
+      <Fab label="Create event" onClick={() => openEditor(newDraft({ day: today, startMin: nextHalfHour(tz) }))} />
     </div>
   );
 }
 
 export function App() {
   const [account, setAccount] = useState<Account | null | undefined>(undefined);
-  const [data, setData] = useState<DayData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [problem, setProblem] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>(savedTab);
-  const [sheet, setSheet] = useState<Sheet>(null);
-  const now = useNow(30_000);
-  const today = todayKey(TZ, now);
+  const load = useData((s) => s.load);
+  const sync = useData((s) => s.sync);
+  const today = useToday();
+  const fmt = useFmt();
 
   useEffect(() => {
-    void backend.currentAccount().then(setAccount);
+    void currentAccount().then((a) => setAccount(__DEMO__ && location.search.includes("login") ? null : a));
   }, []);
 
-  const signedOut = useCallback(() => {
-    setAccount(null);
-    setData(null);
-  }, []);
-
-  const refresh = useCallback(async () => {
-    try {
-      setData(await backend.loadAll());
-      setError(null);
-    } catch (e) {
-      if (e instanceof SignedOutError) return signedOut();
-      setError(e instanceof Error ? e.message : "Couldn't load your data.");
-    }
-  }, [signedOut]);
-
-  // load when signed in, then keep fresh: every two minutes, and whenever the panel comes back into view
+  // load once signed in, then keep fresh the way the website does: every minute while visible, and when the panel comes back into view
   useEffect(() => {
     if (!account) return;
-    const first = setTimeout(() => void refresh(), 0);
-    const timer = setInterval(() => document.visibilityState === "visible" && void refresh(), 120_000);
-    const wake = () => document.visibilityState === "visible" && void refresh();
-    document.addEventListener("visibilitychange", wake);
-    window.addEventListener("focus", wake);
+    void load();
+    const poll = () => document.visibilityState === "visible" && void sync({ silent: true });
+    const id = setInterval(poll, 60_000);
+    const onVis = () => document.visibilityState === "visible" && Date.now() - (useData.getState().syncedAt ?? 0) > 30_000 && void sync({ silent: true });
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("online", poll);
     return () => {
-      clearTimeout(first);
-      clearInterval(timer);
-      document.removeEventListener("visibilitychange", wake);
-      window.removeEventListener("focus", wake);
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("online", poll);
     };
-  }, [account, refresh]);
+  }, [account, load, sync]);
 
   const pick = (t: Tab) => {
     setTab(t);
@@ -124,196 +142,79 @@ export function App() {
     }
   };
 
-  const rows = useMemo(() => (data ? todaysTasks(data.tasks, today) : []), [data, today]);
-  const instances = useMemo(() => (data ? todaysEvents(data.events, today, TZ) : []), [data, today]);
-
-  /** Optimistic: the tick shows at once, and is undone with a message if saving fails. */
-  const toggle = async (id: string, done: boolean) => {
-    setProblem(null);
-    const patch = (fn: (t: Task) => Task) => setData((d) => (d ? { ...d, tasks: d.tasks.map((t) => (t.id === id ? fn(t) : t)) } : d));
-    patch((t) => ({ ...t, status: done ? "completed" : "needsAction", completedAt: done ? Date.now() : null }));
-    try {
-      const saved = await backend.setDone(id, done);
-      patch(() => saved);
-    } catch (e) {
-      if (e instanceof SignedOutError) return signedOut();
-      patch((t) => ({ ...t, status: done ? "needsAction" : "completed" }));
-      setProblem("Couldn't save that change. It was undone.");
-    }
-  };
-
-  const add = async (title: string): Promise<boolean> => {
-    if (!data) return false;
-    setProblem(null);
-    try {
-      const { task, list } = await backend.addTask(title, today, data.lists, data.tasks);
-      setData((d) => (d ? { ...d, tasks: [...d.tasks, task], lists: list ? [...d.lists, list] : d.lists } : d));
-      return true;
-    } catch (e) {
-      if (e instanceof SignedOutError) {
-        signedOut();
-        return false;
-      }
-      setProblem("Couldn't create the task. Nothing was saved.");
-      return false;
-    }
-  };
-
-  /** Optimistic edit of a task's title, description or priority: shown at once, undone with a message if saving fails. */
-  const edit = async (id: string, patch: TaskEdit) => {
-    const before = data?.tasks.find((t) => t.id === id);
-    if (!before) return;
-    setProblem(null);
-    const apply = (fn: (t: Task) => Task) => setData((d) => (d ? { ...d, tasks: d.tasks.map((t) => (t.id === id ? fn(t) : t)) } : d));
-    apply((t) => {
-      const meta = { ...t.meta };
-      if (patch.priority !== undefined) {
-        if (patch.priority === null) delete meta.priority;
-        else meta.priority = patch.priority;
-      }
-      return { ...t, ...(patch.title !== undefined ? { title: patch.title } : {}), ...(patch.notes !== undefined ? { notes: patch.notes } : {}), meta };
-    });
-    try {
-      const saved = await backend.updateTask(id, patch);
-      apply(() => saved);
-    } catch (e) {
-      if (e instanceof SignedOutError) return signedOut();
-      apply(() => before);
-      setProblem("Couldn't save that change. It was undone.");
-    }
-  };
-
-  const addSub = async (parentId: string, title: string): Promise<boolean> => {
-    const parent = data?.tasks.find((t) => t.id === parentId);
-    if (!data || !parent) return false;
-    setProblem(null);
-    try {
-      const sub = await backend.addSubtask(parent, title, data.tasks);
-      setData((d) => (d ? { ...d, tasks: [...d.tasks, sub] } : d));
-      return true;
-    } catch (e) {
-      if (e instanceof SignedOutError) {
-        signedOut();
-        return false;
-      }
-      setProblem("Couldn't add the subtask. Nothing was saved.");
-      return false;
-    }
-  };
-
-  const remove = async (id: string): Promise<void> => {
-    const task = data?.tasks.find((t) => t.id === id);
-    if (!data || !task) return;
-    const subs = data.tasks.filter((t) => t.parentId === id);
-    setProblem(null);
-    try {
-      await backend.deleteTask(task, subs);
-      const gone = new Set([id, ...subs.map((s) => s.id)]);
-      setData((d) => (d ? { ...d, tasks: d.tasks.filter((t) => !gone.has(t.id)), events: task.meta.eventId ? d.events.filter((e) => e.id !== task.meta.eventId) : d.events } : d));
-      setSheet(null);
-    } catch (e) {
-      if (e instanceof SignedOutError) return signedOut();
-      setProblem("Couldn't delete the task.");
-    }
-  };
-
-  const createEvent = async (input: NewEvent): Promise<boolean> => {
-    if (!data) return false;
-    setProblem(null);
-    try {
-      const { event, task, list } = await backend.addEvent(input, data.lists, data.tasks);
-      setData((d) => (d ? { ...d, events: [...d.events, event], tasks: [...d.tasks, task], lists: list ? [...d.lists, list] : d.lists } : d));
-      setSheet(null);
-      return true;
-    } catch (e) {
-      if (e instanceof SignedOutError) {
-        signedOut();
-        return false;
-      }
-      setProblem("Couldn't create the event. Nothing was saved.");
-      return false;
-    }
-  };
-
-  const logOut = async () => {
-    await backend.signOut();
-    signedOut();
-  };
-
-  if (account === undefined) return <div className="app"><div className="boot">Loading…</div></div>;
+  if (account === undefined) return <div className="flex h-full items-center justify-center text-sm text-text-3">Loading…</div>;
   if (account === null) return <Login onSignedIn={setAccount} />;
 
-  const calendarNotice = data?.needsReconnect ? (
-    <p className="notice">
-      Google needs to be connected again. <a href={SITE} target="_blank" rel="noreferrer">Open Daybook to reconnect</a>.
-    </p>
-  ) : null;
+  const initial = (account.email[0] ?? "A").toUpperCase();
 
   return (
-    <div className="app">
-      <header className="header">
-        <Brand />
-        <AccountMenu account={account} onSignOut={logOut} />
+    <div className="flex h-full flex-col bg-bg">
+      {/* the website's header */}
+      <header className="relative z-30 flex h-14 shrink-0 items-center gap-3 border-b border-border bg-bg px-3">
+        <div className="flex items-center gap-2.5">
+          <LogoMark />
+          <span className="font-display text-[1.45rem] leading-none tracking-tight">Daybook</span>
+        </div>
+        <div className="ml-auto flex items-center gap-1">
+          <Menu
+            placement="bottom-end"
+            className="w-64"
+            trigger={
+              <button aria-label="Account" className="ml-1 flex size-8 items-center justify-center rounded-full bg-accent text-sm font-semibold text-on-accent transition-transform hover:scale-105 active:scale-95">
+                {initial}
+              </button>
+            }
+            items={[
+              { type: "label", label: "Account" },
+              { label: account.email, hint: "Signed in", icon: <Cloud className="size-4" />, onSelect: () => {} },
+              { type: "sep" },
+              { label: "Open Daybook", icon: <ExternalLink className="size-4" />, onSelect: () => void window.open(SITE, "_blank") },
+              { label: "Log out", icon: <LogOut className="size-4" />, onSelect: () => void signOut().then(() => location.reload()) },
+            ]}
+          />
+        </div>
       </header>
 
-      <nav className="tabs" aria-label="Primary">
-        <ul role="tablist">
+      {/* the website's Tasks / Calendar switch */}
+      <nav aria-label="Primary" className="shrink-0 border-b border-border px-3 py-2">
+        <ul role="tablist" className="flex rounded-xl bg-surface-2 p-1">
           {(
             [
               { id: "tasks", label: "Tasks", Icon: CheckCircle2 },
               { id: "calendar", label: "Calendar", Icon: CalendarDays },
             ] as const
-          ).map(({ id, label, Icon }) => (
-            <li key={id} role="presentation">
-              <button role="tab" className="tab" aria-selected={tab === id} onClick={() => pick(id)}>
-                <Icon />
-                {label}
-              </button>
-            </li>
-          ))}
+          ).map(({ id, label, Icon }) => {
+            const active = tab === id;
+            return (
+              <li key={id} className="flex-1" role="presentation">
+                <button
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => pick(id)}
+                  className={cn(
+                    "flex h-8 w-full items-center justify-center gap-2 rounded-lg px-4 text-sm font-medium transition-all duration-150",
+                    active ? "bg-raised text-text shadow-sm" : "text-text-2 hover:text-text"
+                  )}
+                >
+                  <Icon className={cn("size-4", active && "text-accent")} />
+                  {label}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       </nav>
 
-      <div className="dateRow">
-        <h1>{fmt.dayLong(today)}</h1>
+      {/* the website's date row, without the controls this panel does not have */}
+      <div className="flex h-14 shrink-0 items-center border-b border-border px-4">
+        <h1 className="font-display min-w-0 flex-1 truncate pl-1 text-[1.5rem] leading-none">{fmt.dayLong(today)}</h1>
       </div>
 
-      <div className="canvas">
-        {error && <p className="notice error" role="alert">{error} <button className="btn soft" onClick={() => void refresh()}>Try again</button></p>}
-        {problem && <p className="notice error" role="alert">{problem}</p>}
-        {!data && !error ? (
-          <div className="boot">Loading…</div>
-        ) : data ? (
-          tab === "tasks" ? (
-            <TasksTab rows={rows} onToggle={toggle} onAdd={add} onOpen={(id) => setSheet({ kind: "task", id })} />
-          ) : (
-            <>
-              {calendarNotice}
-              <CalendarTab day={today} instances={instances} calendars={data.calendars} now={now} onCreate={(startMin) => setSheet({ kind: "event", startMin })} />
-            </>
-          )
-        ) : null}
-      </div>
+      <main className="min-h-0 flex-1">{tab === "tasks" ? <TasksToday /> : <CalendarToday />}</main>
 
-      {data && sheet?.kind === "task" && (() => {
-        const task = data.tasks.find((t) => t.id === sheet.id);
-        if (!task) return null;
-        return (
-          <TaskSheet
-            key={task.id}
-            task={task}
-            subtasks={data.tasks.filter((t) => t.parentId === task.id).sort((a, b) => a.position - b.position)}
-            onClose={() => setSheet(null)}
-            onEdit={(patch) => void edit(task.id, patch)}
-            onToggle={(id, done) => void toggle(id, done)}
-            onAddSub={(title) => addSub(task.id, title)}
-            onDelete={() => remove(task.id)}
-          />
-        );
-      })()}
-      {data && sheet?.kind === "event" && (
-        <EventSheet day={today} startMin={sheet.startMin} calendars={data.calendars} blocked={data.source === "google" ? GOOGLE_READ_ONLY : null} onClose={() => setSheet(null)} onSave={createEvent} />
-      )}
+      <EventLayers />
+      <TaskLayers />
+      <Toaster />
     </div>
   );
 }

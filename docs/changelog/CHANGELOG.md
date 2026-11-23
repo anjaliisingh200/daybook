@@ -9,6 +9,32 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-23 — Extension: now uses the website's own screens, not copies (branch `next-changes`)
+
+**Asked for:** the task details and the add screens should be the website's mobile view, implemented with the same code, not designed again by hand.
+
+**What changed**
+- The extension now **runs the website's own code**: its task cards, the Day timeline and event cards, the **task details** sheet, the **new task** form, the **new event** form, the account menu and the toasts. They are the phone layout (the panel is narrow), so they match the website's screens exactly. The styles are the website's own too (`app/globals.css`, built with Tailwind), and the header, Tasks / Calendar switch, "Add task" and the round **+** buttons are copied from the website's markup.
+- **Task details** now has everything the website's has: title, description, **date, time, repeat**, priority, **calendar**, subtasks, delete (with its own "Delete task" question) and "Mark the task as complete". The new task form and the new event form are the website's too (repeat, calendar, time pickers).
+- The website's own rules come with it: a task with a time gets a calendar event, an event gets a task, repeating tasks fill in, and Google events stay read-only for now with the website's own message.
+- Same account for both: whatever you change in the panel is in the website, and the other way round.
+- My earlier hand-made task sheet and event form were removed. The earlier entry just below describes those and is kept as history.
+- **One thing to know:** because the panel now runs the website's housekeeping (it creates missing tasks for events and fills in repeating tasks when it loads), having the website and the panel open at the same moment could, rarely, make a duplicate. The website already has the same risk across two tabs.
+- Checked: all tests pass and lint and types are clean. The panel was clicked through on sample data (11 checks). The real build was run logged in against a pretend Supabase and a pretend Daybook site: tasks load, Google events load with the login header, and ticking a task saves. **Not checked:** a real login with your own account.
+
+**Files:** `extension/build.mjs`, `extension/src/App.tsx`, `Login.tsx`, `data.ts`, `today.ts`, `net.ts`, `config.ts`, `styles.css` (new), `adapters/supabaseBrowser.ts` (new), `panel.html`, `panel.tsx`; removed `panel.css`, `TaskSheet.tsx`, `EventSheet.tsx`, `TasksTab.tsx`, `CalendarTab.tsx`, `controls.tsx`, `common.tsx`, `backend.ts`, `demo.ts`; `scripts/extension-flows.mjs`, `extension-shots.mjs`, `extension-signed-in.mjs` (new), `extension-load.mjs`; `tests/extension.test.ts`; `package.json` (adds the Tailwind command-line tool)
+
+**Screenshots** (`screenshots/2026-11-23-rebuild-with-website-screens/`, sample data)
+![Tasks](screenshots/2026-11-23-rebuild-with-website-screens/panel-tasks.png)
+![Task details](screenshots/2026-11-23-rebuild-with-website-screens/panel-task-details.png)
+![New task](screenshots/2026-11-23-rebuild-with-website-screens/panel-new-task.png)
+![Calendar](screenshots/2026-11-23-rebuild-with-website-screens/panel-calendar.png)
+![New event](screenshots/2026-11-23-rebuild-with-website-screens/panel-new-event.png)
+![Account menu](screenshots/2026-11-23-rebuild-with-website-screens/panel-account-menu.png)
+![Log in](screenshots/2026-11-23-rebuild-with-website-screens/panel-login.png)
+
+---
+
 ## 2026-11-23 — Extension: task details open, and events can be added (branch `next-changes`)
 
 **Asked for:** (1) users can't add events in the Calendar tab; (2) the task detail doesn't open.

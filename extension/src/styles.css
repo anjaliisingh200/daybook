@@ -1,0 +1,25 @@
+/*
+ * The panel's stylesheet IS the website's: its design tokens and every Tailwind class its components use,
+ * built by extension/build.mjs. Only the two fonts are set up here, because the website loads them with Next.
+ */
+@import "../../app/globals.css";
+@source "../../components";
+@source "../../lib";
+@source "./";
+
+@font-face {
+  font-family: "Instrument Sans";
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("fonts/instrument-sans-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Instrument Serif";
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/instrument-serif-latin.woff2") format("woff2");
+}
+:root {
+  --font-ui: "Instrument Sans";
+  --font-display: "Instrument Serif";
+}
