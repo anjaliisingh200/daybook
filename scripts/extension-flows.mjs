@@ -46,6 +46,10 @@ try {
   check("a subtask is added in the sheet", true);
   await page.keyboard.press("Escape");
   await page.waitForSelector(details, { state: "detached" });
+  // the card catches up a moment after the sheet closes (the website saves the title as the sheet closes)
+  await page
+    .waitForFunction(() => /Collect the parcel from the locker/.test(document.body.textContent ?? "") && /Take ID/.test(document.body.textContent ?? ""), null, { timeout: 5000 })
+    .catch(() => {});
   const card = await page.textContent("[data-task]:has-text('Collect the parcel')");
   check("the edited title, priority and subtask show on the card", card.includes("Collect the parcel from the locker") && card.includes("High") && card.includes("Take ID"));
 
@@ -82,6 +86,14 @@ try {
   await page.waitForSelector(ev, { state: "detached" });
   await page.waitForTimeout(500);
   check("the event is on the timeline", (await page.$$eval("[data-event]", (e) => e.length)) === before + 1 && (await page.textContent("main")).includes("Dentist"));
+
+  // clicking an event opens the event page straight away, not the quick view
+  await page.click('[data-event]:has-text("Dentist")');
+  await page.waitForSelector('[role="dialog"][aria-label="Edit event"]');
+  check("clicking an event opens its edit page", (await page.inputValue('[role="dialog"][aria-label="Edit event"] [aria-label="Event title"]')) === "Dentist");
+  check("the quick view is skipped", (await page.$$('[role="dialog"]')).length === 1);
+  await page.keyboard.press("Escape");
+  await page.waitForSelector('[role="dialog"]', { state: "detached" });
 
   // an event comes with its task, as on the website
   await page.click('[role="tab"]:has-text("Tasks")');

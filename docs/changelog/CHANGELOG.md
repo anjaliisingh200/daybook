@@ -9,6 +9,22 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-23 — Extension: clicking an event opens the event page directly (branch `next-changes`)
+
+**Asked for:** in the extension, clicking an event should open the event page straight away, not the quick view.
+
+**What changed**
+- In the Calendar tab, a click on an event now opens the website's **Edit event** page (title, description, date, time, repeat, calendar, with Delete, Cancel and Save) at once. The small quick-view card that showed first, with its pencil, bin and close buttons, is skipped.
+- An event in a **read-only calendar** still shows the quick view, because that is where the website says it is read-only.
+- Checked by clicking through on sample data: a click on an event opens its edit page with the right title, and only that one sheet is open. Tests, lint and types pass, and the real build was run logged in against a pretend server.
+
+**Files:** `extension/src/App.tsx`, `scripts/extension-flows.mjs`, `scripts/extension-shots.mjs`
+
+**Screenshots** (`screenshots/2026-11-23-event-click-opens-editor/`, sample data)
+![Edit event](screenshots/2026-11-23-event-click-opens-editor/panel-edit-event.png)
+
+---
+
 ## 2026-11-23 — Extension: now uses the website's own screens, not copies (branch `next-changes`)
 
 **Asked for:** the task details and the add screens should be the website's mobile view, implemented with the same code, not designed again by hand.

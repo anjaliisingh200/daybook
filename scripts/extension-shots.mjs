@@ -43,6 +43,12 @@ try {
   await page.waitForSelector("[data-event]");
   await shot("panel-calendar");
 
+  await page.click("[data-event] >> nth=0");
+  await page.waitForSelector('[role="dialog"][aria-label="Edit event"]');
+  await shot("panel-edit-event");
+  await page.keyboard.press("Escape");
+  await page.waitForSelector('[role="dialog"]', { state: "detached" });
+
   await page.click('[aria-label="Create event"]');
   await page.waitForSelector('[role="dialog"][aria-label="New event"]');
   await shot("panel-new-event");

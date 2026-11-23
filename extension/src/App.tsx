@@ -11,7 +11,7 @@ import { Toaster } from "@/components/ui/Toaster";
 import { cn } from "@/lib/cn";
 import { useFmt, useToday, useTz } from "@/lib/hooks";
 import { useData } from "@/lib/store/data";
-import { newDraft } from "@/lib/store/eventActions";
+import { draftFromInstance, newDraft } from "@/lib/store/eventActions";
 import { useUI } from "@/lib/store/ui";
 import { SITE } from "./config";
 import { currentAccount, signOut, type Account } from "./data";
@@ -96,7 +96,20 @@ function CalendarToday() {
   const today = useToday();
   const tz = useTz();
   const status = useData((s) => s.status);
+  const calendars = useData((s) => s.calendars);
   const openEditor = useUI((s) => s.openEventEditor);
+  const popover = useUI((s) => s.eventPopover);
+  const closePopover = useUI((s) => s.closeEventPopover);
+
+  // Clicking an event opens the event page (the website's editor) straight away, instead of the quick view.
+  // A read-only calendar keeps the quick view, because that is where the website says it is read-only.
+  useEffect(() => {
+    if (!popover) return;
+    if (calendars.find((c) => c.id === popover.instance.calendarId)?.readOnly) return;
+    openEditor(draftFromInstance(popover.instance, tz));
+    closePopover();
+  }, [popover, calendars, tz, openEditor, closePopover]);
+
   return (
     <div className="relative h-full min-h-0">
       {status !== "ready" ? <Skeleton className="m-3 h-64" /> : <DayTimeline anchor={today} />}
