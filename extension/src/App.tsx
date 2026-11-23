@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import { dayKey } from "@/components/tasks/taskModel";
+import { usePrefs } from "@/lib/store/prefs";
 import { CalendarDays, CheckCircle2, Cloud, ExternalLink, LogOut, Plus } from "lucide-react";
 import { DayTimeline } from "@/components/calendar/DayTimeline";
 import { EventLayers } from "@/components/calendar/EventLayers";
@@ -59,6 +61,64 @@ function TasksToday() {
   const fmt = useFmt();
   const listMap = useMemo(() => new Map(lists.map((l) => [l.id, l])), [lists]);
   const list = useMemo(() => tasksForDay(tasks, today), [tasks, today]);
+  const manualOrder = usePrefs((p) => p.manualOrder);
+
+  // Drag a task to another place in today's list, as on the website's Tasks screen (the website's own rules for the order).
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
+  const manual = manualOrder || list.some((t) => t.meta.order !== undefined);
+
+  /** Puts a dragged task at a position (an index among the other tasks of the day). */
+  const moveTask = (id: string, index: number) => {
+    const moved = list.find((t) => t.id === id);
+    if (!moved) return;
+    const others = list.filter((t) => t.id !== id);
+    if (!manual) {
+      // First time the day is reordered by hand: the order becomes manual. Every task of the day is given its place
+      // from the arrangement on screen, so the others stay exactly where they were.
+      const arranged = [...others.slice(0, index), moved, ...others.slice(index)];
+      usePrefs.getState().set({ manualOrder: true });
+      arranged.forEach((t, i) => void useData.getState().updateTask(t.id, { order: (i + 1) * 1000 }));
+      useUI.getState().toast("Manual order is on: a task stays where you drop it.", { duration: 6000 });
+      return;
+    }
+    const prev = others[index - 1];
+    const next = others[index];
+    // Keys sort ascending, so the new key sits between its neighbours.
+    const order = prev && next ? (dayKey(prev) + dayKey(next)) / 2 : prev ? dayKey(prev) + 1000 : next ? dayKey(next) - 1000 : 0;
+    void useData.getState().updateTask(id, { order });
+  };
+
+  const slot = <div key="slot" className="my-1 h-12 rounded-md border border-dashed border-semantic-primary bg-[color-mix(in_srgb,var(--semantic-primary)_10%,transparent)] transition-all duration-150" />;
+  const items: React.ReactNode[] = [];
+  let shown = 0;
+  for (const t of list) {
+    if (t.id !== dragId) {
+      if (overIndex === shown) items.push(slot);
+      shown++;
+    }
+    items.push(
+      <div
+        key={t.id}
+        data-card
+        data-dragging={t.id === dragId || undefined}
+        draggable
+        onDragStart={(e) => {
+          e.dataTransfer.setData("text/task-id", t.id);
+          e.dataTransfer.effectAllowed = "move";
+          setDragId(t.id);
+        }}
+        onDragEnd={() => {
+          setDragId(null);
+          setOverIndex(null);
+        }}
+        className={cn("transition-opacity duration-150", t.id === dragId && "opacity-40")}
+      >
+        <TaskCard task={t} list={listMap.get(t.listId)} selectedDay={today} hideDue hideToday />
+      </div>
+    );
+  }
+  if (overIndex === shown) items.push(slot);
 
   return (
     <div className="relative h-full min-h-0">
@@ -70,12 +130,33 @@ function TasksToday() {
             ))}
           </div>
         ) : (
-          <div className="flex min-h-[19rem] min-w-0 flex-col gap-0 px-1.5 py-2">
-            <div className="flex flex-col gap-1.5">
-              {list.map((t) => (
-                <TaskCard key={t.id} task={t} list={listMap.get(t.listId)} selectedDay={today} hideDue hideToday />
-              ))}
-            </div>
+          <div
+            data-day={today}
+            className="flex min-h-[19rem] min-w-0 flex-col gap-0 px-1.5 py-2"
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+              // Where the card would land: after every card whose middle is above the pointer.
+              const cards = [...e.currentTarget.querySelectorAll<HTMLElement>("[data-card]:not([data-dragging])")];
+              const index = cards.filter((el) => {
+                const r = el.getBoundingClientRect();
+                return r.top + r.height / 2 < e.clientY;
+              }).length;
+              if (overIndex !== index) setOverIndex(index);
+            }}
+            onDragLeave={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOverIndex(null);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              const id = e.dataTransfer.getData("text/task-id");
+              const index = overIndex ?? list.filter((t) => t.id !== id).length;
+              setDragId(null);
+              setOverIndex(null);
+              if (id) moveTask(id, index);
+            }}
+          >
+            <div className="flex flex-col gap-1.5">{items}</div>
             <button
               onClick={() => openQuickAdd({ due: today })}
               className="mt-auto flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-text-3 transition-colors hover:bg-surface-2 hover:text-text"

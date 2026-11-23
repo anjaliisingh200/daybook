@@ -9,6 +9,27 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-23 — Drag to move: events on the Day timeline, tasks in the extension (branch `next-changes`)
+
+**Asked for:** "why am I not able to drag and move my calendar events, fix that", then "same for tasks".
+
+**Why it didn't work:** the website only lets you drag events in its **Week** grid. Its **Day** timeline, which the extension shows, had no dragging at all. The Tasks screen lets you drag cards, but the extension's list did not.
+
+**What changed**
+- **Events (Day timeline):** press on an event and drag it up or down. It snaps to 15 minutes, a dashed copy with the new time shows where it will land, and letting go moves it. Escape cancels. Holding it near the top or bottom scrolls the day. The same rules as the Week grid: repeating events, events in read-only calendars and touch drags are not moved. **This change is in the website's own Day view too**, since the extension runs the same code, so it works on the website as well.
+- **Tasks (extension):** drag a task card to another place in today's list. A dashed slot shows where it will land. This uses the website's own ordering rules: the first time you reorder, "Manual order" is switched on and each task keeps the place you gave it (the same message as on the website).
+- **Two fixes found on the way:** letting go of a dragged event over empty space no longer starts a new event there (also after pressing Escape and then letting go), and the Day timeline no longer rebuilds all its event cards on every update, which is what made dragging flicker.
+- Checked by dragging with the mouse on sample data: a task to the top and to the bottom, an event one hour later, the dashed previews, Escape cancelling, and a drag never opening the task or event. The click-through now ran clean five times in a row. Tests, lint and types pass, the website still builds, and the real build runs logged in against a pretend server.
+- **Limits:** Google events can't be saved yet ("read-only for now"), so a drag on a Google event springs back with the website's own message. Tasks can only be reordered inside today, because the panel shows one day.
+
+**Files:** `components/calendar/DayTimeline.tsx` (website, shared), `extension/src/App.tsx`, `scripts/extension-flows.mjs`, `scripts/extension-shots.mjs`
+
+**Screenshots** (`screenshots/2026-11-23-drag-tasks-and-events/`, sample data)
+![Dragging a task](screenshots/2026-11-23-drag-tasks-and-events/panel-task-dragging.png)
+![Dragging an event](screenshots/2026-11-23-drag-tasks-and-events/panel-event-dragging.png)
+
+---
+
 ## 2026-11-23 — Extension: clicking an event opens the event page directly (branch `next-changes`)
 
 **Asked for:** in the extension, clicking an event should open the event page straight away, not the quick view.

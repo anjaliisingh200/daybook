@@ -29,6 +29,19 @@ try {
   await page.waitForSelector("[data-task]");
   await shot("panel-tasks");
 
+  // a task being dragged: a dashed slot shows where it will land
+  await page.waitForTimeout(2500);
+  const grabbed = await page.locator("[data-task] >> nth=3").boundingBox();
+  const target = await page.locator("[data-task] >> nth=1").boundingBox();
+  await page.mouse.move(grabbed.x + 40, grabbed.y + grabbed.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(grabbed.x + 40, grabbed.y + grabbed.height / 2 - 10, { steps: 3 });
+  await page.mouse.move(target.x + 80, target.y + 4, { steps: 12 });
+  await shot("panel-task-dragging");
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  await page.waitForTimeout(600);
+
   await page.click("[data-task] >> nth=2");
   await page.waitForSelector('[role="dialog"][aria-label="Task details"]');
   await shot("panel-task-details");
@@ -42,6 +55,19 @@ try {
   await page.click('[role="tab"]:has-text("Calendar")');
   await page.waitForSelector("[data-event]");
   await shot("panel-calendar");
+
+  // an event being dragged: a dashed copy shows where it will land
+  await page.locator('[data-event]:has-text("Client call")').scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  const ev = await page.locator('[data-event]:has-text("Client call")').boundingBox();
+  await page.mouse.move(ev.x + ev.width / 2, ev.y + 10);
+  await page.mouse.down();
+  await page.mouse.move(ev.x + ev.width / 2, ev.y + 40, { steps: 5 });
+  await page.mouse.move(ev.x + ev.width / 2, ev.y + 10 + 150, { steps: 8 });
+  await shot("panel-event-dragging");
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  await page.waitForTimeout(500);
 
   await page.click("[data-event] >> nth=0");
   await page.waitForSelector('[role="dialog"][aria-label="Edit event"]');

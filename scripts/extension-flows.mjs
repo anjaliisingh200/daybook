@@ -29,7 +29,35 @@ try {
   await page.goto(BASE);
   await page.waitForSelector("[data-task]");
   const start = await titles();
-  check("today's tasks show", start.length === 5, start.join(" | "));
+  check("today's tasks show", start.length >= 5, start.join(" | "));
+  // the website's housekeeping adds a task for each event a moment after loading: let the list settle first
+  await page.waitForTimeout(2500);
+
+  // ── drag a task to another place in today's list ──
+  // a real mouse drag: press on the card, move in steps, let go at the target point
+  const dragCard = async (from, x, y) => {
+    const b = await from.boundingBox();
+    await page.mouse.move(b.x + 40, b.y + b.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(b.x + 40, b.y + b.height / 2 + 10, { steps: 3 });
+    await page.mouse.move(x, y, { steps: 14 });
+    await page.waitForTimeout(150);
+    await page.mouse.up();
+  };
+  const before3 = await titles();
+  const firstBox = await page.locator("[data-task]").first().boundingBox();
+  await dragCard(page.locator("[data-task]:has-text('Read')"), firstBox.x + 80, firstBox.y + 4);
+  await page.waitForFunction((first) => document.querySelector("[data-task] h3")?.textContent !== first, before3[0], { timeout: 5000 }).catch(() => {});
+  const after3 = await titles();
+  check("dragging a task to the top moves it there", after3[0]?.startsWith("Read") && after3.length === before3.length, after3.join(" | "));
+  const lastBox = await page.locator("[data-task]").last().boundingBox();
+  await dragCard(page.locator("[data-task]:has-text('Read')"), lastBox.x + 80, lastBox.y + lastBox.height + 70); // below the last card (the drop slot pushes the cards down while dragging)
+  await page.waitForTimeout(600);
+  const after4 = await titles();
+  // (the sample data may add one more event-linked task at the very end a moment later, so check it is after the one that was last)
+  const lastTitle = lastBox ? after4.findIndex((t) => t.startsWith("Write usability")) : -1;
+  check("dragging it to the bottom moves it there", lastTitle >= 0 && after4.findIndex((t) => t.startsWith("Read")) > lastTitle, after4.join(" | "));
+  check("a drag does not open the task", !(await page.$('[role="dialog"]')));
 
   // ── task details (the website's own sheet) ──
   await page.click("[data-task]:has-text('Collect parcel')");
@@ -72,6 +100,7 @@ try {
   await page.waitForSelector("[data-task]:has-text('Book the dentist')");
   check("a new task is added for today", true);
 
+
   // ── a new event (the website's own form) ──
   await page.click('[role="tab"]:has-text("Calendar")');
   await page.waitForSelector("[data-event]");
@@ -86,6 +115,36 @@ try {
   await page.waitForSelector(ev, { state: "detached" });
   await page.waitForTimeout(500);
   check("the event is on the timeline", (await page.$$eval("[data-event]", (e) => e.length)) === before + 1 && (await page.textContent("main")).includes("Dentist"));
+
+  // drag the new event one hour later on the timeline
+  const evCard = page.locator('[data-event]:has-text("Dentist")');
+  const timeOf = async () => (await evCard.textContent()).match(/\d{1,2}(:\d{2})?\s?[AP]M/)?.[0];
+  await evCard.waitFor();
+  await evCard.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(300);
+  const t0 = await timeOf();
+  const box = await evCard.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + 10);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2, box.y + 10 + 60, { steps: 6 });
+  await page.mouse.move(box.x + box.width / 2, box.y + 10 + 120, { steps: 6 });
+  check("a dashed copy shows where the event will land", await page.$$eval(".border-dashed", (e) => e.length > 0));
+  await page.mouse.up();
+  await page.waitForTimeout(700);
+  const t1 = await timeOf();
+  check("dragging an event moves it an hour later", !!t0 && !!t1 && t0 !== t1, `${t0} -> ${t1}`);
+  check("a drag does not open the event", !(await page.$('[role="dialog"]')));
+
+  // Escape cancels a drag: the event stays where it was, and letting go afterwards opens nothing
+  const t2 = await timeOf();
+  const box2 = await evCard.boundingBox();
+  await page.mouse.move(box2.x + box2.width / 2, box2.y + 10);
+  await page.mouse.down();
+  await page.mouse.move(box2.x + box2.width / 2, box2.y + 10 + 60, { steps: 6 });
+  await page.keyboard.press("Escape");
+  await page.mouse.up();
+  await page.waitForTimeout(500);
+  check("Escape cancels a drag: the event stays and nothing opens", (await timeOf()) === t2 && !(await page.$('[role="dialog"]')), `${t2} -> ${await timeOf()}`);
 
   // clicking an event opens the event page straight away, not the quick view
   await page.click('[data-event]:has-text("Dentist")');

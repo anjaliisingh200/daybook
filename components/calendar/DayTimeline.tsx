@@ -1,10 +1,11 @@
 "use client";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { zoned } from "@/lib/dates";
 import { useFmt, useNow, useToday, useTz } from "@/lib/hooks";
 import { byDay, layoutDay, type Placed } from "@/lib/layout";
-import { newDraft } from "@/lib/store/eventActions";
+import { useData } from "@/lib/store/data";
+import { moveEvent, newDraft } from "@/lib/store/eventActions";
 import { usePrefs } from "@/lib/store/prefs";
 import { toRect, useUI } from "@/lib/store/ui";
 import type { DateKey, EventInstance } from "@/lib/types";
@@ -13,10 +14,53 @@ import { EventCardBody, eventCardClass, eventTier } from "./EventCard";
 import { evVars } from "./eventStyle";
 
 const isBanner = (i: EventInstance) => i.allDay || i.startDate !== i.endDate;
+const clamp = (n: number, a: number, b: number) => Math.min(b, Math.max(a, n));
+const snap = (m: number, step = 15) => Math.round(m / step) * step;
+
+/** An event being dragged to another time of the day. */
+type MoveDrag = { inst: EventInstance; start: number; dur: number };
 
 /** Every hour is exactly this tall, with or without events. Events sit at their real time inside it. */
 const HOUR = "8rem";
 const at = (minutes: number) => `calc(${HOUR} * ${minutes / 60})`;
+
+/** An event card: the same card the week view uses. `mins` is its length on the timeline. */
+function EventButton({
+  inst,
+  mins,
+  color,
+  done,
+  dim,
+  className,
+  style,
+  onPointerDown,
+  onOpen,
+}: {
+  inst: EventInstance;
+  mins: number;
+  color: string;
+  done: boolean;
+  /** Faded while it is being dragged. */
+  dim?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+  onPointerDown?: (e: React.PointerEvent) => void;
+  onOpen: (rect: ReturnType<typeof toRect>) => void;
+}) {
+  const heightPx = mins * 2 - 6; // an hour is 8rem, about 120px
+  return (
+    <button
+      type="button"
+      data-event
+      onPointerDown={onPointerDown}
+      onClick={(e) => onOpen(toRect(e.currentTarget.getBoundingClientRect()))}
+      style={{ ...evVars(color), ...style }}
+      className={cn(eventCardClass(eventTier(heightPx)), dim && "opacity-40", className)}
+    >
+      <EventCardBody inst={inst} done={done} heightPx={heightPx} />
+    </button>
+  );
+}
 
 /**
  * Day view as a timeline: a rail with a big label for every hour, and outlined cards
@@ -35,6 +79,15 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
   const openEditor = useUI((s) => s.openEventEditor);
   const scroller = useRef<HTMLDivElement>(null);
   const body = useRef<HTMLDivElement>(null);
+  const calendars = useData((s) => s.calendars);
+  const readOnlyIds = useMemo(() => new Set(calendars.filter((c) => c.readOnly).map((c) => c.id)), [calendars]);
+  const [drag, setDragState] = useState<MoveDrag | null>(null);
+  const dragRef = useRef<MoveDrag | null>(null);
+  const suppressClick = useRef(false);
+  const setDrag = (d: MoveDrag | null) => {
+    dragRef.current = d;
+    setDragState(d);
+  };
 
   const list = useMemo(() => byDay(instances, [anchor]).get(anchor) ?? [], [instances, anchor]);
   const banners = list.filter(isBanner);
@@ -59,27 +112,85 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
 
   const hours = Array.from({ length: 24 }, (_, h) => h);
 
-  /** An event card: the same component the week view uses. `mins` is its length on the timeline. */
-  const Card = ({ i, mins, className, style }: { i: EventInstance; mins: number; className?: string; style?: React.CSSProperties }) => {
-    const heightPx = mins * 2 - 6; // an hour is 8rem, about 120px
-    return (
-      <button
-        type="button"
-        data-event
-        onClick={(e) => openPopover(i, toRect(e.currentTarget.getBoundingClientRect()))}
-        style={{ ...evVars(colorOf(i)), ...style }}
-        className={cn(eventCardClass(eventTier(heightPx)), className)}
-      >
-        <EventCardBody inst={i} done={doneIds.has(i.event.id)} heightPx={heightPx} />
-      </button>
-    );
+  /** The minute of the day under a vertical pointer position. */
+  const minuteAt = (clientY: number) => {
+    const r = body.current!.getBoundingClientRect();
+    return clamp(((clientY - r.top) / r.height) * 1440, 0, 1440);
+  };
+
+  /**
+   * Drag an event to another time of the day, as in the week grid: it snaps to 15 minutes, a dashed copy shows where it will land,
+   * and letting go moves it. Escape cancels. Holding it near the top or bottom scrolls the day.
+   * Not for repeating events, events in read-only calendars, or touch (a touch drag scrolls).
+   */
+  const startMove = (e: React.PointerEvent, p: Placed) => {
+    const inst = p.inst;
+    if (e.button !== 0 || e.pointerType === "touch" || inst.event.recurrence || readOnlyIds.has(inst.calendarId)) return;
+    const sx = e.clientX;
+    const sy = e.clientY;
+    let lastY = e.clientY;
+    const grab = minuteAt(e.clientY) - p.top;
+    const dur = Math.max(15, Math.round((inst.end - inst.start) / 60_000));
+    let moved = false;
+    const place = () => setDrag({ inst, dur, start: clamp(snap(minuteAt(lastY) - grab), 0, 1440 - Math.min(dur, 1440)) });
+    const timer = window.setInterval(() => {
+      const sc = scroller.current;
+      if (!sc || !moved) return;
+      const r = sc.getBoundingClientRect();
+      const dy = lastY < r.top + 56 ? -14 : lastY > r.bottom - 56 ? 14 : 0;
+      if (dy) {
+        sc.scrollTop += dy;
+        place();
+      }
+    }, 16);
+    const onMove = (ev: PointerEvent) => {
+      lastY = ev.clientY;
+      if (!moved && Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return;
+      moved = true;
+      place();
+    };
+    /** `released`: the mouse button is already up (false when Escape cancels a drag that is still being held). */
+    const finish = (commit: boolean, released: boolean) => {
+      window.clearInterval(timer);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onCancel);
+      window.removeEventListener("keydown", onKey);
+      const d = dragRef.current;
+      setDrag(null);
+      if (!moved) return;
+      // the click that ends a drag, wherever the pointer is let go, must not open an event or start a new one
+      suppressClick.current = true;
+      const clear = () => setTimeout(() => (suppressClick.current = false), 0);
+      if (released) clear();
+      else window.addEventListener("pointerup", clear, { once: true });
+      if (commit && d && d.start !== p.top) void moveEvent(inst, anchor, d.start, tz);
+    };
+    const onUp = () => finish(true, true);
+    const onCancel = () => finish(false, true);
+    const onKey = (ev: KeyboardEvent) => ev.key === "Escape" && finish(false, false);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onCancel);
+    window.addEventListener("keydown", onKey);
+  };
+
+  /** Opens an event's quick view, unless the click is the end of a drag. */
+  const open = (i: EventInstance) => (rect: ReturnType<typeof toRect>) => {
+    if (suppressClick.current) return;
+    openPopover(i, rect);
   };
 
   const cardAt = (p: Placed) => (
-    <Card
+    <EventButton
       key={p.inst.key}
-      i={p.inst}
+      inst={p.inst}
       mins={p.bottom - p.top}
+      color={colorOf(p.inst)}
+      done={doneIds.has(p.inst.event.id)}
+      dim={drag?.inst.key === p.inst.key}
+      onPointerDown={(e) => startMove(e, p)}
+      onOpen={open(p.inst)}
       className="absolute"
       style={{
         top: at(p.top),
@@ -102,7 +213,7 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
             <div className="w-px shrink-0 bg-border" />
             <div className="min-w-0 flex-1 space-y-2">
               {banners.map((i) => (
-                <Card key={i.key} i={i} mins={30} />
+                <EventButton key={i.key} inst={i} mins={30} color={colorOf(i)} done={doneIds.has(i.event.id)} onOpen={open(i)} />
               ))}
             </div>
           </div>
@@ -148,6 +259,8 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
             className="relative min-w-0 flex-1 cursor-pointer"
             onClick={(e) => {
               if ((e.target as HTMLElement).closest("[data-event]")) return;
+              // letting go of a dragged event over empty space is the end of the drag, not a click to start a new event
+              if (suppressClick.current) return;
               const r = e.currentTarget.getBoundingClientRect();
               const minutes = Math.floor((((e.clientY - r.top) / r.height) * 1440) / 30) * 30;
               openEditor(newDraft({ day: anchor, startMin: Math.max(0, Math.min(1410, minutes)) }));
@@ -158,7 +271,16 @@ export function DayTimeline({ anchor }: { anchor: DateKey }) {
                 <div key={h} aria-hidden className="pointer-events-none absolute left-0 right-0 h-px bg-border" style={{ top: at(h * 60) }} />
               ))}
               {placed.map(cardAt)}
-
+              {/* where a dragged event will land */}
+              {drag && (
+                <div
+                  className="pointer-events-none absolute inset-x-0 z-[5] overflow-hidden rounded-sm border border-dashed bg-accent-soft/80 px-3 py-2.5"
+                  style={{ top: at(drag.start), height: `calc(${at(drag.dur)} - 6px)`, borderColor: colorOf(drag.inst) }}
+                >
+                  <div className="truncate text-[0.9375rem] font-medium leading-snug">{drag.inst.title}</div>
+                  <div className="tnum text-xs text-text-2">{`${fmt.minutes(drag.start)} – ${fmt.minutes((drag.start + drag.dur) % 1440)}`}</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
