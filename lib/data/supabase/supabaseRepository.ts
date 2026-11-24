@@ -97,7 +97,7 @@ export class SupabaseRepository implements Repository {
 
   async updateTask(id: string, patch: TaskPatch): Promise<Task> {
     const t = await this.get<Task>("tasks", id);
-    const { priority, calendarId, startMin, endMin, eventId, repeat, order, seriesId, ...rest } = patch;
+    const { priority, calendarId, startMin, endMin, eventId, repeat, order, seriesId, skip, ...rest } = patch;
     if (repeat !== undefined) {
       if (repeat === "none") delete t.meta.repeat;
       else t.meta.repeat = repeat;
@@ -109,6 +109,10 @@ export class SupabaseRepository implements Repository {
     if (seriesId !== undefined) {
       if (seriesId === null) delete t.meta.seriesId;
       else t.meta.seriesId = seriesId;
+    }
+    if (skip !== undefined) {
+      if (skip === null || skip.length === 0) delete t.meta.skip;
+      else t.meta.skip = skip;
     }
     Object.assign(t, rest);
     for (const [key, value] of [["startMin", startMin], ["endMin", endMin], ["eventId", eventId]] as const) {

@@ -53,6 +53,8 @@ export interface TaskMeta {
   order?: number;
   /** App-only: for a generated occurrence, the id of the repeating task it belongs to. */
   seriesId?: string;
+  /** App-only: for a repeating task, the dates of repeats that were deleted one by one, so they are not created again. */
+  skip?: DateKey[];
   /** App-only: how the task repeats ("none", "daily", "weekly", "weekdays", "monthly", "yearly"). */
   repeat?: string;
 }
@@ -77,6 +79,7 @@ export type TaskPatch = Partial<
     repeat: string;
     order: number | null;
     seriesId: string | null;
+    skip: DateKey[] | null;
   }
 >;
 

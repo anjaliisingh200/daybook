@@ -546,28 +546,69 @@ function DeleteTaskConfirm() {
   const id = useUI((s) => s.taskToDelete);
   const setId = useUI((s) => s.setTaskToDelete);
   const task = useData((s) => s.tasks.find((t) => t.id === id));
-  const linked = !!task?.meta.eventId;
+  const repeating = !!task && (!!task.meta.seriesId || (!!task.meta.repeat && task.meta.repeat !== "none"));
+  return (
+    <Modal open={!!task} onClose={() => setId(null)} title={repeating ? "Delete repeating task" : "Delete task"} size="sm">
+      {task && <DeleteBody key={task.id} task={task} repeating={repeating} onClose={() => setId(null)} />}
+    </Modal>
+  );
+}
+
+/**
+ * The question inside the delete dialog. A repeating task asks which ones to delete (the same choice the calendar gives
+ * for a repeating event), because a repeat that is simply deleted would otherwise be created again.
+ */
+function DeleteBody({ task, repeating, onClose }: { task: Task; repeating: boolean; onClose: () => void }) {
+  const [scope, setScope] = useState<"this" | "all">("this");
+  const linked = !!task.meta.eventId;
   const confirm = () => {
-    if (!task) return;
-    setId(null);
+    onClose();
     if (useUI.getState().taskPanelId === task.id) useUI.getState().openTask(null);
-    void useData.getState().deleteTask(task.id);
+    void useData.getState().deleteTask(task.id, scope);
   };
   return (
-    <Modal open={!!task} onClose={() => setId(null)} title="Delete task" size="sm">
-      <p className="p-5 text-sm text-text-2">
-        {linked
-          ? <>Deleting <span className="font-medium text-text">{task?.title}</span> will also delete its event on the calendar.</>
-          : <>Deleting <span className="font-medium text-text">{task?.title}</span> removes it from your tasks.</>}
-      </p>
+    <>
+      {repeating ? (
+        <div className="space-y-1 p-5" role="radiogroup" aria-label="Which tasks to delete">
+          <p className="mb-2 text-sm text-text-2">
+            <span className="font-medium text-text">{task.title}</span> repeats. Which ones do you want to delete?
+          </p>
+          {(
+            [
+              ["this", "Only this task"],
+              ["all", "All tasks in the series"],
+            ] as ["this" | "all", string][]
+          ).map(([v, l]) => (
+            <button
+              key={v}
+              role="radio"
+              aria-checked={scope === v}
+              type="button"
+              onClick={() => setScope(v)}
+              className="flex w-full items-center gap-3 rounded-md px-2 py-2.5 text-left text-sm hover:bg-surface-2"
+            >
+              <span className={cn("flex size-[18px] items-center justify-center rounded-full border-2", scope === v ? "border-accent" : "border-border-strong")}>
+                {scope === v && <span className="size-2 rounded-full bg-accent" />}
+              </span>
+              {l}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <p className="p-5 text-sm text-text-2">
+          {linked
+            ? <>Deleting <span className="font-medium text-text">{task.title}</span> will also delete its event on the calendar.</>
+            : <>Deleting <span className="font-medium text-text">{task.title}</span> removes it from your tasks.</>}
+        </p>
+      )}
       <div className="flex justify-end gap-2 border-t border-border px-5 py-3">
-        <Button type="button" variant="ghost" onClick={() => setId(null)}>
+        <Button type="button" variant="ghost" onClick={onClose}>
           Cancel
         </Button>
         <Button type="button" variant="danger" onClick={confirm}>
           Delete
         </Button>
       </div>
-    </Modal>
+    </>
   );
 }

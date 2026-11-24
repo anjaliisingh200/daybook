@@ -45,7 +45,8 @@ interface DataStore {
   addTask: (input: NewTaskInput) => Promise<Task | null>;
   updateTask: (id: string, patch: TaskPatch) => Promise<void>;
   toggleTask: (id: string) => Promise<void>;
-  deleteTask: (id: string) => Promise<void>;
+  /** `scope` only matters for a repeating task: just this one, or the whole series. */
+  deleteTask: (id: string, scope?: "this" | "all") => Promise<void>;
 
   addEvent: (input: NewEventInput) => Promise<CalendarEvent | null>;
   updateEvent: (id: string, patch: Partial<CalendarEvent>) => Promise<void>;
@@ -99,8 +100,12 @@ export const useData = create<DataStore>((set, get) => {
   const applyTaskPatch = async (id: string, patch: TaskPatch) => {
     const before = get().tasks.find((t) => t.id === id);
     if (!before) return;
-    const { priority, calendarId, startMin, endMin, eventId, repeat, order, seriesId, ...rest } = patch;
+    const { priority, calendarId, startMin, endMin, eventId, repeat, order, seriesId, skip, ...rest } = patch;
     const meta = { ...before.meta };
+    if (skip !== undefined) {
+      if (skip === null || skip.length === 0) delete meta.skip;
+      else meta.skip = skip;
+    }
     if (repeat !== undefined) {
       if (repeat === "none") delete meta.repeat;
       else meta.repeat = repeat;
@@ -284,6 +289,8 @@ export const useData = create<DataStore>((set, get) => {
     for (const root of roots) {
       const preset = root.meta.repeat!;
       const have = new Set(get().tasks.filter((t) => t.id === root.id || t.meta.seriesId === root.id).map((t) => t.due));
+      // Repeats that were deleted one by one stay deleted.
+      for (const d of root.meta.skip ?? []) have.add(d);
       // The dates the rule lands on, from the original's date up to the horizon.
       const rec = isCustomRepeat(preset) ? decodeRepeat(preset) : null;
       const dates: string[] = [];
@@ -334,6 +341,62 @@ const once = (fn: () => Promise<void>) => {
     }
     await ensureOccurrencesOnce();
   });
+
+  /**
+   * Deleting a repeating task. The next 30 days of a repeating task are kept filled in, so a repeat that is simply deleted
+   * would be created again at the next refresh. So:
+   *   "this": only this repeat goes, and its date is remembered on the original so it is not created again (the calendar
+   *           event, if there is one, skips that date too). If it is the original itself, the next repeat takes over as the original.
+   *   "all":  the original, every repeat, their subtasks and the calendar event all go.
+   */
+  const deleteRepeating = async (t: Task, scope: "this" | "all") => {
+    const rootId = t.meta.seriesId ?? t.id;
+    const root = get().tasks.find((x) => x.id === rootId);
+    const series = get().tasks.filter((x) => x.id === rootId || x.meta.seriesId === rootId);
+    const withSubtasks = (list: Task[]) => {
+      const ids = new Set(list.map((x) => x.id));
+      return get().tasks.filter((x) => ids.has(x.id) || (x.parentId && ids.has(x.parentId)));
+    };
+    const eventOf = (r?: Task) => (r?.meta.eventId ? get().events.find((e) => e.id === r.meta.eventId) : undefined);
+
+    let removed: Task[];
+    if (scope === "all") {
+      removed = withSubtasks(series);
+      const ev = eventOf(root);
+      if (ev) await rawDeleteEvent(ev.id).catch(() => {});
+    } else if (t.id !== rootId) {
+      // one repeat: its date is remembered first, so a refresh in the middle cannot bring it back
+      if (root && t.due) {
+        await applyTaskPatch(root.id, { skip: [...(root.meta.skip ?? []), t.due] });
+        const ev = eventOf(root);
+        if (ev) await rawUpdateEvent(ev.id, { exdates: [...(ev.exdates ?? []), t.due] }).catch(() => {});
+      }
+      removed = withSubtasks([t]);
+    } else {
+      const later = series.filter((x) => x.id !== t.id).sort((a, b) => (a.due ?? "").localeCompare(b.due ?? ""));
+      const next = later[0];
+      const ev = eventOf(t);
+      if (next) {
+        // the original goes: the next repeat takes over as the original, with the series' event and skipped dates
+        await applyTaskPatch(next.id, { seriesId: null, repeat: t.meta.repeat ?? "none", ...(t.meta.skip?.length ? { skip: t.meta.skip } : {}), ...(t.meta.eventId ? { eventId: t.meta.eventId } : {}) });
+        for (const o of later.slice(1)) await applyTaskPatch(o.id, { seriesId: next.id });
+        if (ev) await rawUpdateEvent(ev.id, { taskId: next.id, exdates: [...(ev.exdates ?? []), ...(t.due ? [t.due] : [])] }).catch(() => {});
+      } else if (ev) {
+        await rawDeleteEvent(ev.id).catch(() => {});
+      }
+      removed = withSubtasks([t]);
+    }
+
+    const gone = new Set(removed.map((x) => x.id));
+    set({ tasks: get().tasks.filter((x) => !gone.has(x.id)) });
+    try {
+      for (const r of removed) await repo.deleteTask(r.id);
+      toast(scope === "all" ? "Repeating task deleted" : "Task deleted");
+    } catch {
+      set({ tasks: [...get().tasks, ...removed.filter((r) => !get().tasks.some((x) => x.id === r.id))] });
+      toast("Couldn't delete the task.", { tone: "error" });
+    }
+  };
 
   return {
     status: "loading",
@@ -443,9 +506,10 @@ const once = (fn: () => Promise<void>) => {
       }
     },
 
-    async deleteTask(id) {
+    async deleteTask(id, scope = "this") {
       const t = get().tasks.find((x) => x.id === id);
       if (!t) return;
+      if (t.meta.seriesId || (t.meta.repeat && t.meta.repeat !== "none")) return deleteRepeating(t, scope);
       // Deleting a task deletes its calendar event too. The UI asks for confirmation first.
       if (t.meta.eventId && get().events.some((e) => e.id === t.meta.eventId)) await rawDeleteEvent(t.meta.eventId).catch(() => {});
       set({ tasks: get().tasks.filter((x) => x.id !== id) });
@@ -516,7 +580,7 @@ const once = (fn: () => Promise<void>) => {
         await repo.deleteEvent(id);
         // The task stays; only its time goes.
         const task = before.taskId ? get().tasks.find((t) => t.id === before.taskId) : undefined;
-        if (task && task.meta.eventId === id) await get().deleteTask(task.id);
+        if (task && task.meta.eventId === id) await get().deleteTask(task.id, "all");
       } catch {
         set({ events: [...get().events, before] });
         toast("Couldn't delete the event.", { tone: "error" });

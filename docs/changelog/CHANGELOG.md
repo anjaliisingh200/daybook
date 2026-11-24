@@ -9,6 +9,29 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-24 — A deleted repeating task no longer comes back (branch `next-changes`)
+
+**Asked for:** (phone) deleting a repeating task works, but later it comes back.
+
+**Why it came back:** the app keeps the next 30 days of every repeating task filled in. When you deleted one of those, the next refresh (every minute, and when you open the app) saw a gap in the series and created it again. Deleting the original left the later repeats behind as well.
+
+**What changed**
+- **Deleting a repeating task now asks which ones**, with the same two choices the calendar gives for a repeating event: **Only this task** or **All tasks in the series**. A task that does not repeat is deleted as before, with the same message.
+- **Only this task:** that repeat is deleted and its date is remembered on the series, so it is not created again (its calendar event, if it has one, skips that date too). If you delete the original, the next repeat becomes the original and the series carries on.
+- **All tasks in the series:** the original, every repeat, their subtasks and the calendar event all go, and nothing is created again.
+- Deleting a whole repeating event from the calendar now also deletes all of its tasks.
+- There is no "Undo" message for deleting a repeating task, because the choice is asked first.
+- Checked at phone size (390 wide) on sample data: a daily task creates today plus 30 days; deleting today's leaves 30 and nothing for today, even after a reload and a wait; deleting a later repeat leaves 29, its date is remembered, and it stays gone after a reload; deleting the series leaves none, and none come back after a reload. Tests, lint and types pass and the website builds. Not checked with your real account.
+- **Existing data:** a repeat you already deleted before this change was not remembered, so it may come back one more time. Delete it again and it stays deleted.
+- Noticed on the phone, not changed: the "Added to …" message that appears after saving a task can sit on top of the buttons of the next sheet that opens.
+
+**Files:** `lib/store/data.ts`, `lib/types.ts`, `lib/data/mock/mockRepository.ts`, `lib/data/supabase/supabaseRepository.ts`, `components/tasks/TaskLayers.tsx`, `scripts/repeat-delete.mjs` (new check)
+
+**Screenshots** (`screenshots/2026-11-24-delete-repeating-task/`, phone size)
+![Delete repeating task](screenshots/2026-11-24-delete-repeating-task/phone-delete-repeating-task.png)
+
+---
+
 ## 2026-11-23 — Drag to move: events on the Day timeline, tasks in the extension (branch `next-changes`)
 
 **Asked for:** "why am I not able to drag and move my calendar events, fix that", then "same for tasks".
