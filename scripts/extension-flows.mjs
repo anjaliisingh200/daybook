@@ -33,6 +33,9 @@ try {
   // the website's housekeeping adds a task for each event a moment after loading: let the list settle first
   await page.waitForTimeout(2500);
 
+  // only one "Add task" button is left: the floating one (the plain one at the end of the list is gone)
+  check("there is only one Add task button", (await page.locator('button:has-text("Add task")').count()) === 1, String(await page.locator('button:has-text("Add task")').count()));
+
   // the floating add button is the website's labelled primary button (h-9 = 2.25rem = 33.75px at the website's 15px root)
   const fab = page.locator('button[aria-label="Add task"]');
   const fb = await fab.boundingBox();

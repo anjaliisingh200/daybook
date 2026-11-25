@@ -56,7 +56,6 @@ function TasksDay({ day }: { day: DateKey }) {
   const lists = useData((s) => s.lists);
   const status = useData((s) => s.status);
   const openQuickAdd = useUI((s) => s.openQuickAdd);
-  const fmt = useFmt();
   const listMap = useMemo(() => new Map(lists.map((l) => [l.id, l])), [lists]);
   const list = useMemo(() => tasksForDay(tasks, day), [tasks, day]);
   const manualOrder = usePrefs((p) => p.manualOrder);
@@ -120,7 +119,7 @@ function TasksDay({ day }: { day: DateKey }) {
 
   return (
     <div className="relative h-full min-h-0">
-      <div className="h-full overflow-y-auto overscroll-contain pb-24">
+      <div className="h-full overflow-y-auto overscroll-contain">
         {status !== "ready" ? (
           <div className="space-y-1.5 px-1.5 py-2">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -130,7 +129,8 @@ function TasksDay({ day }: { day: DateKey }) {
         ) : (
           <div
             data-day={day}
-            className="flex min-h-[19rem] min-w-0 flex-col gap-0 px-1.5 py-2"
+            // fills the whole space under the list, so a task can be dropped anywhere below the last card too
+            className="flex min-h-full min-w-0 flex-col gap-0 px-1.5 pb-24 pt-2"
             onDragOver={(e) => {
               e.preventDefault();
               e.dataTransfer.dropEffect = "move";
@@ -155,13 +155,6 @@ function TasksDay({ day }: { day: DateKey }) {
             }}
           >
             <div className="flex flex-col gap-1.5">{items}</div>
-            <button
-              onClick={() => openQuickAdd({ due: day })}
-              className="mt-auto flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-text-3 transition-colors hover:bg-surface-2 hover:text-text"
-              aria-label={`Add task on ${fmt.dayLong(day)}`}
-            >
-              <Plus className="size-3.5" /> Add task
-            </button>
           </div>
         )}
       </div>

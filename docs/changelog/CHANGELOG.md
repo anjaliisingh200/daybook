@@ -9,6 +9,22 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-25 — Extension: only the floating "Add task" button is left (branch `next-changes`)
+
+**Asked for:** there were two "Add task" buttons in the extension; keep the floating one and remove the other one at the end of the task list.
+
+**What changed**
+- The small grey **"+ Add task"** under the last task is removed. The floating **"+ Add task"** button in the bottom corner is the only one now.
+- **Dropping a dragged task below the last card:** that grey button used to fill the space under the list, which also made it a drop area. Without it, dropping a task *below* the last card could miss. The area under the list is now one drop area, so a task can be dropped anywhere under the last card.
+- Checked by clicking through on sample data: exactly one "Add task" button on the page, and dragging a task to the bottom works (4 runs in a row, no failures). The real build loads and runs logged in against a pretend server, and tests, lint and types pass.
+
+**Files:** `extension/src/App.tsx`, `scripts/extension-flows.mjs`
+
+**Screenshots** (`screenshots/2026-11-25-one-add-task-button/`, sample data)
+![Tasks](screenshots/2026-11-25-one-add-task-button/panel-tasks.png)
+
+---
+
 ## 2026-11-25 — Extension: the floating button is a labelled product button (branch `next-changes`)
 
 **Asked for:** the floating action button should look like the product's button, in height and width, with a label: Add Task / Add Event.
