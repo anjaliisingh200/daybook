@@ -159,6 +159,59 @@ try {
   await page.waitForTimeout(500);
   check("the event also shows as a task today", (await titles()).includes("Dentist"));
 
+  // ── the day row: on top, with chevrons, and the tab stays where it is ──
+  const heading = async () => (await page.textContent("h1"))?.trim();
+  const selectedTab = async () => (await page.textContent('[role="tab"][aria-selected="true"]'))?.trim();
+  const rowOrder = await page.evaluate(() => {
+    const h1 = document.querySelector("h1")?.getBoundingClientRect().top ?? 0;
+    const tabs = document.querySelector('[role="tablist"]')?.getBoundingClientRect().top ?? 0;
+    return h1 < tabs;
+  });
+  check("the day row is above the tabs", rowOrder);
+  const prevBtn = '[aria-label="Previous day"]';
+  const nextBtn = '[aria-label="Next day"]';
+  const bar = await page.evaluate(() => {
+    const h1 = document.querySelector("h1").getBoundingClientRect();
+    const p = document.querySelector('[aria-label="Previous day"]').getBoundingClientRect();
+    const n = document.querySelector('[aria-label="Next day"]').getBoundingClientRect();
+    return p.right <= h1.left + 2 && n.left >= h1.right - 2;
+  });
+  check("a chevron sits at each end of the day row", bar);
+
+  await page.click('[role="tab"]:has-text("Tasks")');
+  const day0 = await heading();
+  await page.click(nextBtn);
+  const day1 = await heading();
+  check("Tasks: Next day shows the next day and stays on Tasks", day1 !== day0 && (await selectedTab()).includes("Tasks"), `${day0} -> ${day1}`);
+  await page.click('[aria-label="Add task"]');
+  const nt2 = '[role="dialog"][aria-label="New task"]';
+  await page.waitForSelector(nt2);
+  await page.fill(`${nt2} [aria-label="Title"]`, "Tomorrow thing");
+  await page.click(`${nt2} button:has-text("Save")`);
+  await page.waitForSelector("[data-task]:has-text('Tomorrow thing')");
+  check("a task added on the next day is on that day", true);
+  await page.click(prevBtn);
+  await page.waitForTimeout(400);
+  check("and it is not on today", !(await titles()).includes("Tomorrow thing") && (await heading()) === day0);
+  await page.click(nextBtn);
+  await page.waitForTimeout(400);
+  check("Next day shows it again", (await titles()).includes("Tomorrow thing"));
+
+  await page.click('[role="tab"]:has-text("Calendar")');
+  await page.waitForSelector("[data-event], [aria-label^='Create event']");
+  const calDay = await heading();
+  check("switching tab keeps the day", calDay === day1, `${calDay}`);
+  await page.click(nextBtn);
+  const day2 = await heading();
+  check("Calendar: Next day shows the day after and stays on Calendar", day2 !== day1 && (await selectedTab()).includes("Calendar"), `${day1} -> ${day2}`);
+  check("no \"Now\" line on another day", (await page.$$('[aria-label^="Now,"]')).length === 0);
+  await page.click(prevBtn);
+  await page.click(prevBtn);
+  await page.waitForTimeout(500);
+  check("two steps back is today again, with its \"Now\" line", (await heading()) === day0 && (await page.$$('[aria-label^="Now,"]')).length === 1 && (await selectedTab()).includes("Calendar"));
+  await page.click(prevBtn);
+  check("Previous day goes to yesterday", (await heading()) !== day0);
+
   check("no errors in the panel", errors.length === 0, errors.join(" | "));
 } catch (e) {
   failed = true;

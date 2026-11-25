@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { dayKey } from "@/components/tasks/taskModel";
 import { usePrefs } from "@/lib/store/prefs";
-import { CalendarDays, CheckCircle2, Plus } from "lucide-react";
+import { CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { DayTimeline } from "@/components/calendar/DayTimeline";
 import { EventLayers } from "@/components/calendar/EventLayers";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskLayers } from "@/components/tasks/TaskLayers";
+import { IconButton } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Controls";
 import { Toaster } from "@/components/ui/Toaster";
 import { cn } from "@/lib/cn";
+import { addDays } from "@/lib/dates";
+import type { DateKey } from "@/lib/types";
 import { useFmt, useToday, useTz } from "@/lib/hooks";
 import { useData } from "@/lib/store/data";
 import { draftFromInstance, newDraft } from "@/lib/store/eventActions";
@@ -48,19 +51,18 @@ function Fab({ label, onClick }: { label: string; onClick: () => void }) {
   );
 }
 
-/** Today's tasks: the website's Tasks day view (its own task cards, its own "Add task"). */
-function TasksToday() {
-  const today = useToday();
+/** One day's tasks: the website's Tasks day view (its own task cards, its own "Add task"). */
+function TasksDay({ day }: { day: DateKey }) {
   const tasks = useData((s) => s.tasks);
   const lists = useData((s) => s.lists);
   const status = useData((s) => s.status);
   const openQuickAdd = useUI((s) => s.openQuickAdd);
   const fmt = useFmt();
   const listMap = useMemo(() => new Map(lists.map((l) => [l.id, l])), [lists]);
-  const list = useMemo(() => tasksForDay(tasks, today), [tasks, today]);
+  const list = useMemo(() => tasksForDay(tasks, day), [tasks, day]);
   const manualOrder = usePrefs((p) => p.manualOrder);
 
-  // Drag a task to another place in today's list, as on the website's Tasks screen (the website's own rules for the order).
+  // Drag a task to another place in the day's list, as on the website's Tasks screen (the website's own rules for the order).
   const [dragId, setDragId] = useState<string | null>(null);
   const [overIndex, setOverIndex] = useState<number | null>(null);
   const manual = manualOrder || list.some((t) => t.meta.order !== undefined);
@@ -111,7 +113,7 @@ function TasksToday() {
         }}
         className={cn("transition-opacity duration-150", t.id === dragId && "opacity-40")}
       >
-        <TaskCard task={t} list={listMap.get(t.listId)} selectedDay={today} hideDue hideToday />
+        <TaskCard task={t} list={listMap.get(t.listId)} selectedDay={day} hideDue hideToday />
       </div>
     );
   }
@@ -128,7 +130,7 @@ function TasksToday() {
           </div>
         ) : (
           <div
-            data-day={today}
+            data-day={day}
             className="flex min-h-[19rem] min-w-0 flex-col gap-0 px-1.5 py-2"
             onDragOver={(e) => {
               e.preventDefault();
@@ -155,23 +157,22 @@ function TasksToday() {
           >
             <div className="flex flex-col gap-1.5">{items}</div>
             <button
-              onClick={() => openQuickAdd({ due: today })}
+              onClick={() => openQuickAdd({ due: day })}
               className="mt-auto flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium text-text-3 transition-colors hover:bg-surface-2 hover:text-text"
-              aria-label={`Add task on ${fmt.dayLong(today)}`}
+              aria-label={`Add task on ${fmt.dayLong(day)}`}
             >
               <Plus className="size-3.5" /> Add task
             </button>
           </div>
         )}
       </div>
-      <Fab label="Add task" onClick={() => openQuickAdd({ due: today })} />
+      <Fab label="Add task" onClick={() => openQuickAdd({ due: day })} />
     </div>
   );
 }
 
-/** Today's calendar: the website's Day timeline. */
-function CalendarToday() {
-  const today = useToday();
+/** One day's calendar: the website's Day timeline. */
+function CalendarDay({ day }: { day: DateKey }) {
   const tz = useTz();
   const status = useData((s) => s.status);
   const calendars = useData((s) => s.calendars);
@@ -190,8 +191,8 @@ function CalendarToday() {
 
   return (
     <div className="relative h-full min-h-0">
-      {status !== "ready" ? <Skeleton className="m-3 h-64" /> : <DayTimeline anchor={today} />}
-      <Fab label="Create event" onClick={() => openEditor(newDraft({ day: today, startMin: nextHalfHour(tz) }))} />
+      {status !== "ready" ? <Skeleton className="m-3 h-64" /> : <DayTimeline anchor={day} />}
+      <Fab label="Create event" onClick={() => openEditor(newDraft({ day, startMin: nextHalfHour(tz) }))} />
     </div>
   );
 }
@@ -203,6 +204,13 @@ export function App() {
   const sync = useData((s) => s.sync);
   const today = useToday();
   const fmt = useFmt();
+  // The day shown. It follows today (and the midnight rollover) until the person steps to another day.
+  const [picked, setPicked] = useState<DateKey | null>(null);
+  const day = picked ?? today;
+  const step = (dir: 1 | -1) => {
+    const next = addDays(day, dir);
+    setPicked(next === today ? null : next);
+  };
 
   useEffect(() => {
     void currentAccount().then((a) => setAccount(__DEMO__ && location.search.includes("login") ? null : a));
@@ -238,7 +246,18 @@ export function App() {
 
   return (
     <div className="flex h-full flex-col bg-bg">
-      {/* the website's Tasks / Calendar switch (the panel has no logo row: the tabs are the top) */}
+      {/* the top row: the day, with a chevron at each end to step to the previous or next day. The tab stays as it is. */}
+      <div className="flex h-14 shrink-0 items-center gap-1 border-b border-border px-2">
+        <IconButton label="Previous day" onClick={() => step(-1)}>
+          <ChevronLeft className="size-5" />
+        </IconButton>
+        <h1 className="font-display min-w-0 flex-1 truncate text-center text-[1.5rem] leading-none">{fmt.dayLong(day)}</h1>
+        <IconButton label="Next day" onClick={() => step(1)}>
+          <ChevronRight className="size-5" />
+        </IconButton>
+      </div>
+
+      {/* the website's Tasks / Calendar switch, under the day */}
       <nav aria-label="Primary" className="shrink-0 border-b border-border px-3 py-2">
         <ul role="tablist" className="flex rounded-xl bg-surface-2 p-1">
           {(
@@ -268,12 +287,7 @@ export function App() {
         </ul>
       </nav>
 
-      {/* the website's date row, without the controls this panel does not have */}
-      <div className="flex h-14 shrink-0 items-center border-b border-border px-4">
-        <h1 className="font-display min-w-0 flex-1 truncate pl-1 text-[1.5rem] leading-none">{fmt.dayLong(today)}</h1>
-      </div>
-
-      <main className="min-h-0 flex-1">{tab === "tasks" ? <TasksToday /> : <CalendarToday />}</main>
+      <main className="min-h-0 flex-1">{tab === "tasks" ? <TasksDay day={day} /> : <CalendarDay day={day} />}</main>
 
       <EventLayers />
       <TaskLayers />

@@ -56,6 +56,13 @@ try {
   await page.waitForSelector("[data-event]");
   await shot("panel-calendar");
 
+  // the next day, still on the Calendar tab
+  await page.click('[aria-label="Next day"]');
+  await page.waitForTimeout(500);
+  await shot("panel-calendar-next-day");
+  await page.click('[aria-label="Previous day"]');
+  await page.waitForTimeout(500);
+
   // an event being dragged: a dashed copy shows where it will land
   await page.locator('[data-event]:has-text("Client call")').scrollIntoViewIfNeeded();
   await page.waitForTimeout(300);

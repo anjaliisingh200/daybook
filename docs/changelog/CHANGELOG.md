@@ -9,6 +9,27 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-25 — Extension: the day row on top, with chevrons to change day (branch `next-changes`)
+
+**Asked for:** (1) move the day row to the top, with the Tabs row below it; (2) add a chevron at the left end and the right end of the day row, to see the next day (and the previous one); (3) when changing day, stay on the tab you are on (Calendar stays Calendar, Tasks stays Tasks).
+
+**What changed**
+- **Order:** the day row ("Wednesday, 25 November") is now the top row and the Tasks / Calendar switch is under it.
+- **Chevrons:** a left chevron (previous day) at the left end and a right chevron (next day) at the right end of the day row. The date sits between them.
+- **Staying on the tab:** changing day never switches tab. The Tasks tab shows that day's tasks and the Calendar tab shows that day's timeline, with the same task cards, drag-and-drop, "Add task" and "+" buttons for the day you are on. A new task or event is added to the day shown. Switching tab keeps the day.
+- **Today and other days:** the "Now" line appears only on today. Other days open the timeline at 7 AM. The panel opens on today and follows midnight until you step to another day; stepping back to today makes it follow today again.
+- **Not added:** a "Today" button to jump back (the chevrons do it one day at a time). Say if you want one.
+- This changes the earlier "today only" scope (the README says so now). There is still no week or month view.
+- Checked on sample data by clicking through (the day row is above the tabs, a chevron sits at each end, Next/Previous day on both tabs keeping the tab, a task added on the next day appears only there, no "Now" line on other days, two steps back is today with its "Now" line): all pass, along with the earlier 20 checks. The real build loads and runs logged in against a pretend server, and tests, lint and types pass.
+
+**Files:** `extension/src/App.tsx`, `extension/README.md`, `scripts/extension-flows.mjs`, `scripts/extension-shots.mjs`
+
+**Screenshots** (`screenshots/2026-11-25-day-row-top/`, sample data)
+![Tasks](screenshots/2026-11-25-day-row-top/panel-tasks.png)
+![Calendar, next day](screenshots/2026-11-25-day-row-top/panel-calendar-next-day.png)
+
+---
+
 ## 2026-11-25 — Extension: the profile circle is removed too (branch `next-changes`)
 
 **Asked for:** I don't want the profile in the extension: remove the circle.
