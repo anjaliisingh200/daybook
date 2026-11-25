@@ -80,10 +80,6 @@ try {
   await shot("panel-new-event");
   await page.keyboard.press("Escape");
 
-  await page.click('[aria-label="Account"]');
-  await shot("panel-account-menu");
-  await page.keyboard.press("Escape");
-
   await page.goto(`${BASE}/?login`);
   await page.waitForSelector("form");
   await shot("panel-login");

@@ -9,6 +9,23 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-25 — Extension: the profile circle is removed too (branch `next-changes`)
+
+**Asked for:** I don't want the profile in the extension: remove the circle.
+
+**What changed**
+- The profile circle (and its menu) are gone from the panel. The date row is now just the date.
+- **Because of that, the panel has no Log out button and no "Open Daybook" link.** You stay logged in on this computer until the login expires or the extension is removed. If you want a log-out back, the options are a small "Log out" link at the very bottom of the panel, or a right-click on the toolbar icon.
+- Checked: the click-through on sample data (20 checks) passed, the real build loads and runs logged in against a pretend server, and tests, lint and types pass.
+
+**Files:** `extension/src/App.tsx`, `scripts/extension-shots.mjs`
+
+**Screenshots** (`screenshots/2026-11-25-profile-removed/`, sample data)
+![Tasks](screenshots/2026-11-25-profile-removed/panel-tasks.png)
+![Calendar](screenshots/2026-11-25-profile-removed/panel-calendar.png)
+
+---
+
 ## 2026-11-25 — Extension: the top row (logo and profile) is removed (branch `next-changes`)
 
 **Asked for:** in the extension, remove the topmost row, where the Daybook logo and the profile are.

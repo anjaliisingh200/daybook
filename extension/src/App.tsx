@@ -1,21 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { dayKey } from "@/components/tasks/taskModel";
 import { usePrefs } from "@/lib/store/prefs";
-import { CalendarDays, CheckCircle2, Cloud, ExternalLink, LogOut, Plus } from "lucide-react";
+import { CalendarDays, CheckCircle2, Plus } from "lucide-react";
 import { DayTimeline } from "@/components/calendar/DayTimeline";
 import { EventLayers } from "@/components/calendar/EventLayers";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskLayers } from "@/components/tasks/TaskLayers";
 import { Skeleton } from "@/components/ui/Controls";
-import { Menu } from "@/components/ui/Menu";
 import { Toaster } from "@/components/ui/Toaster";
 import { cn } from "@/lib/cn";
 import { useFmt, useToday, useTz } from "@/lib/hooks";
 import { useData } from "@/lib/store/data";
 import { draftFromInstance, newDraft } from "@/lib/store/eventActions";
 import { useUI } from "@/lib/store/ui";
-import { SITE } from "./config";
-import { currentAccount, signOut, type Account } from "./data";
+import { currentAccount, type Account } from "./data";
 import { Login } from "./Login";
 import { tasksForDay } from "./today";
 
@@ -238,8 +236,6 @@ export function App() {
   if (account === undefined) return <div className="flex h-full items-center justify-center text-sm text-text-3">Loading…</div>;
   if (account === null) return <Login onSignedIn={setAccount} />;
 
-  const initial = (account.email[0] ?? "A").toUpperCase();
-
   return (
     <div className="flex h-full flex-col bg-bg">
       {/* the website's Tasks / Calendar switch (the panel has no logo row: the tabs are the top) */}
@@ -273,25 +269,8 @@ export function App() {
       </nav>
 
       {/* the website's date row, without the controls this panel does not have */}
-      <div className="relative z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border px-4">
+      <div className="flex h-14 shrink-0 items-center border-b border-border px-4">
         <h1 className="font-display min-w-0 flex-1 truncate pl-1 text-[1.5rem] leading-none">{fmt.dayLong(today)}</h1>
-        {/* the account menu (Log out, Open Daybook) now sits here, since the logo row is gone */}
-        <Menu
-          placement="bottom-end"
-          className="w-64"
-          trigger={
-            <button aria-label="Account" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-on-accent transition-transform hover:scale-105 active:scale-95">
-              {initial}
-            </button>
-          }
-          items={[
-            { type: "label", label: "Account" },
-            { label: account.email, hint: "Signed in", icon: <Cloud className="size-4" />, onSelect: () => {} },
-            { type: "sep" },
-            { label: "Open Daybook", icon: <ExternalLink className="size-4" />, onSelect: () => void window.open(SITE, "_blank") },
-            { label: "Log out", icon: <LogOut className="size-4" />, onSelect: () => void signOut().then(() => location.reload()) },
-          ]}
-        />
       </div>
 
       <main className="min-h-0 flex-1">{tab === "tasks" ? <TasksToday /> : <CalendarToday />}</main>
