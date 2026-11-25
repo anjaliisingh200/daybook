@@ -33,6 +33,15 @@ try {
   // the website's housekeeping adds a task for each event a moment after loading: let the list settle first
   await page.waitForTimeout(2500);
 
+  // the floating add button is the website's labelled primary button (h-9 = 2.25rem = 33.75px at the website's 15px root)
+  const fab = page.locator('button[aria-label="Add task"]');
+  const fb = await fab.boundingBox();
+  check(
+    "the floating button is a labelled product button: Add task",
+    (await fab.textContent())?.trim() === "Add task" && Math.abs(fb.height - 33.75) < 1.5 && fb.width > 80 && fb.width < 170,
+    `${Math.round(fb.width)} x ${Math.round(fb.height)}`
+  );
+
   // ── drag a task to another place in today's list ──
   // a real mouse drag: press on the card, move in steps, let go at the target point
   const dragCard = async (from, x, y) => {
@@ -104,8 +113,15 @@ try {
   // ── a new event (the website's own form) ──
   await page.click('[role="tab"]:has-text("Calendar")');
   await page.waitForSelector("[data-event]");
+  const evFab = page.locator('button[aria-label="Add event"]');
+  const eb = await evFab.boundingBox();
+  check(
+    "the floating button on Calendar is a labelled product button: Add event",
+    (await evFab.textContent())?.trim() === "Add event" && Math.abs(eb.height - 33.75) < 1.5 && eb.width > 80 && eb.width < 170,
+    `${Math.round(eb.width)} x ${Math.round(eb.height)}`
+  );
   const before = await page.$$eval("[data-event]", (e) => e.length);
-  await page.click('[aria-label="Create event"]');
+  await page.click('[aria-label="Add event"]');
   const ev = '[role="dialog"][aria-label="New event"]';
   await page.waitForSelector(ev);
   const evText = await page.textContent(ev);
@@ -198,7 +214,7 @@ try {
   check("Next day shows it again", (await titles()).includes("Tomorrow thing"));
 
   await page.click('[role="tab"]:has-text("Calendar")');
-  await page.waitForSelector("[data-event], [aria-label^='Create event']");
+  await page.waitForSelector("[data-event], [aria-label^='Add event']");
   const calDay = await heading();
   check("switching tab keeps the day", calDay === day1, `${calDay}`);
   await page.click(nextBtn);

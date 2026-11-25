@@ -2,8 +2,8 @@
 
 A side panel for **one day at a time** (today when it opens): a **Tasks** tab and a **Calendar** tab. The screens are the website's own, not copies: its task cards, Day timeline, task details, new task and new event forms, account menu and toasts run inside the panel (the phone layout, since the panel is narrow). Click the toolbar icon to open it beside any page. You log in with the same email and password as the website.
 
-- **Tasks:** the day's tasks as the website's task cards. Click one for its details, tick it, or add one with the **+** button or "Add task".
-- **Calendar:** the day's events as the website's Day timeline. Tap the timeline or the **+** button for a new event. Events come from Google when Google is connected on the website, otherwise from Daybook's own calendar. While Google is connected the website treats events as read-only, so the panel does too.
+- **Tasks:** the day's tasks as the website's task cards. Click one for its details, tick it, or add one with the **Add task** button.
+- **Calendar:** the day's events as the website's Day timeline. Tap the timeline or the **Add event** button for a new event. Events come from Google when Google is connected on the website, otherwise from Daybook's own calendar. While Google is connected the website treats events as read-only, so the panel does too.
 - The day row is at the top, with a chevron at each end to step to the previous or next day. The tab stays as it is when you change day. There is no week or month view. The panel opens on today and follows midnight until you step to another day.
 
 ## Try it in Chrome (your own copy)

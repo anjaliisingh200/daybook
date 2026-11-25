@@ -9,6 +9,24 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-25 — Extension: the floating button is a labelled product button (branch `next-changes`)
+
+**Asked for:** the floating action button should look like the product's button, in height and width, with a label: Add Task / Add Event.
+
+**What changed**
+- The round-cornered square icon button is replaced by the website's own **primary Button** (the same one as the "Add task" button in its toolbar): **2.25rem tall** (about 34px in the panel), corners and text size as the product's, **as wide as its label needs** (about 109px for "Add task" and 119px for "Add event"), with a plus and the label.
+- **Tasks tab:** "+ Add task". **Calendar tab:** "+ Add event". It stays in the bottom-right corner, floating over the list or timeline, with the same shadow as before.
+- I used the product's sentence-style wording, "Add task" and "Add event" (not "Add Task"). Say if you want capitals.
+- Checked by clicking through on sample data: the button's text and size are checked on both tabs (109×34 and 119×34), and it still opens the right form. Tests, lint and types pass, and the real build runs logged in against a pretend server.
+
+**Files:** `extension/src/App.tsx`, `extension/README.md`, `scripts/extension-flows.mjs`, `scripts/extension-shots.mjs`
+
+**Screenshots** (`screenshots/2026-11-25-labelled-add-button/`, sample data)
+![Tasks](screenshots/2026-11-25-labelled-add-button/panel-tasks.png)
+![Calendar](screenshots/2026-11-25-labelled-add-button/panel-calendar.png)
+
+---
+
 ## 2026-11-25 — Extension: the day row on top, with chevrons to change day (branch `next-changes`)
 
 **Asked for:** (1) move the day row to the top, with the Tabs row below it; (2) add a chevron at the left end and the right end of the day row, to see the next day (and the previous one); (3) when changing day, stay on the tab you are on (Calendar stays Calendar, Tasks stays Tasks).

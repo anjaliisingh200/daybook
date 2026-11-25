@@ -6,7 +6,7 @@ import { DayTimeline } from "@/components/calendar/DayTimeline";
 import { EventLayers } from "@/components/calendar/EventLayers";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskLayers } from "@/components/tasks/TaskLayers";
-import { IconButton } from "@/components/ui/Button";
+import { Button, IconButton } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Controls";
 import { Toaster } from "@/components/ui/Toaster";
 import { cn } from "@/lib/cn";
@@ -38,16 +38,15 @@ function nextHalfHour(tz: string): number {
   return Math.min(Math.ceil((h * 60 + m + 1) / 30) * 30, 23 * 60 + 30);
 }
 
-/** The website's phone add button. */
+/**
+ * The floating add button: the website's own primary Button (same height, width style, corners and text size as the
+ * "Add task" button in its toolbar), with a plus and a label, kept in the bottom corner.
+ */
 function Fab({ label, onClick }: { label: string; onClick: () => void }) {
   return (
-    <button
-      aria-label={label}
-      onClick={onClick}
-      className="fixed bottom-5 right-4 z-20 flex size-14 items-center justify-center rounded-2xl bg-semantic-primary text-semantic-on-primary shadow-lg transition-transform active:scale-95"
-    >
-      <Plus className="size-6" />
-    </button>
+    <Button variant="primary" icon={<Plus className="size-4" />} aria-label={label} onClick={onClick} className="fixed bottom-5 right-4 z-20 shadow-lg">
+      {label}
+    </Button>
   );
 }
 
@@ -192,7 +191,7 @@ function CalendarDay({ day }: { day: DateKey }) {
   return (
     <div className="relative h-full min-h-0">
       {status !== "ready" ? <Skeleton className="m-3 h-64" /> : <DayTimeline anchor={day} />}
-      <Fab label="Create event" onClick={() => openEditor(newDraft({ day, startMin: nextHalfHour(tz) }))} />
+      <Fab label="Add event"onClick={() => openEditor(newDraft({ day, startMin: nextHalfHour(tz) }))} />
     </div>
   );
 }

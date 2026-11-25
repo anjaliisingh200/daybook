@@ -82,7 +82,7 @@ try {
   await page.keyboard.press("Escape");
   await page.waitForSelector('[role="dialog"]', { state: "detached" });
 
-  await page.click('[aria-label="Create event"]');
+  await page.click('[aria-label="Add event"]');
   await page.waitForSelector('[role="dialog"][aria-label="New event"]');
   await shot("panel-new-event");
   await page.keyboard.press("Escape");
