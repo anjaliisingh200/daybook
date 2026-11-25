@@ -4,7 +4,6 @@ import { usePrefs } from "@/lib/store/prefs";
 import { CalendarDays, CheckCircle2, Cloud, ExternalLink, LogOut, Plus } from "lucide-react";
 import { DayTimeline } from "@/components/calendar/DayTimeline";
 import { EventLayers } from "@/components/calendar/EventLayers";
-import { LogoMark } from "@/components/shell/Logo";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskLayers } from "@/components/tasks/TaskLayers";
 import { Skeleton } from "@/components/ui/Controls";
@@ -243,33 +242,7 @@ export function App() {
 
   return (
     <div className="flex h-full flex-col bg-bg">
-      {/* the website's header */}
-      <header className="relative z-30 flex h-14 shrink-0 items-center gap-3 border-b border-border bg-bg px-3">
-        <div className="flex items-center gap-2.5">
-          <LogoMark />
-          <span className="font-display text-[1.45rem] leading-none tracking-tight">Daybook</span>
-        </div>
-        <div className="ml-auto flex items-center gap-1">
-          <Menu
-            placement="bottom-end"
-            className="w-64"
-            trigger={
-              <button aria-label="Account" className="ml-1 flex size-8 items-center justify-center rounded-full bg-accent text-sm font-semibold text-on-accent transition-transform hover:scale-105 active:scale-95">
-                {initial}
-              </button>
-            }
-            items={[
-              { type: "label", label: "Account" },
-              { label: account.email, hint: "Signed in", icon: <Cloud className="size-4" />, onSelect: () => {} },
-              { type: "sep" },
-              { label: "Open Daybook", icon: <ExternalLink className="size-4" />, onSelect: () => void window.open(SITE, "_blank") },
-              { label: "Log out", icon: <LogOut className="size-4" />, onSelect: () => void signOut().then(() => location.reload()) },
-            ]}
-          />
-        </div>
-      </header>
-
-      {/* the website's Tasks / Calendar switch */}
+      {/* the website's Tasks / Calendar switch (the panel has no logo row: the tabs are the top) */}
       <nav aria-label="Primary" className="shrink-0 border-b border-border px-3 py-2">
         <ul role="tablist" className="flex rounded-xl bg-surface-2 p-1">
           {(
@@ -300,8 +273,25 @@ export function App() {
       </nav>
 
       {/* the website's date row, without the controls this panel does not have */}
-      <div className="flex h-14 shrink-0 items-center border-b border-border px-4">
+      <div className="relative z-30 flex h-14 shrink-0 items-center gap-2 border-b border-border px-4">
         <h1 className="font-display min-w-0 flex-1 truncate pl-1 text-[1.5rem] leading-none">{fmt.dayLong(today)}</h1>
+        {/* the account menu (Log out, Open Daybook) now sits here, since the logo row is gone */}
+        <Menu
+          placement="bottom-end"
+          className="w-64"
+          trigger={
+            <button aria-label="Account" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-semibold text-on-accent transition-transform hover:scale-105 active:scale-95">
+              {initial}
+            </button>
+          }
+          items={[
+            { type: "label", label: "Account" },
+            { label: account.email, hint: "Signed in", icon: <Cloud className="size-4" />, onSelect: () => {} },
+            { type: "sep" },
+            { label: "Open Daybook", icon: <ExternalLink className="size-4" />, onSelect: () => void window.open(SITE, "_blank") },
+            { label: "Log out", icon: <LogOut className="size-4" />, onSelect: () => void signOut().then(() => location.reload()) },
+          ]}
+        />
       </div>
 
       <main className="min-h-0 flex-1">{tab === "tasks" ? <TasksToday /> : <CalendarToday />}</main>

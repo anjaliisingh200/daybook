@@ -9,6 +9,24 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-25 — Extension: the top row (logo and profile) is removed (branch `next-changes`)
+
+**Asked for:** in the extension, remove the topmost row, where the Daybook logo and the profile are.
+
+**What changed**
+- The row with the **Daybook logo and the profile circle** is gone. The panel now starts with the **Tasks / Calendar** switch, then the date row.
+- **The profile circle moved, not removed:** it sits at the right end of the date row, because it holds **Log out** and **Open Daybook**, and without it there would be no way to log out. If you want it gone completely, say so.
+- The login screen keeps its logo, since it has nothing else on it.
+- Checked: the click-through on sample data (20 checks) passed, the real build loads and runs logged in against a pretend server, and tests, lint and types pass. This panel also shows the new black checkboxes, because it runs the website's own code.
+
+**Files:** `extension/src/App.tsx`
+
+**Screenshots** (`screenshots/2026-11-25-header-row-removed/`, sample data)
+![Tasks](screenshots/2026-11-25-header-row-removed/panel-tasks.png)
+![Calendar](screenshots/2026-11-25-header-row-removed/panel-calendar.png)
+
+---
+
 ## 2026-11-25 — Subtasks: saved on every repeat; square black checkboxes; no "N" badge in development (branch `next-changes`)
 
 **Asked for:** (1) see how subtasks get saved, and for repeating tasks make sure all the subtasks are saved on every repeat; (2) the subtask box before you type was a circle, make it square; (3) the completion square should look exactly like the calendar-visibility checkbox, in black; (4) remove the black "N" icon in the corner of the preview.
