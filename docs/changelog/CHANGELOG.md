@@ -9,6 +9,29 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-25 — One search icon in the top header (branch `next-changes`)
+
+**Asked for:** keep the search icon at the right corner, to the left of the user icon in the topmost header of the website. No need for a separate search in both Calendar and Tasks.
+
+**What changed**
+- **One search icon** in the top header, at the right, just **left of the profile circle**, on the Calendar and Tasks pages (not on the other pages).
+- **On Tasks** it searches tasks: tap it, type, and the task list filters as you type. **On Calendar** it searches events: results drop down, and choosing one opens that event on its day.
+- On a **phone** the search takes the whole header while it is open (so it has room); on a **wide screen** it opens beside the icons. The × (or Escape) closes it and clears the search. The **/** key opens it.
+- A task search is cleared when you leave the Tasks page, so it can never keep hiding tasks without you seeing it.
+- **Removed:** the search box on the Tasks page (desktop toolbar and the phone row), and the search icon in the Calendar toolbar.
+- **Left as it was:** the task **Filter** button. On a phone it now sits alone, at the right of its own row under the date bar.
+- Checked at phone (390) and desktop (1440) sizes on sample data (24 checks): one icon, left of the profile circle on the same row; no other search on either page; Tasks filtering as you type and coming back to the full list on close and on Escape; Calendar results and opening an event; no errors. Tests, lint and types pass and the website builds.
+
+**Files:** `components/shell/HeaderSearch.tsx` (new), `components/shell/Header.tsx`, `components/calendar/Toolbar.tsx`, `components/tasks/TasksScreen.tsx`, `components/tasks/TaskControls.tsx`, `scripts/header-search.mjs` (new check)
+
+**Screenshots** (`screenshots/2026-11-25-header-search/`, sample data)
+![Phone, Tasks](screenshots/2026-11-25-header-search/phone-tasks-closed.png)
+![Phone, searching tasks](screenshots/2026-11-25-header-search/phone-tasks-searching.png)
+![Phone, searching events](screenshots/2026-11-25-header-search/phone-calendar-searching.png)
+![Desktop, Calendar](screenshots/2026-11-25-header-search/desktop-calendar-searching.png)
+
+---
+
 ## 2026-11-25 — Tasks week page: the Completed list at the bottom is removed (branch `next-changes`)
 
 **Asked for:** remove the completed tasks at the bottom on the Tasks weekly page.

@@ -7,6 +7,7 @@ import { cn } from "@/lib/cn";
 import { Menu } from "@/components/ui/Menu";
 import { Badge } from "@/components/ui/Controls";
 import { LogoMark } from "./Logo";
+import { HeaderSearch } from "./HeaderSearch";
 import { connectGoogle, useGoogle } from "@/lib/store/google";
 import { useUI } from "@/lib/store/ui";
 import { supabaseBrowser } from "@/lib/supabase/browser";
@@ -66,6 +67,7 @@ export function Header() {
       </nav>
 
       <div className="ml-auto flex items-center gap-1">
+        <HeaderSearch />
         <Menu
           placement="bottom-end"
           className="w-64"

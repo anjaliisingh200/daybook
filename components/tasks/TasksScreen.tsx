@@ -16,7 +16,7 @@ import { usePrefs } from "@/lib/store/prefs";
 import { NO_FILTERS, useUI } from "@/lib/store/ui";
 import type { DateKey, Task } from "@/lib/types";
 import { MonthNav } from "./MonthNav";
-import { FilterMenu, TaskSearch, activeFilterCount } from "./TaskControls";
+import { FilterMenu, activeFilterCount } from "./TaskControls";
 import { TaskCard } from "./TaskCard";
 import { buildGroups, columnOrderFor, dayKey, matches, passesFilters } from "./taskModel";
 
@@ -322,7 +322,6 @@ export function TasksScreen() {
         right={
           mobile ? undefined : (
             <>
-              <TaskSearch className="w-48 lg:w-60" />
               <FilterMenu />
               <Button variant="primary" size="sm" icon={<Plus className="size-4" />} onClick={() => openQuickAdd({ due: selected })}>
                 Add task
@@ -332,10 +331,9 @@ export function TasksScreen() {
         }
       />
 
-      {/* phones have no room in the header, so search and filter get their own row */}
+      {/* phones have no room in the header, so the filter gets its own row (search is the icon in the top header) */}
       {mobile && (
-        <div className="flex min-h-12 shrink-0 items-center gap-2 border-b border-border px-2 py-1.5">
-          <TaskSearch className="min-w-0 flex-1" />
+        <div className="flex min-h-12 shrink-0 items-center justify-end gap-2 border-b border-border px-2 py-1.5">
           <FilterMenu compact />
         </div>
       )}

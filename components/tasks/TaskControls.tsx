@@ -1,6 +1,5 @@
 "use client";
-import { ListFilter, Search, X } from "lucide-react";
-import { useRef, useEffect } from "react";
+import { ListFilter } from "lucide-react";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Dropdown } from "@/components/ui/Popover";
 import { cn } from "@/lib/cn";
@@ -100,42 +99,5 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
     >
       {children}
     </button>
-  );
-}
-
-export function TaskSearch({ className, inputRef }: { className?: string; inputRef?: React.RefObject<HTMLInputElement | null> }) {
-  const q = useUI((s) => s.taskQuery);
-  const setQ = useUI((s) => s.setTaskQuery);
-  const local = useRef<HTMLInputElement>(null);
-  const ref = inputRef ?? local;
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const el = e.target as HTMLElement;
-      if (e.key === "/" && !["INPUT", "TEXTAREA"].includes(el.tagName) && !el.isContentEditable) {
-        e.preventDefault();
-        ref.current?.focus();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [ref]);
-  return (
-    <div className={cn("flex h-9 items-center gap-2 rounded-full border border-border bg-surface px-3 transition-[border,box-shadow] focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20", className)}>
-      <Search className="size-4 shrink-0 text-text-3" />
-      <input
-        ref={ref}
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        onKeyDown={(e) => e.key === "Escape" && (setQ(""), (e.target as HTMLInputElement).blur())}
-        placeholder="Search tasks"
-        aria-label="Search tasks"
-        className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-text-3"
-      />
-      {q && (
-        <button onClick={() => setQ("")} aria-label="Clear search" className="text-text-3 hover:text-text">
-          <X className="size-4" />
-        </button>
-      )}
-    </div>
   );
 }
