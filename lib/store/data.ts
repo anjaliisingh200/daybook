@@ -45,6 +45,11 @@ interface DataStore {
   addTask: (input: NewTaskInput) => Promise<Task | null>;
   updateTask: (id: string, patch: TaskPatch) => Promise<void>;
   toggleTask: (id: string) => Promise<void>;
+  /**
+   * Adds a subtask to a task. For the original of a repeating task it is also added to every coming repeat that is not done,
+   * so all of them carry it.
+   */
+  addSubtask: (parentId: string, title: string) => Promise<void>;
   /** `scope` only matters for a repeating task: just this one, or the whole series. */
   deleteTask: (id: string, scope?: "this" | "all") => Promise<void>;
 
@@ -100,8 +105,12 @@ export const useData = create<DataStore>((set, get) => {
   const applyTaskPatch = async (id: string, patch: TaskPatch) => {
     const before = get().tasks.find((t) => t.id === id);
     if (!before) return;
-    const { priority, calendarId, startMin, endMin, eventId, repeat, order, seriesId, skip, ...rest } = patch;
+    const { priority, calendarId, startMin, endMin, eventId, repeat, order, seriesId, skip, subtasksCopy, ...rest } = patch;
     const meta = { ...before.meta };
+    if (subtasksCopy !== undefined) {
+      if (subtasksCopy === null) delete meta.subtasksCopy;
+      else meta.subtasksCopy = subtasksCopy;
+    }
     if (skip !== undefined) {
       if (skip === null || skip.length === 0) delete meta.skip;
       else meta.skip = skip;
@@ -270,14 +279,29 @@ export const useData = create<DataStore>((set, get) => {
 
   /**
    * Gives a repeating task's occurrence its own copy of the original's subtasks, all unticked, so each day can be
-   * ticked off separately. Does nothing if the occurrence already has subtasks.
+   * ticked off separately.
+   *
+   * Making the copy takes a few seconds, and the app can be closed or the phone put to sleep in the middle, so an occurrence
+   * is marked "copying" when it is made and "done" when its copy is complete. Whatever is still "copying" gets the
+   * subtasks it is missing the next time the app loads or syncs. A "done" occurrence is left alone, so a subtask you
+   * delete from one day stays deleted. An occurrence made before this marking existed is left as it is if it has subtasks.
    */
   const copySubtasks = async (rootId: string, occurrenceId: string) => {
-    if (get().tasks.some((t) => t.parentId === occurrenceId)) return;
+    const occ = get().tasks.find((t) => t.id === occurrenceId);
+    if (!occ || occ.meta.subtasksCopy === "done") return;
     const subs = get().tasks.filter((t) => t.parentId === rootId).sort((a, b) => a.position - b.position);
+    if (subs.length === 0) return; // nothing to copy yet; a subtask added to the original later is handed on when it is added
+    const have = new Set(get().tasks.filter((t) => t.parentId === occurrenceId).map((t) => t.title));
+    if (!occ.meta.subtasksCopy && have.size > 0) {
+      // made before the marking existed, and it already has subtasks: leave them as they are
+      await applyTaskPatch(occurrenceId, { subtasksCopy: "done" });
+      return;
+    }
     for (const sub of subs) {
+      if (have.has(sub.title)) continue;
       await get().addTask({ title: sub.title, notes: sub.notes, listId: sub.listId, parentId: occurrenceId, due: null, calendarId: sub.meta.calendarId });
     }
+    await applyTaskPatch(occurrenceId, { subtasksCopy: "done" });
   };
 
   /** Repeating tasks: keep the next month's occurrences created. Completing one only marks that one done. */
@@ -301,7 +325,7 @@ export const useData = create<DataStore>((set, get) => {
           have.add(cur);
           const made = await get().addTask({ title: root.title, listId: root.listId, due: cur, calendarId: root.meta.calendarId, priority: root.meta.priority });
           if (made) {
-            await applyTaskPatch(made.id, { repeat: preset, seriesId: root.id, startMin: root.meta.startMin ?? null, endMin: root.meta.endMin ?? null });
+            await applyTaskPatch(made.id, { repeat: preset, seriesId: root.id, startMin: root.meta.startMin ?? null, endMin: root.meta.endMin ?? null, subtasksCopy: "copying" });
             await copySubtasks(root.id, made.id);
           }
         }
@@ -504,6 +528,23 @@ const once = (fn: () => Promise<void>) => {
           action: { label: "Undo", onClick: () => void get().updateTask(id, { status: "needsAction" }) },
         });
       }
+    },
+
+    async addSubtask(parentId, title) {
+      const parent = get().tasks.find((t) => t.id === parentId);
+      if (!parent) return;
+      const sub = { title, listId: parent.listId, due: null, calendarId: parent.meta.calendarId };
+      await get().addTask({ ...sub, parentId });
+      const isOriginal = !!parent.meta.repeat && parent.meta.repeat !== "none" && !parent.meta.seriesId;
+      if (!isOriginal) return;
+      // hand it on to the coming repeats, all at once so it is quick and cannot be left half done
+      const today = todayKey(appTimeZone());
+      const repeats = get().tasks.filter((t) => t.meta.seriesId === parentId && t.status === "needsAction" && t.due && t.due >= today);
+      await Promise.all(
+        repeats
+          .filter((r) => !get().tasks.some((s) => s.parentId === r.id && s.title === title))
+          .map((r) => get().addTask({ ...sub, parentId: r.id }))
+      );
     },
 
     async deleteTask(id, scope = "this") {

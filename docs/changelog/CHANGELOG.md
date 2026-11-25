@@ -9,6 +9,36 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-25 — Subtasks: saved on every repeat; square black checkboxes; no "N" badge in development (branch `next-changes`)
+
+**Asked for:** (1) see how subtasks get saved, and for repeating tasks make sure all the subtasks are saved on every repeat; (2) the subtask box before you type was a circle, make it square; (3) the completion square should look exactly like the calendar-visibility checkbox, in black; (4) remove the black "N" icon in the corner of the preview.
+
+**1. Subtasks on repeating tasks**
+- **What was wrong:** subtasks were saved, but late and not reliably on repeats. A repeating task creates its next 30 days one by one, and each repeat then copies the original's subtasks. That took close to a minute. If the app was closed or the phone fell asleep in the middle, a repeat kept only some of its subtasks (I saw 1 of 2) and the app never finished the job. The new-task form also made the task repeat *before* saving its subtasks, so the first repeats started empty, and a subtask added to the original later never reached the repeats.
+- **What changed:** every repeat is now marked while its copy is being made and when it is complete. If the app is closed in the middle, the next time it opens (or syncs) it finishes the copy, adding only the subtasks that are missing. A repeat whose copy is complete is left alone, so a subtask you delete from one day stays deleted. The new-task form saves the subtasks first. A subtask added to the original of a repeating task is also added to all its coming repeats that are not done.
+- **Checked at phone size on sample data:** a daily task with two subtasks ends with both on all 31 tasks, with no reload needed and nothing doubled after a reload; closing the page in the middle of the copy and reopening still ends with both on all 31; a subtask added later reaches all 31; a subtask removed from one day does not come back.
+- **Still slow:** making a month of repeats still takes a minute or so on sample data, one step at a time (I tried five at a time and it was not faster, so I left it). It is safe to close the app during that time now.
+- **Not done:** renaming or deleting a subtask on the original is not carried to the repeats.
+
+**2. Square box before typing:** the empty box in front of "Subtask title", in the new-task form and in the task details, is now a square, not a circle.
+
+**3. Completion checkbox = the calendar-visibility checkbox, in black:** the tick box on task cards, subtasks, the task sheet and the new-task form (and the home page sample) is now exactly the calendar-visibility one: 18px, 5px corners, 2px outline, white tick, filled when done, with no hover tint or pop animation. The colour is the app's black (the dark text colour `--text`); if you want pure black it is one value in `components/ui/Controls.tsx`. The empty box before typing a subtask has the same black outline.
+
+**4. No "N" badge:** Next.js's round developer badge is turned off in `next.config.ts` (`devIndicators: false`). It only ever showed in development.
+
+- Tests, lint and types pass and the website builds. Not checked with your real account.
+
+**Files:** `lib/store/data.ts`, `lib/types.ts`, `lib/data/mock/mockRepository.ts`, `lib/data/supabase/supabaseRepository.ts`, `components/tasks/TaskLayers.tsx`, `components/ui/Controls.tsx`, `components/ui/Controls.ds.md`, `components/home/Hero.tsx`, `next.config.ts`, `scripts/repeat-subtasks.mjs` (new check), `scripts/dev-sample.mjs` (new: runs the app on sample data)
+
+**Screenshots** (phone size)
+![Task checkboxes](screenshots/2026-11-25-black-completion-checkbox/phone-tasks-checkboxes.png)
+![Calendar visibility checkboxes, for comparison](screenshots/2026-11-25-black-completion-checkbox/phone-calendar-visibility-checkboxes.png)
+![Task details, square box before typing](screenshots/2026-11-25-black-completion-checkbox/phone-task-details-checkboxes.png)
+![A later repeat with its subtasks](screenshots/2026-11-25-repeat-subtasks/phone-repeat-with-subtasks.png)
+![New task, square subtask box](screenshots/2026-11-25-square-subtask-checkbox/phone-new-task-subtask-square.png)
+
+---
+
 ## 2026-11-24 — A deleted repeating task no longer comes back (branch `next-changes`)
 
 **Asked for:** (phone) deleting a repeating task works, but later it comes back.

@@ -90,7 +90,7 @@ export class MockRepository implements Repository {
     const s = this.read();
     const t = s.tasks.find((x) => x.id === id);
     if (!t) throw new Error("Task not found");
-    const { priority, calendarId, startMin, endMin, eventId, repeat, order, seriesId, skip, ...rest } = patch;
+    const { priority, calendarId, startMin, endMin, eventId, repeat, order, seriesId, skip, subtasksCopy, ...rest } = patch;
     if (repeat !== undefined) {
       if (repeat === "none") delete t.meta.repeat;
       else t.meta.repeat = repeat;
@@ -106,6 +106,10 @@ export class MockRepository implements Repository {
     if (skip !== undefined) {
       if (skip === null || skip.length === 0) delete t.meta.skip;
       else t.meta.skip = skip;
+    }
+    if (subtasksCopy !== undefined) {
+      if (subtasksCopy === null) delete t.meta.subtasksCopy;
+      else t.meta.subtasksCopy = subtasksCopy;
     }
     Object.assign(t, rest);
     for (const [key, value] of [["startMin", startMin], ["endMin", endMin], ["eventId", eventId]] as const) {

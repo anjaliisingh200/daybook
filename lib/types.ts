@@ -55,6 +55,8 @@ export interface TaskMeta {
   seriesId?: string;
   /** App-only: for a repeating task, the dates of repeats that were deleted one by one, so they are not created again. */
   skip?: DateKey[];
+  /** App-only: for a repeat of a repeating task, whether its copy of the original's subtasks is still being made or is complete. */
+  subtasksCopy?: "copying" | "done";
   /** App-only: how the task repeats ("none", "daily", "weekly", "weekdays", "monthly", "yearly"). */
   repeat?: string;
 }
@@ -80,6 +82,7 @@ export type TaskPatch = Partial<
     order: number | null;
     seriesId: string | null;
     skip: DateKey[] | null;
+    subtasksCopy: "copying" | "done" | null;
   }
 >;
 

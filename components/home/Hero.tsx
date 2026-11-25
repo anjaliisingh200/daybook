@@ -145,7 +145,7 @@ function Preview() {
           {TASKS.map((k) => (
             <div key={k.t} className="flex items-center gap-3 rounded-md px-1 py-1.5">
               <span className="pointer-events-none">
-                <TaskCheck checked={k.done} onChange={() => {}} label={k.t} size={20} />
+                <TaskCheck checked={k.done} onChange={() => {}} label={k.t} />
               </span>
               <span className={cn("text-[0.9375rem] font-medium", k.done && "line-through decoration-text")}>{k.t}</span>
             </div>

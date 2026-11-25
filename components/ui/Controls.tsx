@@ -24,8 +24,11 @@ export function Field({ label, children, hint, className }: { label: string; chi
   );
 }
 
-/** Square completion checkbox used on task cards, in the task editor and for subtasks. */
-export function TaskCheck({ checked, onChange, label, size = 20 }: { checked: boolean; onChange: (v: boolean) => void; label: string; size?: number }) {
+/**
+ * Square completion checkbox used on task cards, in the task editor and for subtasks.
+ * It is the calendar-visibility checkbox (ColorCheck) in black: the same size, outline and tick, filled when it is done.
+ */
+export function TaskCheck({ checked, onChange, label, size = 18 }: { checked: boolean; onChange: (v: boolean) => void; label: string; size?: number }) {
   return (
     <button
       type="button"
@@ -36,17 +39,10 @@ export function TaskCheck({ checked, onChange, label, size = 20 }: { checked: bo
         e.stopPropagation();
         onChange(!checked);
       }}
-      style={{ width: size, height: size }}
-      className={cn(
-        "group/check relative flex shrink-0 items-center justify-center rounded-[5px] border-2 transition-all duration-150",
-        checked ? "border-transparent bg-[color-mix(in_srgb,var(--semantic-primary)_16%,var(--surface))] text-semantic-primary" : "border-border-strong bg-surface hover:border-accent hover:bg-accent-soft"
-      )}
+      className="flex shrink-0 items-center justify-center rounded-[5px] border-2 transition-colors"
+      style={{ width: size, height: size, borderColor: "var(--text)", background: checked ? "var(--text)" : "transparent" }}
     >
-      {checked ? (
-        <Check key="c" className="anim-check size-[62%]" strokeWidth={3} />
-      ) : (
-        <Check className="size-[62%] text-accent opacity-0 transition-opacity group-hover/check:opacity-60" strokeWidth={3} />
-      )}
+      {checked && <Check className="size-3 text-on-solid" strokeWidth={3.5} />}
     </button>
   );
 }

@@ -5,9 +5,9 @@ Source: `Controls.tsx` (Input, Textarea, Field, TaskCheck, ColorCheck, Switch, S
 
 **Field** — a label above any control, with optional hint text below.
 
-**TaskCheck** — the square completion checkbox (same shape as ColorCheck).
-- Unchecked: grey ring.
-- Checked: light blue fill (`--semantic-primary` at 16%), blue ring, blue check.
+**TaskCheck** — the square completion checkbox. It is ColorCheck in black: same 18px size, 5px corners, 2px outline and white tick.
+- Unchecked: black outline, transparent inside.
+- Checked: filled black (`--text`) with a white check.
 
 **ColorCheck** — square checkbox used for calendar visibility, filled with the calendar colour.
 

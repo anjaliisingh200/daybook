@@ -73,15 +73,16 @@ function QuickAddForm({ initialDue, initialList, onDone }: { initialDue: DateKey
     }
     onDone();
     const created = await add({ title: t, notes: notes.trim(), due, listId, priority, calendarId });
-    if (created && completed) await useData.getState().updateTask(created.id, { status: "completed" });
-    if (created && repeat !== "none") await useData.getState().updateTask(created.id, { repeat });
-    if (created && due && startMin !== undefined) await useData.getState().updateTask(created.id, { startMin, endMin: endMin ?? null });
+    // The subtasks are saved before the task is made to repeat, so every repeat that is created is copied with them from the start.
     if (created) {
       for (const sub of subs) {
         const made = await add({ title: sub.title, listId, parentId: created.id, due: null, calendarId });
         if (made && sub.done) await useData.getState().updateTask(made.id, { status: "completed" });
       }
     }
+    if (created && completed) await useData.getState().updateTask(created.id, { status: "completed" });
+    if (created && repeat !== "none") await useData.getState().updateTask(created.id, { repeat });
+    if (created && due && startMin !== undefined) await useData.getState().updateTask(created.id, { startMin, endMin: endMin ?? null });
     const cal = calendars.find((c) => c.id === calendarId);
     if (created) toast(`Added to ${cal?.name ?? "tasks"}${due ? ` · ${fmt.dayShort(due)}` : ""}${completed ? " · done" : ""}`);
   };
@@ -186,7 +187,7 @@ function QuickAddForm({ initialDue, initialList, onDone }: { initialDue: DateKey
           {addingSub && (
             <div className="mt-2" ref={subInputWrap}>
               <div className="flex h-9 items-center gap-2 rounded-md border border-border bg-surface px-3 transition-colors focus-within:border-semantic-primary">
-              <span aria-hidden className="size-[18px] shrink-0 rounded-full border-[1.5px] border-border-strong" />
+              <span aria-hidden className="size-[18px] shrink-0 rounded-[5px] border-2 border-text" />
               <input
                               autoFocus
                               className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-text-3"
@@ -418,7 +419,7 @@ function DetailsBody({ taskId }: { taskId: string }) {
 function Subtasks({ parent }: { parent: Task }) {
   const all = useData((s) => s.tasks);
   const subs = useMemo(() => all.filter((t) => t.parentId === parent.id).sort((a, b) => a.position - b.position), [all, parent.id]);
-  const add = useData((s) => s.addTask);
+  const addSubtask = useData((s) => s.addSubtask);
   const toggle = useData((s) => s.toggleTask);
   const del = useData((s) => s.deleteTask);
   const update = useData((s) => s.updateTask);
@@ -432,7 +433,8 @@ function Subtasks({ parent }: { parent: Task }) {
     const t = text.trim();
     if (!t) return;
     setText("");
-    void add({ title: t, listId: parent.listId, parentId: parent.id, due: null, calendarId: parent.meta.calendarId });
+    // for the original of a repeating task this also adds it to the coming repeats
+    void addSubtask(parent.id, t);
   };
 
   return (
@@ -456,7 +458,7 @@ function Subtasks({ parent }: { parent: Task }) {
       {adding && (
         <div className="mt-2" ref={inputWrap}>
           <div className="flex h-9 items-center gap-2 rounded-md border border-border bg-surface px-3 transition-colors focus-within:border-semantic-primary">
-          <span aria-hidden className="size-[18px] shrink-0 rounded-full border-[1.5px] border-border-strong" />
+          <span aria-hidden className="size-[18px] shrink-0 rounded-[5px] border-2 border-text" />
           <input
                       autoFocus
                       className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-text-3"
