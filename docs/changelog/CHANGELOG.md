@@ -9,6 +9,24 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-25 — Tasks week page: the Completed list at the bottom is removed (branch `next-changes`)
+
+**Asked for:** remove the completed tasks at the bottom on the Tasks weekly page.
+
+**What changed**
+- The **Completed** list that sat under the day columns in the Tasks **Week** view is gone, on desktop and on a phone. Completed tasks still show in their own day column, with the tick and the strike-through.
+- The **Month** view still has its Completed list, and the Day view still has none.
+- (The same thing was done on 2026-11-22 together with the grey canvas; it came back when that was undone, so it is done again on its own.)
+- Checked at desktop (1440) and phone (390) sizes on sample data: no Completed list in Week or Day, and the list is still in Month. Tests, lint and types pass.
+
+**Files:** `components/tasks/TasksScreen.tsx`, `scripts/completed-week.mjs` (new check)
+
+**Screenshots** (`screenshots/2026-11-25-no-completed-in-week/`, sample data)
+![Week, desktop](screenshots/2026-11-25-no-completed-in-week/desktop-tasks-week.png)
+![Week, phone](screenshots/2026-11-25-no-completed-in-week/phone-tasks-week.png)
+
+---
+
 ## 2026-11-25 — Extension: only the floating "Add task" button is left (branch `next-changes`)
 
 **Asked for:** there were two "Add task" buttons in the extension; keep the floating one and remove the other one at the end of the task list.

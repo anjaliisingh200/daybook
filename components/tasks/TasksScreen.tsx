@@ -586,7 +586,7 @@ export function TasksScreen() {
                 </section>
               ))}
 
-              {showCompleted && view !== "day" && !(mobile && view === "week") && (
+              {showCompleted && view === "month" && (
                 <section className="mt-8" aria-label="Completed">
                   <button onClick={() => setCompletedOpen(!completedOpen)} aria-expanded={completedOpen} className="flex w-full items-center gap-2.5 rounded-lg py-2 text-left">
                     <ChevronDown className={cn("size-4 text-text-3 transition-transform", !completedOpen && "-rotate-90")} />
