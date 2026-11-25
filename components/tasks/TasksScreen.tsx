@@ -337,7 +337,7 @@ export function TasksScreen() {
       {/* tasks */}
       <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto">
         {/* Day view is a single readable column, not stretched across the screen. */}
-        <div className={view === "day" ? "mx-auto max-w-3xl" : "contents"}>
+        <div className={cn("flex min-h-full flex-col", view === "day" && "mx-auto w-full max-w-3xl")}>
         {/* the day / date row lives inside the scroller so it is exactly as wide as the columns */}
         <div className="sticky top-0 z-10 w-max min-w-full bg-bg">
       {view === "day" ? null : view !== "month" ? (
@@ -352,7 +352,7 @@ export function TasksScreen() {
 
         </div>
         {status === "ready" && columnsMode && (
-          <div className="grid" style={colTemplate}>
+          <div className="grid flex-1" style={colTemplate}>
             {days.map((d) => {
               const list = byDay.get(d) ?? [];
               const visibleCount = list.filter((t) => t.id !== dragId).length;
@@ -482,7 +482,7 @@ export function TasksScreen() {
                     if (id) moveTask(id, d, index);
                   }}
                   className={cn(
-                    "flex min-h-[19rem] min-w-0 flex-col gap-0 border-l border-border px-1.5 py-2 transition-colors duration-150 first:border-l-0",
+                    "flex min-h-[19rem] min-w-0 flex-col gap-0 border-l border-border px-1.5 pb-28 pt-2 transition-colors duration-150 first:border-l-0 md:pb-16",
                     d === today && "bg-surface"
                   )}
                 >
@@ -500,7 +500,7 @@ export function TasksScreen() {
           </div>
         )}
 
-        <div className="mx-auto max-w-[88rem] px-3 pb-28 md:px-6 md:pb-16">
+        <div className={cn("mx-auto max-w-[88rem] px-3 pb-28 md:px-6 md:pb-16", columnsMode && status === "ready" && "hidden")}>
           {status !== "ready" ? (
             <div className={cn(gridClass, "pt-5")}>
               {Array.from({ length: 8 }).map((_, i) => (

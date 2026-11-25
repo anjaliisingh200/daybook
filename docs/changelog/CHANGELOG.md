@@ -9,6 +9,28 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-26 — Tasks day columns now run the full height (branch `next-changes`)
+
+**Asked for:** the day columns should extend to full length, instead of stopping randomly.
+
+**Why they stopped:** each column was only as tall as the tallest column (or 19rem at least), so the thin lines between the days ended wherever the busiest day ended, with empty space below.
+
+**What changed**
+- In the Tasks **Week** and **Day** views the day columns now run **all the way down to the bottom of the page** (to the bottom bar on a phone), on every screen size, with the same line between the days all the way.
+- The "Add task" at the foot of each column now sits at the **bottom** of the page, in line across the days.
+- When there are **more tasks than fit**, the page still scrolls, and the columns still all end at the same place at the bottom of the longest one.
+- The room kept at the bottom for the phone's add button is now inside each column, so it does not cut the column lines short.
+- Checked at phone (390) and desktop (1440) sizes on sample data. Before the fix a column ended at 455px on a 900px-tall page; now every column ends at the bottom (792 on the phone, 900 on desktop), with 12 extra tasks added they all still end together and the page scrolls. Tests, lint and types pass and the website builds.
+
+**Files:** `components/tasks/TasksScreen.tsx`, `scripts/columns-full-height.mjs` (new check)
+
+**Screenshots** (`screenshots/2026-11-26-full-height-columns/`, sample data)
+![Week, phone](screenshots/2026-11-26-full-height-columns/phone-tasks-week.png)
+![Week, desktop](screenshots/2026-11-26-full-height-columns/desktop-tasks-week.png)
+![Day, desktop](screenshots/2026-11-26-full-height-columns/desktop-tasks-day.png)
+
+---
+
 ## 2026-11-26 — Tasks page: the Filter button is removed (branch `next-changes`)
 
 **Asked for:** I don't need the Filter button on the Tasks page (the funnel icon, which on a phone sat alone in its own row).
