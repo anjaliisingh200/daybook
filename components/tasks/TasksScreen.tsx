@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { CheckCheck, ChevronDown, ListFilter, Plus, X } from "lucide-react";
+import { CheckCheck, ChevronDown, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState, Skeleton } from "@/components/ui/Controls";
 import { DateHeader } from "@/components/shell/DateHeader";
@@ -9,16 +9,14 @@ import { DayHeaders } from "@/components/shell/DayHeaders";
 import { revealColumn } from "@/lib/scroll";
 import { cn } from "@/lib/cn";
 import { addDays, addMonths, dowOf, parseKey, startOfWeek } from "@/lib/dates";
-import { hexOf } from "@/lib/colors";
 import { useFmt, useHotkeys, useIsMobile, useToday } from "@/lib/hooks";
 import { useData } from "@/lib/store/data";
 import { usePrefs } from "@/lib/store/prefs";
-import { NO_FILTERS, useUI } from "@/lib/store/ui";
+import { useUI } from "@/lib/store/ui";
 import type { DateKey, Task } from "@/lib/types";
 import { MonthNav } from "./MonthNav";
-import { FilterMenu, activeFilterCount } from "./TaskControls";
 import { TaskCard } from "./TaskCard";
-import { buildGroups, columnOrderFor, dayKey, matches, passesFilters } from "./taskModel";
+import { buildGroups, columnOrderFor, dayKey, matches } from "./taskModel";
 
 export function TasksScreen() {
   const status = useData((s) => s.status);
@@ -32,8 +30,6 @@ export function TasksScreen() {
   const weekStart = usePrefs((p) => p.weekStart);
   const hideWeekends = usePrefs((p) => p.hideWeekends);
   const query = useUI((s) => s.taskQuery);
-  const filters = useUI((s) => s.taskFilters);
-  const setFilters = useUI((s) => s.setTaskFilters);
   const selected = useUI((s) => s.tasksSelected);
   const setSelected = useUI((s) => s.setTasksSelected);
   const weekAnchor = useUI((s) => s.tasksWeekAnchor);
@@ -131,8 +127,7 @@ export function TasksScreen() {
   /** Desktop week/day: one column per day, exactly like the calendar. Phones keep the single list. */
   const columnsMode = view !== "month";
   const listMap = useMemo(() => new Map(lists.map((l) => [l.id, l])), [lists]);
-  const nFilters = activeFilterCount(filters);
-  const filtering = nFilters > 0 || query.trim().length > 0;
+  const filtering = query.trim().length > 0;
 
   const days = useMemo<DateKey[]>(() => {
     if (view === "day") return [anchor];
@@ -144,7 +139,7 @@ export function TasksScreen() {
   const { groups, byDay, completed, counts, selectedHasTasks } = useMemo(() => {
     const topTasks = tasks.filter((t) => !t.parentId);
     const allOpen = topTasks.filter((t) => t.status === "needsAction");
-    const visible = (t: Task) => matches(t, query, listMap) && passesFilters(t, filters, today);
+    const visible = (t: Task) => matches(t, query, listMap);
     const open = allOpen.filter(visible);
     const done = topTasks.filter((t) => t.status === "completed" && visible(t)).sort((a, b) => (b.completedAt ?? 0) - (a.completedAt ?? 0));
 
@@ -173,7 +168,7 @@ export function TasksScreen() {
       counts,
       selectedHasTasks: selected ? topTasks.some((t) => t.due === selected) : true,
     };
-  }, [tasks, query, filters, today, sort, showUndated, fmt, listMap, selected, days, columnsMode, manualOrder]);
+  }, [tasks, query, today, sort, showUndated, fmt, listMap, selected, days, columnsMode, manualOrder]);
 
   // The finger can end over the drop slot instead of the card, and the browser then delivers the release there.
   // So while a touch drag is active, the release is also heard on the whole page.
@@ -322,7 +317,6 @@ export function TasksScreen() {
         right={
           mobile ? undefined : (
             <>
-              <FilterMenu />
               <Button variant="primary" size="sm" icon={<Plus className="size-4" />} onClick={() => openQuickAdd({ due: selected })}>
                 Add task
               </Button>
@@ -330,29 +324,6 @@ export function TasksScreen() {
           )
         }
       />
-
-      {/* phones have no room in the header, so the filter gets its own row (search is the icon in the top header) */}
-      {mobile && (
-        <div className="flex min-h-12 shrink-0 items-center justify-end gap-2 border-b border-border px-2 py-1.5">
-          <FilterMenu compact />
-        </div>
-      )}
-
-      {nFilters > 0 && (
-        <div className="flex shrink-0 flex-wrap items-center gap-1.5 border-b border-border px-3 py-2 text-xs md:px-4">
-          <ListFilter className="size-3.5 text-text-3" />
-          {filters.lists.map((id) => (
-            <FilterPill key={id} label={listMap.get(id)?.title ?? id} swatch={hexOf(listMap.get(id)?.color)} onClear={() => setFilters({ ...filters, lists: filters.lists.filter((x) => x !== id) })} />
-          ))}
-          {filters.priorities.map((p) => (
-            <FilterPill key={p} label={p === ("none" as string) ? "No priority" : `${p[0].toUpperCase()}${p.slice(1)} priority`} onClear={() => setFilters({ ...filters, priorities: filters.priorities.filter((x) => x !== p) })} />
-          ))}
-          {filters.due !== "any" && <FilterPill label={{ overdue: "Overdue", today: "Due today", week: "Next 7 days", none: "No date", any: "" }[filters.due]} onClear={() => setFilters({ ...filters, due: "any" })} />}
-          <button className="ml-1 text-text-2 underline-offset-2 hover:underline" onClick={() => setFilters(NO_FILTERS)}>
-            Clear all
-          </button>
-        </div>
-      )}
 
       {!columnsMode && selected && !selectedHasTasks && (
         <div className="anim-fade mx-3 mt-3 flex shrink-0 items-center gap-3 rounded-lg bg-surface-2 px-3 py-2 text-sm text-text-2 md:mx-6">
@@ -539,17 +510,14 @@ export function TasksScreen() {
           ) : !columnsMode && groups.length === 0 && completed.length === 0 ? (
             filtering ? (
               <EmptyState
-                icon={<ListFilter className="size-5" />}
+                icon={<Search className="size-5" />}
                 title="No tasks match"
-                body="Nothing fits the current search and filters. Your tasks are safe, just out of view."
+                body="Nothing fits the current search. Your tasks are safe, just out of view."
                 action={
                   <Button
-                    onClick={() => {
-                      setFilters(NO_FILTERS);
-                      setQuery("");
-                    }}
+                    onClick={() => setQuery("")}
                   >
-                    Clear search and filters
+                    Clear search
                   </Button>
                 }
               />
@@ -619,17 +587,5 @@ export function TasksScreen() {
         <Plus className="size-6" />
       </button>
     </div>
-  );
-}
-
-function FilterPill({ label, swatch, onClear }: { label: string; swatch?: string; onClear: () => void }) {
-  return (
-    <span className="flex h-6 items-center gap-1.5 rounded-full border border-accent-line bg-accent-soft pl-2 pr-1 font-medium">
-      {swatch && <span className="size-2 rounded-full" style={{ background: swatch }} />}
-      {label}
-      <button onClick={onClear} aria-label={`Remove filter ${label}`} className="flex size-4 items-center justify-center rounded-full hover:bg-surface-3">
-        <X className="size-3" />
-      </button>
-    </span>
   );
 }

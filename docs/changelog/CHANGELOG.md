@@ -9,6 +9,25 @@ A running record of every change requested, newest first, with screenshots. It l
 
 ---
 
+## 2026-11-26 — Tasks page: the Filter button is removed (branch `next-changes`)
+
+**Asked for:** I don't need the Filter button on the Tasks page (the funnel icon, which on a phone sat alone in its own row).
+
+**What changed**
+- The **Filter** button (the funnel) is gone from the Tasks page on desktop and on phones.
+- On a **phone** that also removes the extra row under the date bar that only held the funnel, so the tasks start right under the date bar.
+- The strip of "active filter" chips that appeared under the toolbar is gone with it, and so is the filter menu code. The **search** (the icon in the top header) is now the only way to narrow the list.
+- The "No tasks match" message now only talks about the search ("Clear search").
+- Checked at phone (390) and desktop (1440) sizes on sample data: no Filter button, no empty row, Day / Week / Month views still open, no errors. Tests, lint and types pass.
+
+**Files:** `components/tasks/TasksScreen.tsx`, `components/tasks/TaskControls.tsx` (deleted), `scripts/tasks-no-filter.mjs` (new check)
+
+**Screenshots** (`screenshots/2026-11-26-no-task-filter/`, sample data)
+![Phone](screenshots/2026-11-26-no-task-filter/phone-tasks.png)
+![Desktop](screenshots/2026-11-26-no-task-filter/desktop-tasks.png)
+
+---
+
 ## 2026-11-25 — One search icon in the top header (branch `next-changes`)
 
 **Asked for:** keep the search icon at the right corner, to the left of the user icon in the topmost header of the website. No need for a separate search in both Calendar and Tasks.
